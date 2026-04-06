@@ -1,0 +1,324 @@
+// Base URL for the backend API
+// const API_URL = 'https://tracktor-production.up.railway.app/api';
+//'hhttps://tracktor-production.up.railway.app/api
+const API_URL = 'http://localhost:5000/api'
+//
+/**
+ * Standard fetch wrapper that automatically injects the Authorization header
+ * if a token is present in localStorage.
+ */
+async function fetchAPI(endpoint, options = {}) {
+  const token = localStorage.getItem('tractorlink_token');
+  
+  const headers = {
+    'Content-Type': 'application/json',
+    ...(options.headers || {}),
+  };
+
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_URL}${endpoint}`, {
+    ...options,
+    headers,
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.message || 'Something went wrong');
+  }
+
+  return data;
+}
+
+// Auth API Calls
+export const api = {
+  auth: {
+    login: async (email, password) => {
+      return await fetchAPI('/auth/login', {
+        method: 'POST',
+        body: JSON.stringify({ email, password }),
+      });
+    },
+    register: async (userData) => {
+      return await fetchAPI('/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(userData),
+      });
+    },
+    getMe: async () => {
+      return await fetchAPI('/auth/me', {
+        method: 'GET',
+      });
+    },
+    logout: async () => {
+      return await fetchAPI('/auth/logout', { method: 'POST' });
+    }
+  },
+  farmer: {
+    getDashboard: async () => {
+      return await fetchAPI('/farmer/dashboard');
+    },
+    getRecentActivity: async () => {
+      return await fetchAPI('/farmer/recent-activity');
+    },
+    getUpcomingJobs: async () => {
+      return await fetchAPI('/farmer/upcoming-jobs');
+    },
+    listServices: async () => {
+      return await fetchAPI('/farmer/services');
+    },
+    listZones: async () => {
+      return await fetchAPI('/farmer/zones');
+    },
+    getSystemConfig: async () => {
+      return await fetchAPI('/farmer/settings/config');
+    },
+    getPricePreview: async (bookingData) => {
+      return await fetchAPI('/farmer/price-preview', {
+        method: 'POST',
+        body: JSON.stringify(bookingData),
+      });
+    },
+    createBooking: async (bookingData) => {
+      return await fetchAPI('/farmer/bookings', {
+        method: 'POST',
+        body: JSON.stringify(bookingData),
+      });
+    },
+    listBookings: async () => {
+      return await fetchAPI('/farmer/bookings');
+    },
+    getBooking: async (id) => {
+      return await fetchAPI(`/farmer/bookings/${id}`);
+    },
+    getProfile: async () => {
+      return await fetchAPI('/farmer/profile');
+    },
+    updateProfile: async (profileData) => {
+      return await fetchAPI('/farmer/profile', {
+        method: 'PATCH',
+        body: JSON.stringify(profileData)
+      });
+    },
+    changePassword: async (passwordData) => {
+      return await fetchAPI('/farmer/change-password', {
+        method: 'PATCH',
+        body: JSON.stringify(passwordData)
+      });
+    },
+    updateLanguage: async (languageData) => {
+      return await fetchAPI('/farmer/language', {
+        method: 'PATCH',
+        body: JSON.stringify(languageData)
+      });
+    }
+  },
+  admin: {
+    getDashboardMetrics: async () => {
+      return await fetchAPI('/admin/dashboard/metrics');
+    },
+    getDispatchQueue: async () => {
+      return await fetchAPI('/admin/dashboard/dispatch-queue');
+    },
+    getDashboardRevenue: async (timeframe = 'daily') => {
+      return await fetchAPI(`/admin/dashboard/revenue?timeframe=${timeframe}`);
+    },
+    getDashboardFleet: async () => {
+      return await fetchAPI('/admin/dashboard/fleet');
+    },
+    listBookings: async (params = {}) => {
+      const query = new URLSearchParams(params).toString();
+      return await fetchAPI(`/admin/bookings?${query}`);
+    },
+    getBooking: async (id) => {
+      return await fetchAPI(`/admin/bookings/${id}`);
+    },
+    getPendingBookings: async () => {
+      return await fetchAPI('/admin/pending-dispatch');
+    },
+    getAvailableOperators: async () => {
+      return await fetchAPI('/admin/operators');
+    },
+    dispatchBooking: async (bookingId, operatorId) => {
+      return await fetchAPI(`/admin/assign/${bookingId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ operatorId })
+      });
+    },
+    getPayments: async () => {
+      return await fetchAPI('/admin/payments');
+    },
+    settleBooking: async (bookingId) => {
+      return await fetchAPI(`/admin/settle-booking/${bookingId}`, {
+        method: 'POST'
+      });
+    },
+    listFarmers: async () => {
+      return await fetchAPI('/admin/farmers');
+    },
+    createFarmer: async (farmerData) => {
+      return await fetchAPI('/admin/farmers', {
+        method: 'POST',
+        body: JSON.stringify(farmerData)
+      });
+    },
+    updateFarmerStatus: async (farmerId, status) => {
+      return await fetchAPI(`/admin/farmers/${farmerId}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status })
+      });
+    },
+    getOperators: async () => {
+      return await fetchAPI('/admin/operator-list');
+    },
+    createOperator: async (operatorData) => {
+      return await fetchAPI('/admin/operators', {
+        method: 'POST',
+        body: JSON.stringify(operatorData)
+      });
+    },
+    deleteOperator: async (id) => {
+      return await fetchAPI(`/admin/operators/${id}`, {
+        method: 'DELETE'
+      });
+    },
+    // Tractor Management
+    getTractors: async () => {
+      return await fetchAPI('/admin/tractors');
+    },
+    createTractor: async (tractorData) => {
+      return await fetchAPI('/admin/tractors', {
+        method: 'POST',
+        body: JSON.stringify(tractorData)
+      });
+    },
+    updateTractor: async (id, tractorData) => {
+      return await fetchAPI(`/admin/tractors/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(tractorData)
+      });
+    },
+    reports: {
+      getRevenue: async (range = '7d') => {
+        return await fetchAPI(`/admin/reports/revenue?range=${range}`);
+      },
+      getServiceUsage: async () => {
+        return await fetchAPI('/admin/reports/service-usage');
+      },
+      getFleet: async () => {
+        return await fetchAPI('/admin/reports/fleet');
+      },
+      getFarmers: async () => {
+        return await fetchAPI('/admin/reports/farmers');
+      }
+    },
+    // System Configuration
+    getSystemConfig: async () => {
+      return await fetchAPI('/admin/settings/config');
+    },
+    updateSystemConfig: async (config) => {
+      return await fetchAPI('/admin/settings/config', {
+        method: 'POST',
+        body: JSON.stringify(config)
+      });
+    },
+    // Distance Zones
+    listZones: async () => {
+      return await fetchAPI('/admin/settings/zones');
+    },
+    createZone: async (zoneData) => {
+      return await fetchAPI('/admin/settings/zones', {
+        method: 'POST',
+        body: JSON.stringify(zoneData)
+      });
+    },
+    updateZone: async (id, zoneData) => {
+      return await fetchAPI(`/admin/settings/zones/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(zoneData)
+      });
+    },
+    deleteZone: async (id) => {
+      return await fetchAPI(`/admin/settings/zones/${id}`, {
+        method: 'DELETE'
+      });
+    },
+    // System Settings - Services
+    updateServiceRates: async (ratesData) => {
+      return await fetchAPI('/admin/services', {
+        method: 'PUT',
+        body: JSON.stringify(ratesData)
+      });
+    }
+  },
+  operator: {
+    getJobs: async () => {
+      return await fetchAPI('/operator/jobs');
+    },
+    getStats: async () => {
+      return await fetchAPI('/operator/stats');
+    },
+    updateStatus: async (id, status) => {
+      return await fetchAPI(`/operator/job-status/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status })
+      });
+    },
+    addFuelLog: async (fuelData) => {
+      return await fetchAPI('/operator/fuel', {
+        method: 'POST',
+        body: JSON.stringify(fuelData)
+      });
+    },
+    getFuelHistory: async () => {
+      return await fetchAPI('/operator/fuel');
+    },
+    getFuelSummary: async () => {
+      return await fetchAPI('/operator/fuel/summary');
+    },
+    getProfile: async () => {
+      return await fetchAPI('/operator/profile');
+    },
+    updateProfile: async (profileData) => {
+      return await fetchAPI('/operator/profile', {
+        method: 'PATCH',
+        body: JSON.stringify(profileData)
+      });
+    },
+    changePassword: async (passwordData) => {
+      return await fetchAPI('/operator/change-password', {
+        method: 'PATCH',
+        body: JSON.stringify(passwordData)
+      });
+    },
+    updateLanguage: async (languageData) => {
+      return await fetchAPI('/operator/language', {
+        method: 'PATCH',
+        body: JSON.stringify(languageData)
+      });
+    }
+  },
+  payments: {
+    getPending: async () => {
+      return await fetchAPI('/payments/pending');
+    },
+    getHistory: async () => {
+      return await fetchAPI('/payments/history');
+    },
+    payBooking: async (paymentData) => {
+      return await fetchAPI('/payments/pay-booking', {
+        method: 'POST',
+        body: JSON.stringify(paymentData)
+      });
+    },
+    settleAll: async () => {
+      return await fetchAPI('/payments/settle-all', {
+        method: 'POST'
+      });
+    }
+  }
+};
+

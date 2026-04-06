@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+@theme {
+  --color-earth-main: #f3e3c9;
+  --color-earth-card: #f8f5ef;
+  --color-earth-card-alt: #efe8dc;
+  --color-earth-dark: #2d321e;
+  --color-earth-primary: #f5a415;
+  --color-earth-primary-hover: #fabb52;
+  --color-earth-brown: #301e10;
+  --color-earth-green: #6c9336;
+  --color-earth-green-dark: #2c5f24;
+  --color-earth-sub: #5a5a4a;
+  --color-earth-mut: #8a8a7a;
+
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+@layer base {
+  body {
+    @apply bg-earth-main text-earth-brown font-sans antialiased;
+  }
+}
+
+@layer utilities {
+  .soft-shadow {
+    box-shadow: 0 4px 30px -2px rgba(0, 0, 0, 0.05);
+  }
+  .glass-card {
+    @apply bg-earth-card shadow-lg border border-earth-dark/10;
+  }
+}
