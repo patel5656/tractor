@@ -22,6 +22,7 @@ export const SettingsProvider = ({ children }) => {
     dieselPrice: 0,
     avgMileage: 1,
     fuelCostPerKm: 0,
+    pricingMode: 'ZONE',
     lastUpdated: new Date().toISOString()
   });
 
@@ -42,14 +43,14 @@ export const SettingsProvider = ({ children }) => {
         : await api.farmer.getSystemConfig();
 
       if (configRes.success) {
-        const { hubName, hubLocation, supportEmail, contactEmail, dieselPrice, avgMileage, fuelCostPerKm, serviceIntervalHours, preAlertHours, updatedAt, baseLatitude, baseLongitude, perKmRate } = configRes.data;
+        const { hubName, hubLocation, supportEmail, contactEmail, dieselPrice, avgMileage, fuelCostPerKm, serviceIntervalHours, preAlertHours, updatedAt, baseLatitude, baseLongitude, perKmRate, pricingMode } = configRes.data;
         
         setGeneralInfo({ 
           hubName, hubLocation, supportEmail, contactEmail,
           baseLatitude: baseLatitude ?? 0,
           baseLongitude: baseLongitude ?? 0
         });
-        setFuelMetrics({ dieselPrice, avgMileage, fuelCostPerKm, lastUpdated: updatedAt });
+        setFuelMetrics({ dieselPrice, avgMileage, fuelCostPerKm, pricingMode: pricingMode || 'ZONE', lastUpdated: updatedAt });
         setMaintenanceSettings({ serviceIntervalHours, preAlertHours });
       }
     } catch (error) {
@@ -67,7 +68,10 @@ export const SettingsProvider = ({ children }) => {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const result = await api.farmer.listServices();
+        const result = role === 'admin' 
+          ? await api.admin.listServices() 
+          : await api.farmer.listServices();
+          
         if (result.success) {
           const rates = {};
           result.data.forEach(s => {
@@ -85,7 +89,7 @@ export const SettingsProvider = ({ children }) => {
     };
 
     if (role) {
-      if (role === 'farmer') fetchServices();
+      fetchServices();
       fetchGlobalSettings();
     }
   }, [role]);
@@ -102,12 +106,26 @@ export const SettingsProvider = ({ children }) => {
     }
   };
   
-  const updateFuelPrice = async (dieselPrice, avgMileage) => {
+  const updateFuelPrice = async (dieselPrice, avgMileage, pricingMode) => {
     try {
-      const res = await api.admin.updateSystemConfig({ dieselPrice: parseFloat(dieselPrice), avgMileage: parseFloat(avgMileage) });
+      const payload = { dieselPrice: parseFloat(dieselPrice), avgMileage: parseFloat(avgMileage) };
+      if (pricingMode) payload.pricingMode = pricingMode;
+      const res = await api.admin.updateSystemConfig(payload);
       if (res.success) {
-        const { dieselPrice, avgMileage, fuelCostPerKm, updatedAt } = res.data;
-        setFuelMetrics({ dieselPrice, avgMileage, fuelCostPerKm, lastUpdated: updatedAt });
+        const { dieselPrice, avgMileage, fuelCostPerKm, updatedAt, pricingMode: savedMode } = res.data;
+        setFuelMetrics({ dieselPrice, avgMileage, fuelCostPerKm, pricingMode: savedMode || 'ZONE', lastUpdated: updatedAt });
+      }
+      return res;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const updatePricingMode = async (pricingMode) => {
+    try {
+      const res = await api.admin.updateSystemConfig({ pricingMode });
+      if (res.success) {
+        setFuelMetrics(prev => ({ ...prev, pricingMode: res.data.pricingMode || 'ZONE' }));
       }
       return res;
     } catch (error) {
@@ -123,6 +141,26 @@ export const SettingsProvider = ({ children }) => {
       console.error(error);
     }
   };
+
+  const refreshServices = async () => {
+    try {
+      const result = role === 'admin' 
+        ? await api.admin.listServices() 
+        : await api.farmer.listServices();
+
+      if (result.success) {
+        const rates = {};
+        result.data.forEach(s => {
+          const label = s.name.charAt(0).toUpperCase() + s.name.slice(1);
+          rates[label] = s.baseRatePerHectare;
+        });
+        setServiceRates(rates);
+        setSystemServices(result.data);
+      }
+    } catch (error) {
+       console.error('Failed to refresh services:', error);
+    }
+  };
   
   const updateServiceRates = async (newRates) => {
     try {
@@ -130,6 +168,18 @@ export const SettingsProvider = ({ children }) => {
       const res = await api.admin.updateServiceRates(newRates);
       if (res.success) {
         setServiceRates(prev => ({ ...prev, ...newRates }));
+      }
+      return res;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  const updateService = async (id, data) => {
+    try {
+      const res = await api.admin.updateService(id, data);
+      if (res.success) {
+        await refreshServices();
       }
       return res;
     } catch (error) {
@@ -159,8 +209,11 @@ export const SettingsProvider = ({ children }) => {
     updateGeneral,
     updateFuelPrice,
     refreshZones,
+    refreshServices,
     updateServiceRates,
-    updateMaintenance
+    updateService,
+    updateMaintenance,
+    updatePricingMode
   };
 
   return (

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Eye, Search, Filter, MoreVertical, FileText, Clock, Tractor as TractorIcon, CheckCircle2, ChevronDown, Trash2, CheckCircle, X } from 'lucide-react';
+import { Eye, Search, Filter, MoreVertical, FileText, Clock, Tractor as TractorIcon, CheckCircle2, ChevronDown, Trash2, CheckCircle, X, MapPin, Navigation, ArrowDown, Info } from 'lucide-react';
 import { Card, CardContent } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
@@ -406,19 +406,19 @@ export default function Bookings() {
       {/* Booking Details Modal */}
       <AnimatePresence>
         {isViewModalOpen && selectedBooking && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-[100] flex items-start justify-center p-6 md:p-12 overflow-y-auto bg-earth-main/80 backdrop-blur-sm pt-20 pb-20">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsViewModalOpen(false)}
-              className="absolute inset-0 bg-earth-main/80 backdrop-blur-sm"
+              className="fixed inset-0 -z-10"
             />
             <motion.div 
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="relative w-full max-w-xl bg-earth-card border border-earth-dark/15/50 rounded-[2rem] overflow-hidden shadow-[0_0_50px_rgba(0,0,0,0.5)] flex flex-col max-h-[90vh]"
+              className="relative w-full max-w-xl bg-earth-card border border-earth-dark/15/50 rounded-[2.5rem] shadow-[0_0_80px_rgba(0,0,0,0.6)] flex flex-col max-h-[80vh] my-auto"
             >
               <div className="p-6 border-b border-earth-dark/10 flex items-center justify-between bg-earth-main/20">
                 <div>
@@ -433,83 +433,126 @@ export default function Bookings() {
                 </button>
               </div>
 
-              <div className="p-6 overflow-y-auto custom-scrollbar space-y-6 text-left">
-                {/* Core Details */}
-                <div className="grid grid-cols-3 gap-4">
-                   <DetailItem label="Status" value={
-                      <Badge className={cn(
-                        "text-[8px] px-2.5 py-0.5 font-black uppercase tracking-widest",
-                        selectedBooking.status === 'completed' || selectedBooking.status === 'paid' ? 'bg-earth-primary/20 text-earth-green' : 'bg-earth-primary/10 text-earth-primary'
-                      )}>{selectedBooking.status}</Badge>
-                   } />
-                   <DetailItem label="Finance" value={
-                      <Badge className={cn(
-                        "text-[8px] px-2.5 py-0.5 font-black uppercase tracking-widest",
-                        selectedBooking.status === 'paid' ? 'bg-blue-500/10 text-blue-400' : 'bg-orange-500/10 text-orange-500'
-                      )}>{selectedBooking.status === 'paid' ? 'Settled' : 'Unpaid'}</Badge>
-                   } />
-                   <DetailItem label="Total" value={<span className="text-sm font-black text-earth-brown tracking-tighter uppercase italic">₦{selectedBooking.totalPrice?.toLocaleString()}</span>} />
-                </div>
+              <div className="p-6 overflow-y-auto custom-scrollbar space-y-8 text-left">
+                {/* 1. Location Selection (Route Flow) */}
+                <div className="space-y-4">
+                   <h4 className="text-[10px] font-black text-earth-mut uppercase tracking-[0.2em] px-1 flex items-center gap-2">
+                     <Navigation size={12} className="text-earth-primary" />
+                     Service Route Visualization
+                   </h4>
+                   <div className="relative pl-10 space-y-6">
+                      {/* Vertical Line */}
+                      <div className="absolute left-[19px] top-3 bottom-3 w-0.5 bg-dashed border-l border-dashed border-earth-dark/20" />
+                      
+                      {/* From: Hub */}
+                      <div className="relative">
+                        <div className="absolute -left-[30px] top-0 w-5 h-5 rounded-full bg-earth-card border-2 border-earth-primary flex items-center justify-center z-10 shadow-sm">
+                           <div className="w-1.5 h-1.5 rounded-full bg-earth-primary" />
+                        </div>
+                        <div>
+                          <p className="text-[9px] font-black text-earth-mut uppercase tracking-widest leading-none mb-1">Origin Point (Hub)</p>
+                          <p className="text-sm font-black text-earth-brown truncate">
+                            {selectedBooking.hubName || "TractorLink Main Hub"}
+                          </p>
+                          <p className="text-[10px] font-medium text-earth-mut truncate mt-0.5">
+                            {selectedBooking.hubLocation || "Operational Base Registry"}
+                          </p>
+                        </div>
+                      </div>
 
-                <div className="h-px bg-earth-card-alt/80 w-full" />
+                      {/* Distance Indicator Overlay */}
+                      <div className="relative py-2">
+                         <div className="inline-flex items-center gap-2 px-3 py-1 bg-earth-main border border-earth-dark/10 rounded-full text-[10px] font-black text-earth-primary uppercase tracking-widest shadow-sm">
+                            <ArrowDown size={10} />
+                            {selectedBooking.roadDistance || selectedBooking.distanceKm || 0} KM Road Distance
+                         </div>
+                      </div>
 
-                {/* Farmer & Service */}
-                <div className="grid grid-cols-2 gap-6">
-                   <div className="space-y-1">
-                      <h4 className="text-[9px] font-black text-earth-mut uppercase tracking-widest mb-2 opacity-70">Farmer Metadata</h4>
-                      <p className="text-sm font-black text-earth-brown truncate">{selectedBooking.farmer?.name}</p>
-                      <p className="text-[10px] font-bold text-earth-mut truncate">{selectedBooking.farmer?.email}</p>
-                   </div>
-                   <div className="space-y-1">
-                      <h4 className="text-[9px] font-black text-earth-mut uppercase tracking-widest mb-2 opacity-70">Service Unit</h4>
-                      <div className="flex items-center gap-2">
-                         <div className="p-2 bg-earth-main border border-earth-dark/10 rounded-lg text-earth-primary">
-                            <TractorIcon size={14} />
-                         </div>
-                         <div>
-                            <p className="text-sm font-black text-earth-brown truncate leading-none">{selectedBooking.service?.name}</p>
-                            <p className="text-[9px] font-black text-earth-mut uppercase italic mt-1">{selectedBooking.landSize} Hectares</p>
-                         </div>
+                      {/* To: Farmer */}
+                      <div className="relative">
+                        <div className="absolute -left-[30px] top-0 w-5 h-5 rounded-full bg-earth-primary flex items-center justify-center z-10 shadow-lg shadow-earth-primary/30">
+                           <MapPin size={10} className="text-earth-brown" />
+                        </div>
+                        <div>
+                          <p className="text-[9px] font-black text-earth-mut uppercase tracking-widest leading-none mb-1">Destination Point (Farmer)</p>
+                          <p className="text-sm font-black text-earth-brown truncate">
+                            {selectedBooking.location || "Farmer Site Location"}
+                          </p>
+                          <p className="text-[10px] font-medium text-earth-mut truncate mt-0.5 italic">
+                            Zone: {selectedBooking.zoneName || "Calculated Range"}
+                          </p>
+                        </div>
                       </div>
                    </div>
                 </div>
 
-                {/* Location & Times (Compact) */}
-                <div className="p-4 bg-earth-main/40 rounded-2xl border border-earth-dark/10/50 grid grid-cols-2 gap-4">
-                  <DetailItem label="Operational Node" value={
-                    <div className="flex flex-col">
-                      <p className="text-[10px] font-bold text-earth-sub truncate">{selectedBooking.location}</p>
-                      {selectedBooking.zoneName && (
-                        <p className="text-[9px] font-black text-earth-primary uppercase tracking-widest mt-0.5">{selectedBooking.zoneName}</p>
-                      )}
-                    </div>
-                  } />
-                  <DetailItem label="Registry Sync" value={<p className="text-[10px] font-bold text-earth-sub truncate">{new Date(selectedBooking.createdAt).toLocaleDateString()}</p>} />
-                </div>
+                <div className="h-px bg-earth-dark/5 w-full" />
 
-                {/* Operator & Fleet */}
-                {(selectedBooking.operator || selectedBooking.tractor) && (
-                   <div className="grid grid-cols-2 gap-6 pt-2">
-                      <div className="space-y-1">
-                         <h4 className="text-[9px] font-black text-earth-mut uppercase tracking-widest mb-2 opacity-70">Assigned Asset</h4>
-                         {selectedBooking.operator ? (
-                            <>
-                               <p className="text-xs font-black text-earth-brown truncate">{selectedBooking.operator.name}</p>
-                               <p className="text-[9px] font-bold text-earth-mut italic mt-0.5 uppercase tracking-widest">Operator Core</p>
-                            </>
-                         ) : <p className="text-[10px] text-earth-mut italic">No assigned unit</p>}
-                      </div>
-                      <div className="space-y-1">
-                         <h4 className="text-[9px] font-black text-earth-mut uppercase tracking-widest mb-2 opacity-70">Fleet Unit</h4>
-                         {selectedBooking.tractor ? (
-                            <div className="flex flex-col">
-                               <p className="text-xs font-black text-earth-primary truncate uppercase leading-none">{selectedBooking.tractor.modelName}</p>
-                               <p className="text-[9px] font-black text-earth-mut mt-1 uppercase tracking-widest">{selectedBooking.tractor.plateNumber}</p>
+                {/* 2. Service & Financial Breakdown */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                   {/* Service Summary */}
+                   <div className="space-y-4">
+                      <h4 className="text-[10px] font-black text-earth-mut uppercase tracking-[0.2em] px-1">Service Particulars</h4>
+                      <div className="p-4 bg-earth-main/40 rounded-2xl border border-earth-dark/10/50 space-y-3">
+                         <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-earth-card border border-earth-dark/10 flex items-center justify-center text-earth-primary">
+                               <TractorIcon size={18} />
                             </div>
-                         ) : <p className="text-[10px] text-earth-mut italic">Missing fleet</p>}
+                            <div>
+                               <p className="text-sm font-black text-earth-brown uppercase italic leading-none">{selectedBooking.serviceNameSnapshot || selectedBooking.service?.name}</p>
+                               <p className="text-[10px] font-bold text-earth-mut mt-1">{selectedBooking.landSize} Hectares Coverage</p>
+                            </div>
+                         </div>
                       </div>
                    </div>
-                )}
+
+                   {/* Price Ledger */}
+                   <div className="space-y-4">
+                      <h4 className="text-[10px] font-black text-earth-mut uppercase tracking-[0.2em] px-1">Financial Ledger</h4>
+                      <div className="p-4 bg-earth-card border border-earth-dark/10 rounded-2xl shadow-inner space-y-3">
+                         <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-earth-mut">
+                            <span>Base Work Rate</span>
+                            <span className="text-earth-brown">₦{selectedBooking.basePrice?.toLocaleString()}</span>
+                         </div>
+                         <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-earth-mut">
+                            <span>Distance Logistics</span>
+                            <span className="text-earth-brown">₦{selectedBooking.distanceCharge?.toLocaleString()}</span>
+                         </div>
+                         <div className="h-px bg-earth-dark/10 my-1" />
+                         <div className="flex justify-between items-center bg-earth-primary/10 -mx-4 px-4 py-2">
+                            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-earth-primary italic">Total Valuation</span>
+                            <span className="text-base font-black text-earth-brown tracking-tighter italic">₦{selectedBooking.totalPrice?.toLocaleString()}</span>
+                         </div>
+                      </div>
+                   </div>
+                </div>
+
+                {/* 3. Extra Info & Policy */}
+                <div className="p-4 bg-earth-primary/5 rounded-2xl border border-earth-primary/10 flex gap-4">
+                   <div className="w-10 h-10 rounded-xl bg-earth-primary/20 flex items-center justify-center shrink-0">
+                      <Info size={16} className="text-earth-primary" />
+                   </div>
+                   <div className="space-y-1">
+                      <p className="text-[10px] font-black text-earth-brown uppercase tracking-widest">Inclusions & Policy</p>
+                      <p className="text-[9px] font-bold text-earth-mut uppercase leading-relaxed tracking-wide">
+                        Quote includes full fuel allocation, professional operator deployment, and equipment mobilization.
+                        <br />
+                        <span className="text-earth-primary font-black italic">Valid for 48 hours from Registry Sync Date.</span>
+                      </p>
+                   </div>
+                </div>
+
+                {/* Status Badges */}
+                <div className="flex items-center gap-3 pt-2">
+                   <Badge className={cn(
+                     "text-[8px] px-3 py-1 font-black uppercase tracking-widest border border-earth-dark/10 shadow-sm",
+                     selectedBooking.status === 'completed' || selectedBooking.status === 'paid' ? 'bg-earth-primary/20 text-earth-green border-emerald-500/20' : 'bg-earth-primary/10 text-earth-primary border-earth-primary/20'
+                   )}>{selectedBooking.status}</Badge>
+                   <Badge className={cn(
+                     "text-[8px] px-3 py-1 font-black uppercase tracking-widest border border-earth-dark/10 shadow-sm",
+                     selectedBooking.status === 'paid' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-orange-500/10 text-orange-500 border-orange-500/20'
+                   )}>{selectedBooking.status === 'paid' ? 'Financials Settled' : 'Payment Pending'}</Badge>
+                </div>
               </div>
 
               <div className="px-6 py-4 border-t border-earth-dark/10 bg-earth-main/40 flex justify-end">

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Fuel, MapPin, Banknote, Wrench, Settings as SettingsIcon, Save, Info, CheckCircle2, AlertTriangle, ShieldCheck, Trash2, Edit, Search } from 'lucide-react';
+import { Fuel, MapPin, Banknote, Wrench, Settings as SettingsIcon, Save, Info, CheckCircle2, AlertTriangle, ShieldCheck, Trash2, Edit, Search, Plus, X, Calculator } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/Card';
 import { Input } from '../../components/ui/Input';
 import { Button } from '../../components/ui/Button';
@@ -12,12 +12,12 @@ export default function Settings() {
   const location = useLocation();
   const navigate = useNavigate();
   const { 
-    generalInfo, fuelMetrics, zones, serviceRates, maintenanceSettings,
-    updateGeneral, updateFuelPrice, refreshZones, updateServiceRates, updateMaintenance 
+    generalInfo, fuelMetrics, zones, serviceRates, maintenanceSettings, systemServices,
+    updateGeneral, updateFuelPrice, refreshZones, refreshServices, updateServiceRates, updateService, updateMaintenance, updatePricingMode 
   } = useSettings();
 
   const tabFromPath = location.pathname.split('/').pop();
-  const validTabs = ['fuel', 'zones', 'rates', 'maintenance'];
+  const validTabs = ['pricing', 'fuel', 'zones', 'rates', 'maintenance'];
   const activeTab = validTabs.includes(tabFromPath) ? tabFromPath : 'general';
 
   const [localGeneral, setLocalGeneral] = useState(generalInfo);
@@ -25,6 +25,7 @@ export default function Settings() {
     dieselPrice: fuelMetrics.dieselPrice, 
     avgMileage: fuelMetrics.avgMileage 
   });
+  const [localPricingMode, setLocalPricingMode] = useState(fuelMetrics.pricingMode || 'ZONE');
   
   // Zones are managed independently from the main Save button to allow CRUD
   const [newZoneName, setNewZoneName] = useState('');
@@ -39,11 +40,34 @@ export default function Settings() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState(null);
 
+  const [fuelHistory, setFuelHistory] = useState([]);
+  const [showFuelHistory, setShowFuelHistory] = useState(false);
+  const [showFuelConfirm, setShowFuelConfirm] = useState(false);
+  const [fuelError, setFuelError] = useState("");
+
+  const [editingServiceId, setEditingServiceId] = useState(null);
+  const [editServiceRate, setEditServiceRate] = useState('');
+  const [editServiceDate, setEditServiceDate] = useState('');
+
+  const fetchFuelHistory = async () => {
+    try {
+      const res = await api.admin.getFuelHistory();
+      if (res.success) setFuelHistory(res.data);
+    } catch(e) {
+      console.error(e);
+    }
+  };
+
+  useEffect(() => {
+    if (showFuelHistory) fetchFuelHistory();
+  }, [showFuelHistory]);
+
   useEffect(() => {
     setLocalFuel({
       dieselPrice: fuelMetrics.dieselPrice,
       avgMileage: fuelMetrics.avgMileage
     });
+    setLocalPricingMode(fuelMetrics.pricingMode || 'ZONE');
   }, [fuelMetrics]);
 
   useEffect(() => {
@@ -55,6 +79,7 @@ export default function Settings() {
 
   const tabs = [
     { id: 'general', label: 'General Info', icon: SettingsIcon },
+    { id: 'pricing', label: 'Pricing Settings', icon: Calculator },
     { id: 'fuel', label: 'Fuel Metrics', icon: Fuel },
     { id: 'zones', label: 'Distance Zones', icon: MapPin },
     { id: 'rates', label: 'Service Rates', icon: Banknote },
@@ -66,35 +91,49 @@ export default function Settings() {
   };
 
   const handleSave = async () => {
+    if (activeTab === 'fuel') {
+      const price = parseFloat(localFuel.dieselPrice);
+      if (isNaN(price) || price <= 0 || price > 5000) {
+        setFuelError("Diesel price must be greater than 0 and ≤ 5000 ₦/L.");
+        return;
+      }
+      setFuelError("");
+      if (!showFuelConfirm) {
+        setShowFuelConfirm(true);
+        return;
+      }
+      setShowFuelConfirm(false);
+    }
+
     setIsSaving(true);
     try {
       if (activeTab === 'general') await updateGeneral(localGeneral);
-      if (activeTab === 'fuel') await updateFuelPrice(localFuel.dieselPrice, localFuel.avgMileage);
+      if (activeTab === 'pricing') await updatePricingMode(localPricingMode);
+      if (activeTab === 'fuel') await updateFuelPrice(localFuel.dieselPrice, localFuel.avgMileage, localPricingMode);
       if (activeTab === 'rates') await updateServiceRates(localRates);
       if (activeTab === 'maintenance') await updateMaintenance(localMaintenance);
       
       setSaveStatus('success');
     } catch (e) {
       console.error(e);
-      // add proper error handling if needed
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleSaveZone = async () => {
-    if (!newZoneName || newZoneMinDistance === '' || newZoneMaxDistance === '' || newZoneSurcharge === '') return;
+    if (newZoneMinDistance === '' || newZoneSurcharge === '') return;
     try {
-      if (editingZoneId) {
-        const res = await api.admin.updateZone(editingZoneId, {
-          name: newZoneName.trim(), 
-          minDistance: parseFloat(newZoneMinDistance),
-          maxDistance: parseFloat(newZoneMaxDistance),
-          surchargePerHectare: parseFloat(newZoneSurcharge)
-        });
+      const payload = {
+        minDistance: parseFloat(newZoneMinDistance),
+        maxDistance: newZoneMaxDistance === '' ? null : parseFloat(newZoneMaxDistance),
+        surchargePerHectare: parseFloat(newZoneSurcharge)
+      };
+
+      if (editingZoneId !== 'new' && editingZoneId !== null) {
+        const res = await api.admin.updateZone(editingZoneId, payload);
         if (res.success) {
           await refreshZones();
-          setNewZoneName('');
           setNewZoneMinDistance('');
           setNewZoneMaxDistance('');
           setNewZoneSurcharge('');
@@ -103,18 +142,13 @@ export default function Settings() {
           console.error('Failed to update zone:', res.message);
         }
       } else {
-        const res = await api.admin.createZone({ 
-          name: newZoneName.trim(), 
-          minDistance: parseFloat(newZoneMinDistance),
-          maxDistance: parseFloat(newZoneMaxDistance),
-          surchargePerHectare: parseFloat(newZoneSurcharge) 
-        });
+        const res = await api.admin.createZone(payload);
         if (res.success) {
           await refreshZones();
-          setNewZoneName('');
           setNewZoneMinDistance('');
           setNewZoneMaxDistance('');
           setNewZoneSurcharge('');
+          setEditingZoneId(null);
         } else {
           console.error('Failed to create zone:', res.message);
         }
@@ -125,15 +159,13 @@ export default function Settings() {
   };
 
   const handleEditClick = (zone) => {
-    setNewZoneName(zone.name);
     setNewZoneMinDistance(zone.minDistance.toString());
-    setNewZoneMaxDistance(zone.maxDistance.toString());
+    setNewZoneMaxDistance(zone.maxDistance === null ? '' : zone.maxDistance.toString());
     setNewZoneSurcharge(zone.surchargePerHectare.toString());
     setEditingZoneId(zone.id);
   };
 
   const handleCancelEdit = () => {
-    setNewZoneName('');
     setNewZoneMinDistance('');
     setNewZoneMaxDistance('');
     setNewZoneSurcharge('');
@@ -152,7 +184,6 @@ export default function Settings() {
   };
 
   const filteredZones = zones.filter(z => 
-    z.name.toLowerCase().includes(zoneSearchTerm.toLowerCase()) ||
     z.minDistance?.toString().includes(zoneSearchTerm) ||
     z.maxDistance?.toString().includes(zoneSearchTerm) ||
     z.surchargePerHectare?.toString().includes(zoneSearchTerm)
@@ -310,160 +341,423 @@ export default function Settings() {
               </div>
             )}
 
-            {/* Fuel Settings */}
-            {activeTab === 'fuel' && (
-              <div className="max-w-md space-y-8">
-                <div className="space-y-6">
-                  <div className="space-y-3">
-                    <label className="text-[10px] uppercase font-black tracking-widest text-earth-sub pl-1">Current Diesel Price (₦/L)</label>
-                    <div className="relative">
-                       <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-earth-primary font-black">₦</div>
-                       <Input 
-                        type="number" 
-                        value={localFuel.dieselPrice} 
-                        onChange={(e) => setLocalFuel({...localFuel, dieselPrice: e.target.value})}
-                        className="pl-10 bg-earth-card border-earth-dark/15 font-black text-2xl text-earth-brown h-16 rounded-2xl focus:border-earth-primary shadow-inner" 
-                      />
-                    </div>
-                  </div>
+            {/* Pricing Settings */}
+            {activeTab === 'pricing' && (
+              <div className="max-w-2xl space-y-8 animate-in fade-in duration-300">
+                <div>
+                  <h3 className="text-lg font-black text-earth-brown uppercase tracking-tight italic flex items-center gap-2">
+                     Global Pricing Rules
+                     <div className="w-1.5 h-1.5 rounded-full bg-earth-primary"></div>
+                  </h3>
+                  <p className="text-[10px] font-bold text-earth-mut uppercase tracking-widest mt-1">Configure how the system calculates logistical surcharges.</p>
                 </div>
-                <div className="p-5 bg-earth-card/50 border border-earth-dark/15/50 rounded-2xl flex items-start gap-4">
-                   <Fuel size={20} className="text-earth-primary mt-1 shrink-0" />
-                   <div className="w-full">
-                     <p className="text-[10px] font-black text-earth-brown uppercase tracking-widest mb-1">Base Fuel Multiplier</p>
-                     <p className="text-[10px] font-bold text-earth-mut uppercase tracking-wider leading-relaxed mb-3">Formula: Diesel Price ÷ 800 (Stored for Phase 2)</p>
-                     <div className="bg-earth-card-alt border border-earth-dark/10 p-3 rounded-xl flex items-center justify-between">
-                       <span className="text-xs font-black text-earth-sub uppercase">Multiplier Value</span>
-                       <span className="text-lg font-black text-earth-primary">{localFuel.dieselPrice ? (parseFloat(localFuel.dieselPrice) / 800).toFixed(4) : "0.0000"}</span>
-                     </div>
-                   </div>
+
+                <div className="p-6 bg-earth-card border-2 border-earth-primary/20 rounded-3xl shadow-xl">
+                  <h4 className="text-[11px] font-black text-earth-brown uppercase tracking-[0.2em] mb-4">Active Pricing Mode</h4>
+                  <div className="flex rounded-xl overflow-hidden border border-earth-dark/10">
+                    <button
+                      onClick={() => setLocalPricingMode('ZONE')}
+                      className={cn(
+                        "flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-all",
+                        localPricingMode === 'ZONE'
+                          ? "bg-earth-primary text-white shadow-inner"
+                          : "bg-earth-main text-earth-mut hover:bg-earth-card"
+                      )}
+                    >
+                      Zone Based
+                    </button>
+                    <button
+                      onClick={() => setLocalPricingMode('FUEL')}
+                      className={cn(
+                        "flex-1 py-3 text-[10px] font-black uppercase tracking-widest transition-all",
+                        localPricingMode === 'FUEL'
+                          ? "bg-blue-500 text-white shadow-inner"
+                          : "bg-earth-main text-earth-mut hover:bg-earth-card"
+                      )}
+                    >
+                      Fuel Based
+                    </button>
+                  </div>
+                  <p className="text-[8px] font-bold text-earth-mut uppercase tracking-wider mt-3 leading-relaxed">
+                    {localPricingMode === 'ZONE' 
+                      ? "Distance surcharges are calculated from predefined distance zones (zone tier × hectares)." 
+                      : "Distance surcharges are calculated dynamically via the fuel multiplier formula (diesel ÷ 800 × 750 × distance)."}
+                  </p>
                 </div>
               </div>
             )}
 
-            {/* Distance Zones Settings */}
-            {activeTab === 'zones' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
-                <div className="space-y-6">
-                  <h3 className="text-sm font-black text-earth-brown uppercase">{editingZoneId ? 'Edit Zone' : 'Add New Zone'}</h3>
-                  <div className="space-y-3">
-                    <label className="text-[10px] uppercase font-black tracking-widest text-earth-sub pl-1">Zone Name</label>
-                    <Input 
-                      placeholder="e.g. Village Area"
-                      value={newZoneName} 
-                      onChange={(e) => setNewZoneName(e.target.value)}
-                      className="bg-earth-card border-earth-dark/15 font-bold text-earth-brown h-12 rounded-xl focus:border-earth-primary shadow-inner" 
-                    />
+            {/* Fuel Settings */}
+            {activeTab === 'fuel' && (() => {
+               const parsedPrice = parseFloat(localFuel.dieselPrice) || 0;
+               const fuelMultiplier = parsedPrice / 800;
+               const adjustedKmRate = 750 * fuelMultiplier;
+               
+               const exampleDistance = 22;
+               const oldSimulatedCharge = (fuelMetrics.dieselPrice / 800) * 750 * exampleDistance;
+               const newSimulatedCharge = adjustedKmRate * exampleDistance;
+
+               return (
+              <div className="max-w-2xl space-y-8 animate-in fade-in duration-300">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-lg font-black text-earth-brown uppercase tracking-tight italic flex items-center gap-2">
+                       Dynamic Fuel Config
+                       <div className="w-1.5 h-1.5 rounded-full bg-blue-500"></div>
+                    </h3>
+                    <p className="text-[10px] font-bold text-earth-mut uppercase tracking-widest mt-1">Controls directly affecting per-km operational surcharges.</p>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <Button 
+                    variant="outline"
+                    onClick={() => setShowFuelHistory(true)}
+                    className="border-earth-dark/15 text-earth-brown uppercase tracking-widest text-[10px] h-9 px-4 rounded-xl font-black"
+                  >
+                    View History
+                  </Button>
+                </div>
+
+                {fuelError && (
+                  <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-black uppercase tracking-widest rounded-xl flex items-center gap-2">
+                    <AlertTriangle size={16} /> {fuelError}
+                  </div>
+                )}
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-6">
                     <div className="space-y-3">
-                      <label className="text-[10px] uppercase font-black tracking-widest text-earth-sub pl-1">Min Distance</label>
+                      <label className="text-[10px] uppercase font-black tracking-widest text-earth-sub pl-1">Current Diesel Price (₦/litre)</label>
                       <div className="relative">
-                        <Input 
+                         <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-earth-primary font-black">₦</div>
+                         <Input 
                           type="number" 
-                          placeholder="0"
-                          value={newZoneMinDistance} 
-                          onChange={(e) => setNewZoneMinDistance(e.target.value)}
-                          className="bg-earth-card border-earth-dark/15 font-black text-earth-brown h-12 rounded-xl focus:border-earth-primary shadow-inner" 
+                          value={localFuel.dieselPrice} 
+                          onChange={(e) => setLocalFuel({...localFuel, dieselPrice: e.target.value})}
+                          className="pl-10 bg-earth-card border-earth-dark/15 font-black text-2xl text-earth-brown h-16 rounded-2xl focus:border-earth-primary shadow-inner" 
                         />
-                        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-earth-mut uppercase">km</div>
                       </div>
                     </div>
-                    <div className="space-y-3">
-                      <label className="text-[10px] uppercase font-black tracking-widest text-earth-sub pl-1">Max Distance</label>
-                      <div className="relative">
-                        <Input 
-                          type="number" 
-                          placeholder="15"
-                          value={newZoneMaxDistance} 
-                          onChange={(e) => setNewZoneMaxDistance(e.target.value)}
-                          className="bg-earth-card border-earth-dark/15 font-black text-earth-brown h-12 rounded-xl focus:border-earth-primary shadow-inner" 
-                        />
-                        <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-black text-earth-mut uppercase">km</div>
+                    
+                    <div className="p-5 bg-earth-card/50 border border-earth-dark/15/50 rounded-2xl space-y-4">
+                      <div className="flex justify-between items-center bg-earth-main p-3 rounded-xl border border-earth-dark/5">
+                         <span className="text-[10px] font-black text-earth-sub uppercase tracking-widest">Fixed Baseline Price</span>
+                         <span className="text-xs font-black text-earth-mut">₦800 /L</span>
+                      </div>
+                      <div className="flex justify-between items-center bg-earth-main p-3 rounded-xl border border-earth-dark/5">
+                         <span className="text-[10px] font-black text-earth-sub uppercase tracking-widest">Fixed Base KM Rate</span>
+                         <span className="text-xs font-black text-earth-mut">₦750 /KM</span>
                       </div>
                     </div>
                   </div>
-                  <div className="space-y-3">
-                    <label className="text-[10px] uppercase font-black tracking-widest text-earth-sub pl-1">Surcharge Per Hectare (₦)</label>
-                    <div className="relative">
-                      <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-earth-primary font-black">₦</div>
-                      <Input 
-                        type="number" 
-                        placeholder="500"
-                        value={newZoneSurcharge} 
-                        onChange={(e) => setNewZoneSurcharge(e.target.value)}
-                        className="pl-8 bg-earth-card border-earth-dark/15 font-black text-earth-brown h-12 rounded-xl focus:border-earth-primary shadow-inner" 
-                      />
-                    </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button 
-                      onClick={handleSaveZone} 
-                      className="flex-1 bg-earth-primary hover:bg-earth-primary-hover text-earth-brown uppercase font-black tracking-widest rounded-xl h-12"
-                    >
-                      {editingZoneId ? 'Update Zone' : 'Create Zone'}
-                    </Button>
-                    {editingZoneId && (
-                      <Button 
-                        onClick={handleCancelEdit} 
-                        variant="outline"
-                        className="bg-earth-card-alt hover:bg-earth-card text-earth-sub uppercase font-black tracking-widest rounded-xl h-12 border-earth-dark/15"
-                      >
-                        Cancel
-                      </Button>
-                    )}
+
+                  <div className="space-y-4">
+                     <div className="p-6 bg-blue-500/5 border border-blue-500/20 rounded-3xl relative overflow-hidden">
+                       <div className="absolute top-0 right-0 p-4 opacity-10">
+                         <Info size={100} className="text-blue-500" />
+                       </div>
+                       <h4 className="text-[11px] font-black text-earth-brown uppercase tracking-widest mb-4">Live Multiplier Logic</h4>
+                       <div className="space-y-5 relative z-10">
+                          <div>
+                            <p className="text-[9px] uppercase font-black tracking-widest text-earth-sub mb-1">Calculated Multiplier</p>
+                            <p className="text-2xl font-black text-blue-500">{fuelMultiplier.toFixed(4)}</p>
+                          </div>
+                          <div>
+                            <p className="text-[9px] uppercase font-black tracking-widest text-earth-sub mb-1">Adjusted Base Rate</p>
+                            <p className="text-2xl font-black text-earth-primary">₦ {adjustedKmRate.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} <span className="text-sm font-bold text-earth-mut">/KM</span></p>
+                          </div>
+                       </div>
+                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between mb-2">
-                     <h3 className="text-sm font-black text-earth-brown uppercase">Existing Zones</h3>
-                  </div>
-                  
-                  <div className="relative group mb-4">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-earth-mut group-focus-within:text-earth-primary transition-colors" size={16} />
-                    <Input 
-                      value={zoneSearchTerm}
-                      onChange={(e) => setZoneSearchTerm(e.target.value)}
-                      placeholder="Search zones by name or distance..." 
-                      className="pl-12 bg-earth-card border-earth-dark/15 rounded-xl h-12 w-full focus:ring-0 focus:border-earth-primary shadow-inner font-bold text-earth-brown"
-                    />
-                  </div>
+                <div className="pt-4 border-t border-earth-dark/10">
+                   <h4 className="text-[11px] font-black text-earth-brown uppercase tracking-widest mb-4 flex items-center gap-2">
+                     <Search size={14} className="text-earth-primary" />
+                     Sample Impact Preview (22 KM)
+                   </h4>
+                   <div className="grid grid-cols-2 gap-4">
+                     <div className="p-4 bg-earth-card border border-earth-dark/10 rounded-2xl flex justify-between items-center opacity-60">
+                       <span className="text-[10px] font-black text-earth-sub uppercase tracking-widest">Old KM Surcharge</span>
+                       <span className="text-sm font-black text-earth-mut">₦ {oldSimulatedCharge.toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
+                     </div>
+                     <div className="p-4 bg-earth-main border border-earth-primary/30 rounded-2xl flex justify-between items-center shadow-lg shadow-earth-primary/10">
+                       <span className="text-[10px] font-black text-earth-primary uppercase tracking-widest">New KM Surcharge</span>
+                       <span className="text-sm font-black text-earth-brown">₦ {newSimulatedCharge.toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
+                     </div>
+                   </div>
+                </div>
 
-                  {filteredZones.length === 0 ? (
-                    <div className="p-6 bg-earth-card/50 border border-dashed border-earth-dark/10 rounded-2xl text-center">
-                      <p className="text-[10px] font-black text-earth-mut uppercase tracking-widest">
-                        {zones.length === 0 ? "No zones configured yet." : "No matching zones found."}
+                {/* Confirm Dialog Overlay */}
+                {showFuelConfirm && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-earth-brown/80 backdrop-blur-sm animate-in fade-in zoom-in duration-200">
+                    <div className="bg-earth-card p-8 rounded-3xl shadow-2xl max-w-sm w-full space-y-6">
+                      <div className="flex justify-center text-earth-primary">
+                        <ShieldCheck size={40} />
+                      </div>
+                      <div className="text-center">
+                        <h3 className="text-xl font-black text-earth-brown uppercase tracking-widest mb-2">Confirm Fuel Update</h3>
+                        <p className="text-sm font-bold text-earth-sub">Changing the diesel price will automatically adjust all future per-KM rates to ₦{adjustedKmRate.toFixed(2)}. Are you sure?</p>
+                      </div>
+                      <div className="flex gap-3">
+                        <Button variant="outline" onClick={() => setShowFuelConfirm(false)} className="flex-1 border-earth-dark/15 h-12 rounded-xl text-xs uppercase font-black text-earth-mut">Cancel</Button>
+                        <Button onClick={handleSave} disabled={isSaving} className="flex-1 bg-earth-primary hover:bg-earth-primary-hover text-white h-12 rounded-xl text-xs uppercase font-black">Deploy Config</Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* History Modal */}
+                {showFuelHistory && (
+                  <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-earth-brown/80 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-earth-card p-6 md:p-8 rounded-[2rem] shadow-2xl max-w-2xl w-full max-h-[80vh] flex flex-col relative">
+                      <button onClick={() => setShowFuelHistory(false)} className="absolute top-6 right-6 text-earth-sub hover:text-earth-brown">
+                        <X size={20} />
+                      </button>
+                      <h3 className="text-lg font-black text-earth-brown uppercase tracking-widest mb-6">Adjustment Audit Logs</h3>
+                      <div className="overflow-y-auto flex-1 custom-scrollbar min-h-[300px]">
+                        {fuelHistory.length === 0 ? (
+                          <div className="flex flex-col items-center justify-center text-earth-mut py-10 opacity-50">
+                            <Info size={32} className="mb-2" />
+                            <p className="text-xs uppercase font-black tracking-widest">No history recorded yet</p>
+                          </div>
+                        ) : (
+                           <div className="space-y-3">
+                             {fuelHistory.map((log) => (
+                               <div key={log.id} className="p-4 rounded-2xl bg-earth-main border border-earth-dark/5 flex items-center justify-between">
+                                 <div>
+                                   <p className="text-[10px] font-black text-earth-mut uppercase mb-1">
+                                      Modifier ID: #{log.adminId} &bull; {new Date(log.timestamp).toLocaleString()}
+                                   </p>
+                                   <div className="flex items-center gap-2">
+                                     <span className="text-xs font-black text-earth-sub line-through opacity-70">₦{log.oldPrice}</span>
+                                     <span className="text-earth-primary">&rarr;</span>
+                                     <span className="text-sm font-black text-earth-brown">₦{log.newPrice}</span>
+                                   </div>
+                                 </div>
+                               </div>
+                             ))}
+                           </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+              );
+            })()}
+
+            {/* Distance Zones Settings */}
+            {activeTab === 'zones' && (
+              <div className="space-y-8">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-lg font-black text-earth-brown uppercase tracking-tight italic flex items-center gap-2">
+                       Active Fleet Radius
+                       <div className="w-1.5 h-1.5 rounded-full bg-earth-primary"></div>
+                    </h3>
+                    <p className="text-[10px] font-bold text-earth-mut uppercase tracking-widest mt-1">Configuring distance-based surcharges for logistical overhead.</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="relative w-full md:w-64">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-earth-mut" size={14} />
+                      <Input 
+                        value={zoneSearchTerm}
+                        onChange={(e) => setZoneSearchTerm(e.target.value)}
+                        placeholder="Search zones..." 
+                        className="pl-9 bg-earth-card border-earth-dark/10 rounded-xl h-10 w-full focus:ring-0 focus:border-earth-primary shadow-inner text-xs font-bold text-earth-brown"
+                      />
+                    </div>
+                    <Button 
+                      onClick={() => {
+                        handleCancelEdit();
+                        // Open a modal if we had one, but for now we'll stick to a toggleable form or inline
+                        setEditingZoneId('new'); 
+                      }}
+                      className="bg-earth-brown text-white hover:bg-earth-brown/90 px-4 h-10 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shrink-0 shadow-lg"
+                    >
+                      <Plus size={16} /> Add Zone
+                    </Button>
+                  </div>
+                </div>
+
+                {/* Inline Add/Edit Form */}
+                {editingZoneId !== null && (
+                  <div className="p-6 bg-earth-card border-2 border-earth-primary/20 rounded-3xl shadow-xl space-y-6 animate-in fade-in zoom-in duration-300">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-[11px] font-black text-earth-brown uppercase tracking-[0.2em]">{editingZoneId === 'new' ? 'Create New Distance Tier' : 'Modify Existing Tier'}</h4>
+                      <Button variant="ghost" size="sm" onClick={handleCancelEdit} className="text-earth-mut hover:text-earth-brown">
+                        <X size={18} />
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[9px] uppercase font-black tracking-widest text-earth-sub pl-1">Min Distance (KM)</label>
+                        <div className="relative">
+                          <Input 
+                            type="number" 
+                            placeholder="0"
+                            value={newZoneMinDistance} 
+                            onChange={(e) => setNewZoneMinDistance(e.target.value)}
+                            className="bg-earth-main border-earth-dark/10 font-black text-earth-brown h-12 rounded-xl focus:border-earth-primary shadow-inner" 
+                          />
+                          <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-black text-earth-mut uppercase">km</div>
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[9px] uppercase font-black tracking-widest text-earth-sub pl-1">Max Distance (KM)</label>
+                        <div className="relative">
+                          <Input 
+                            type="number" 
+                            placeholder="Leave empty for unlimited +"
+                            value={newZoneMaxDistance} 
+                            onChange={(e) => setNewZoneMaxDistance(e.target.value)}
+                            className="bg-earth-main border-earth-dark/10 font-black text-earth-brown h-12 rounded-xl focus:border-earth-primary shadow-inner" 
+                          />
+                          <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[9px] font-black text-earth-mut uppercase">km</div>
+                        </div>
+                        <p className="text-[8px] text-earth-mut font-bold uppercase pl-1">* Leave empty for "41+" (Open-ended)</p>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[9px] uppercase font-black tracking-widest text-earth-sub pl-1">Surcharge (₦/ha)</label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-earth-primary font-black">₦</div>
+                          <Input 
+                            type="number" 
+                            placeholder="0"
+                            value={newZoneSurcharge} 
+                            onChange={(e) => setNewZoneSurcharge(e.target.value)}
+                            className="pl-8 bg-earth-main border-earth-dark/10 font-black text-earth-brown h-12 rounded-xl focus:border-earth-primary shadow-inner" 
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex justify-end gap-3 pt-2">
+                      <Button 
+                        variant="outline" 
+                        onClick={handleCancelEdit}
+                        className="bg-transparent border-earth-dark/15 text-earth-brown uppercase font-black tracking-widest rounded-xl h-11 px-6 text-[10px]"
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        onClick={handleSaveZone} 
+                        className="bg-earth-primary hover:bg-earth-primary-hover text-earth-brown uppercase font-black tracking-widest rounded-xl h-11 px-8 text-[10px] shadow-lg shadow-earth-primary/20"
+                      >
+                        {editingZoneId === 'new' ? 'Confirm Addition' : 'Save Changes'}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="overflow-hidden bg-earth-card/30 border border-earth-dark/10 rounded-[2rem] shadow-inner">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-earth-card/50 border-b border-earth-dark/10">
+                        <th className="px-6 py-4 text-[10px] font-black text-earth-mut uppercase tracking-[0.2em]">ID</th>
+                        <th className="px-6 py-4 text-[10px] font-black text-earth-mut uppercase tracking-[0.2em]">Distance Range</th>
+                        <th className="px-6 py-4 text-[10px] font-black text-earth-mut uppercase tracking-[0.2em]">Surcharge (₦/ha)</th>
+                        <th className="px-6 py-4 text-[10px] font-black text-earth-mut uppercase tracking-[0.2em]">Status</th>
+                        <th className="px-6 py-4 text-[10px] font-black text-earth-mut uppercase tracking-[0.2em] text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-earth-dark/5">
+                      {filteredZones.length === 0 ? (
+                        <tr>
+                          <td colSpan="5" className="px-6 py-12 text-center">
+                            <p className="text-[10px] font-black text-earth-mut uppercase tracking-widest">
+                               {zones.length === 0 ? "No radius tiers configured." : "No matching tiers found."}
+                            </p>
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredZones.map((z, idx) => (
+                          <tr key={z.id} className={cn(
+                            "group hover:bg-earth-primary/5 transition-colors",
+                            editingZoneId === z.id && "bg-earth-primary/10"
+                          )}>
+                            <td className="px-6 py-5 text-xs font-black text-earth-mut">#{z.id}</td>
+                            <td className="px-6 py-5">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-earth-main flex items-center justify-center text-earth-primary shadow-sm border border-earth-dark/5">
+                                  <MapPin size={14} />
+                                </div>
+                                <span className="text-sm font-black text-earth-brown">
+                                  {z.minDistance} — {z.maxDistance === null ? `${z.minDistance}+` : z.maxDistance} KM
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-5">
+                              <span className="text-sm font-black text-earth-primary">₦ {z.surchargePerHectare.toLocaleString()}</span>
+                            </td>
+                            <td className="px-6 py-5">
+                              <div className={cn(
+                                "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest",
+                                z.status === 'ACTIVE' 
+                                  ? "bg-green-500/10 text-green-600 border border-green-500/20" 
+                                  : "bg-red-500/10 text-red-600 border border-red-500/20 opacity-60"
+                              )}>
+                                <div className={cn("w-1 h-1 rounded-full", z.status === 'ACTIVE' ? "bg-green-500 animate-pulse" : "bg-red-500")}></div>
+                                {z.status}
+                              </div>
+                            </td>
+                            <td className="px-6 py-5 text-right">
+                              <div className="flex items-center justify-end gap-2">
+                                <button 
+                                  onClick={() => handleEditClick(z)} 
+                                  className="w-8 h-8 rounded-lg flex items-center justify-center text-earth-sub hover:bg-earth-primary/20 hover:text-earth-brown transition-all"
+                                  title="Edit Tier"
+                                >
+                                  <Edit size={16} />
+                                </button>
+                                <button 
+                                  onClick={async () => {
+                                    if(z.status === 'ACTIVE') {
+                                      handleDeleteZone(z.id);
+                                    } else {
+                                      try {
+                                        const res = await api.admin.updateZone(z.id, { status: 'ACTIVE' });
+                                        if (res.success) refreshZones();
+                                      } catch(e) { console.error('Failed to reactivate zone'); }
+                                    }
+                                  }} 
+                                  className={cn(
+                                    "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
+                                    z.status === 'ACTIVE' 
+                                      ? "text-red-400 hover:bg-red-400/10" 
+                                      : "text-green-500 hover:bg-green-500/10"
+                                  )}
+                                  title={z.status === 'ACTIVE' ? "Deactivate Tier" : "Reactivate Tier"}
+                                >
+                                  {z.status === 'ACTIVE' ? <Trash2 size={16} /> : <CheckCircle2 size={16} />}
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+
+                <div className="flex flex-col md:flex-row gap-6">
+                  <div className="flex-1 p-5 bg-blue-500/5 rounded-3xl border border-blue-500/10 flex items-start gap-4">
+                    <Info size={18} className="text-blue-500 mt-1 shrink-0" />
+                    <div>
+                      <p className="text-[10px] font-black text-earth-brown uppercase tracking-widest mb-1">Dynamic Mapping Logic</p>
+                      <p className="text-[9px] font-bold text-earth-mut uppercase tracking-wider leading-relaxed">
+                        The system automatically calculates road distance (Air × 1.3) and retrieves the corresponding surcharge. 
+                        <strong>Inclusive lower bound:</strong> distance ≥ min. <strong>Exclusive upper bound:</strong> distance &lt; max.
                       </p>
                     </div>
-                  ) : (
-                    <div className="space-y-3 max-h-[340px] overflow-y-auto pr-2 custom-scrollbar">
-                      {filteredZones.map(z => (
-                        <div key={z.id} className="p-4 bg-earth-card border border-earth-dark/10 rounded-2xl flex items-center justify-between group hover:border-earth-primary/30 transition-all">
-                           <div className="flex items-center gap-3">
-                             <MapPin size={18} className="text-earth-primary" />
-                             <div>
-                               <p className="text-xs font-black text-earth-brown uppercase tracking-wide">{z.name}</p>
-                               <p className="text-[10px] font-bold text-earth-mut tracking-widest uppercase">{z.minDistance} - {z.maxDistance} KM &bull; ₦{z.surchargePerHectare}/ha</p>
-                             </div>
-                           </div>
-                           <div className="flex items-center gap-1">
-                             <button onClick={() => handleEditClick(z)} className="w-8 h-8 rounded-lg flex items-center justify-center text-blue-400 hover:bg-blue-400/10 transition-colors">
-                               <Edit size={16} />
-                             </button>
-                             <button onClick={() => handleDeleteZone(z.id)} className="w-8 h-8 rounded-lg flex items-center justify-center text-red-400 hover:bg-red-400/10 transition-colors">
-                               <Trash2 size={16} />
-                             </button>
-                           </div>
-                        </div>
-                      ))}
+                  </div>
+                  <div className="flex-1 p-5 bg-earth-primary/5 rounded-3xl border border-earth-primary/10 flex items-start gap-4">
+                    <ShieldCheck size={18} className="text-earth-primary mt-1 shrink-0" />
+                    <div>
+                      <p className="text-[10px] font-black text-earth-brown uppercase tracking-widest mb-1">Operational Integrity</p>
+                      <p className="text-[9px] font-bold text-earth-mut uppercase tracking-wider leading-relaxed">
+                        Validation prevents overlaps or gaps between distance tiers. At least one open-ended zone (max = NULL) 
+                        should exist for out-of-boundary range coverage.
+                      </p>
                     </div>
-                  )}
-                  <div className="p-4 bg-blue-500/5 rounded-2xl border border-blue-500/10 flex items-start gap-3 mt-4">
-                    <Info size={16} className="text-blue-500 mt-1 shrink-0" />
-                    <p className="text-[10px] font-bold text-earth-sub uppercase tracking-wider leading-relaxed">
-                      Farmers will select from these zones when booking. If no zone is selected, distance charge defaults to ₦0.
-                    </p>
                   </div>
                 </div>
               </div>
@@ -471,23 +765,132 @@ export default function Settings() {
 
             {/* Service Rates Settings */}
             {activeTab === 'rates' && (
-              <div className="space-y-8">
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {Object.entries(localRates).map(([service, price]) => (
-                    <div key={service} className="p-5 bg-earth-card rounded-3xl border border-earth-dark/10 space-y-3 group hover:border-earth-primary/30 transition-all">
-                      <label className="text-[9px] uppercase font-black tracking-[0.2em] text-earth-mut pl-1 group-hover:text-earth-primary">{service} Rate (₦/ha)</label>
-                      <div className="relative">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-earth-mut font-bold">₦</div>
+              <div className="space-y-8 animate-in fade-in duration-300">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="text-lg font-black text-earth-brown uppercase tracking-tight italic flex items-center gap-2">
+                       Service Rate Management
+                       <div className="w-1.5 h-1.5 rounded-full bg-earth-primary"></div>
+                    </h3>
+                    <p className="text-[10px] font-bold text-earth-mut uppercase tracking-widest mt-1">Configure base operational rates per hectare for each service.</p>
+                  </div>
+                </div>
+
+                {editingServiceId && (
+                  <div className="p-6 bg-earth-card border-2 border-earth-primary/20 rounded-3xl shadow-xl space-y-6 animate-in fade-in zoom-in duration-300">
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-[11px] font-black text-earth-brown uppercase tracking-[0.2em]">Update Service Rate</h4>
+                      <Button variant="ghost" size="sm" onClick={() => setEditingServiceId(null)} className="text-earth-mut hover:text-earth-brown">
+                        <X size={18} />
+                      </Button>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-2">
+                        <label className="text-[9px] uppercase font-black tracking-widest text-earth-sub pl-1">Rate (₦/ha)</label>
+                        <div className="relative">
+                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-earth-mut font-bold">₦</div>
+                          <Input 
+                            type="number" 
+                            value={editServiceRate} 
+                            onChange={(e) => setEditServiceRate(e.target.value)}
+                            className="pl-8 bg-earth-main border-earth-dark/10 font-black text-earth-brown h-12 rounded-xl focus:border-earth-primary shadow-inner" 
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[9px] uppercase font-black tracking-widest text-earth-sub pl-1">Effective Date</label>
                         <Input 
-                          type="number" 
-                          value={price} 
-                          onChange={(e) => setLocalRates({...localRates, [service]: parseInt(e.target.value)})}
-                          className="pl-8 bg-earth-main border-earth-dark/10 font-black text-lg text-earth-brown h-12 rounded-xl focus:border-earth-primary shadow-inner" 
+                          type="date" 
+                          value={editServiceDate} 
+                          onChange={(e) => setEditServiceDate(e.target.value)}
+                          className="bg-earth-main border-earth-dark/10 font-black text-earth-brown h-12 rounded-xl focus:border-earth-primary shadow-inner" 
                         />
                       </div>
                     </div>
-                  ))}
+                    <div className="flex justify-end gap-3 pt-2">
+                      <Button 
+                        variant="outline" 
+                        onClick={() => setEditingServiceId(null)}
+                        className="bg-transparent border-earth-dark/15 text-earth-brown uppercase font-black tracking-widest rounded-xl h-11 px-6 text-[10px]"
+                      >
+                        Cancel
+                      </Button>
+                      <Button 
+                        onClick={async () => {
+                          const rate = parseFloat(editServiceRate);
+                          if (isNaN(rate) || rate <= 0) return alert('Please enter a valid rate');
+                          if (!editServiceDate) return alert('Please select an effective date');
+                          
+                          try {
+                            const res = await api.admin.updateService(editingServiceId, {
+                              baseRatePerHectare: rate,
+                              effectiveDate: editServiceDate
+                            });
+                            if (res.success) {
+                              await refreshServices();
+                              setEditingServiceId(null);
+                              setSaveStatus('success');
+                            }
+                          } catch (e) {
+                            console.error('Failed to update service:', e);
+                          }
+                        }} 
+                        className="bg-earth-primary hover:bg-earth-primary-hover text-earth-brown uppercase font-black tracking-widest rounded-xl h-11 px-8 text-[10px] shadow-lg shadow-earth-primary/20"
+                      >
+                        Save Changes
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="overflow-hidden bg-earth-card/30 border border-earth-dark/10 rounded-[2rem] shadow-inner">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="bg-earth-card/50 border-b border-earth-dark/10">
+                        <th className="px-6 py-4 text-[10px] font-black text-earth-mut uppercase tracking-[0.2em]">Service Name</th>
+                        <th className="px-6 py-4 text-[10px] font-black text-earth-mut uppercase tracking-[0.2em]">Rate (₦/ha)</th>
+                        <th className="px-6 py-4 text-[10px] font-black text-earth-mut uppercase tracking-[0.2em]">Effective Date</th>
+                        <th className="px-6 py-4 text-[10px] font-black text-earth-mut uppercase tracking-[0.2em] text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-earth-dark/5">
+                      {systemServices.map((s) => (
+                        <tr key={s.id} className="group hover:bg-earth-primary/5 transition-colors">
+                          <td className="px-6 py-5">
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-lg bg-earth-main flex items-center justify-center text-earth-primary shadow-sm border border-earth-dark/5 text-[10px] font-black">
+                                {s.name.substring(0, 1).toUpperCase()}
+                              </div>
+                              <span className="text-sm font-black text-earth-brown capitalize">{s.name}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-5">
+                            <span className="text-sm font-black text-earth-primary">₦ {s.baseRatePerHectare.toLocaleString()}</span>
+                          </td>
+                          <td className="px-6 py-5">
+                            <span className="text-xs font-black text-earth-mut uppercase">
+                              {new Date(s.effectiveDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                            </span>
+                          </td>
+                          <td className="px-6 py-5 text-right">
+                            <button 
+                              onClick={() => {
+                                setEditingServiceId(s.id);
+                                setEditServiceRate(s.baseRatePerHectare.toString());
+                                setEditServiceDate(new Date(s.effectiveDate).toISOString().split('T')[0]);
+                              }} 
+                              className="w-8 h-8 rounded-lg inline-flex items-center justify-center text-earth-sub hover:bg-earth-primary/20 hover:text-earth-brown transition-all"
+                              title="Edit Service"
+                            >
+                              <Edit size={16} />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
+
                 <div className="p-4 bg-yellow-500/5 border border-yellow-500/10 rounded-2xl flex gap-3">
                    <AlertTriangle size={18} className="text-yellow-500 mt-0.5" />
                    <p className="text-[9px] font-bold text-earth-sub uppercase tracking-widest leading-relaxed">Warning: Adjusting base rates will affect all future quotes instantly. Existing bookings will retain their original lock price.</p>

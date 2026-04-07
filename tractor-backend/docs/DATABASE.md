@@ -58,6 +58,7 @@ erDiagram
         int id PK
         string name
         decimal base_rate_per_hectare
+        datetime effective_date
         datetime created_at
         datetime updated_at
     }
@@ -68,6 +69,11 @@ erDiagram
         int service_id FK
         float land_size
         string location
+        string service_name_snapshot
+        string hub_name
+        string hub_location
+        float hub_latitude
+        float hub_longitude
         float base_price
         float total_price
         int tractor_id FK
@@ -128,6 +134,7 @@ Defines service types and base rates.
 
 - name → plough, harrow, ridge, full  
 - base_rate_per_hectare → used in pricing  
+- effective_date → the date from which this rate is valid (supports past, present, and future)
 
 ---
 
@@ -142,6 +149,12 @@ Includes:
 - service_id
 - land_size
 - location
+
+#### Historical Snapshots (Quote Integrity)
+- service_name_snapshot → The name of the service at booking time
+- hub_name → Name of the operational hub at booking time
+- hub_location → Address/Description of the hub at booking time
+- hub_latitude / hub_longitude → Coordinates of the hub at booking time
 
 #### Pricing Breakdown
 - base_price
@@ -233,6 +246,18 @@ model Tractor {
   @@map("tractors")
 }
 
+model Service {
+  id                  Int       @id @default(autoincrement())
+  name                String    @unique
+  baseRatePerHectare  Float     @map("base_rate_per_hectare")
+  effectiveDate       DateTime  @default(now()) @map("effective_date")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+  bookings            Booking[]
+
+  @@map("services")
+}
+
 model Booking {
   id              Int      @id @default(autoincrement())
   farmerId        Int      @map("farmer_id")
@@ -241,12 +266,19 @@ model Booking {
   landSize        Float    @map("land_size")
   location        String
 
-  basePrice       Decimal  @db.Decimal(10,2) @map("base_price")
+  basePrice       Float    @map("base_price")
   distanceKm      Float    @map("distance_km")
-  distanceCharge  Decimal  @db.Decimal(10,2) @map("distance_charge")
-  fuelSurcharge   Decimal  @db.Decimal(10,2) @map("fuel_surcharge")
-  totalPrice      Decimal  @db.Decimal(10,2) @map("total_price")
-  finalPrice      Decimal  @db.Decimal(10,2) @map("final_price")
+  distanceCharge  Float    @map("distance_charge")
+  fuelSurcharge   Float    @map("fuel_surcharge")
+  totalPrice      Float    @map("total_price")
+  finalPrice      Float    @map("final_price")
+
+  // Historical Snapshots
+  serviceNameSnapshot String? @map("service_name_snapshot")
+  hubName             String? @map("hub_name")
+  hubLocation         String? @map("hub_location")
+  hubLatitude         Float?  @map("hub_latitude")
+  hubLongitude        Float?  @map("hub_longitude")
 
   tractorId       Int?     @map("tractor_id")
   operatorId      Int?     @map("operator_id")

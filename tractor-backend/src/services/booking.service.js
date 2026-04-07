@@ -46,6 +46,7 @@ export const calculateBookingPrice = async (serviceType, landSize, zoneId = null
   let baseLatitude = null;
   let baseLongitude = null;
   let perKmRate = 500;
+  let pricingMode = 'ZONE'; // Default
 
   try {
     const config = await prisma.systemConfig.findUnique({ where: { id: 1 } });
@@ -55,6 +56,7 @@ export const calculateBookingPrice = async (serviceType, landSize, zoneId = null
       baseLatitude = config.baseLatitude;
       baseLongitude = config.baseLongitude;
       perKmRate = (config.perKmRate !== null && config.perKmRate !== undefined) ? config.perKmRate : 500;
+      pricingMode = config.pricingMode || 'ZONE';
     }
   } catch (e) {
     console.warn('[BookingService] Could not fetch SystemConfig, using defaults:', e.message);
@@ -67,43 +69,63 @@ export const calculateBookingPrice = async (serviceType, landSize, zoneId = null
   // Add 1.3 Terrain Factor Client Requirement
   const roadDistance = airDistance > 0 ? airDistance * 1.3 : 0;
   
-  // 4. Track A - Zone Based Tiering Lookup
+  // 4. Distance Surcharge — branched by pricing mode
   let distanceCharge = 0;
   let distanceKm = roadDistance;
   let zoneName = "Within Hub Distance (Free)";
-  
-  if (roadDistance > 0) {
-    // Lookup matching zone from database
-    const allZones = await prisma.zone.findMany({
-      orderBy: { minDistance: 'asc' }
-    });
-    
-    // Find the tier that matches road_distance
-    const matchedZone = allZones.find(z => roadDistance >= z.minDistance && roadDistance <= z.maxDistance);
-    
-    if (matchedZone) {
-      zoneName = matchedZone.name;
-      distanceCharge = parseFloat((matchedZone.surchargePerHectare * landSize).toFixed(2));
-    } else if (allZones.length > 0) {
-      // If beyond all zones, fallback to the highest zone for worst-case mapping or leave it
-      const maxZone = allZones[allZones.length - 1];
-      if (roadDistance > maxZone.maxDistance) {
-        zoneName = `Long Distance (${maxZone.name} +)`;
-        distanceCharge = parseFloat((maxZone.surchargePerHectare * landSize).toFixed(2));
-      }
+
+  if (pricingMode === 'FUEL') {
+    // ─── FUEL-BASED PRICING ─────────────────────────────────────
+    // fuel_index = diesel_price / 800
+    // per_km_rate = 750 × fuel_index
+    // surcharge = per_km_rate × distance × hectares
+    if (roadDistance > 0 && dieselPrice > 0) {
+      const fuelIndex = dieselPrice / 800;
+      const adjustedKmRate = 750 * fuelIndex;
+      distanceCharge = parseFloat((adjustedKmRate * roadDistance).toFixed(2));
+      zoneName = `${parseFloat(roadDistance.toFixed(1))} KM (Fuel Rate)`;
     }
-  } else if (zoneId) {
-     // Backward compatibility for old manual zone dropdown
-     const oldZone = await prisma.zone.findUnique({ where: { id: parseInt(zoneId) } });
-     if (oldZone) {
-       distanceKm = oldZone.minDistance;
-       distanceCharge = parseFloat((oldZone.surchargePerHectare * landSize).toFixed(2));
-       zoneName = `Zone Fallback: ${oldZone.name}`;
-     }
+  } else {
+    // ─── ZONE-BASED PRICING (DEFAULT) ───────────────────────────
+    if (roadDistance > 0) {
+      // Lookup matching zone from database - Only ACTIVE zones
+      const allZones = await prisma.zone.findMany({
+        where: { status: 'ACTIVE' },
+        orderBy: { minDistance: 'asc' }
+      });
+      
+      // Round the roadDistance to seamlessly fall into integer bounds (e.g., 5.5 becomes 6)
+      const roundedDistance = Math.round(roadDistance);
+
+      // Find the tier that matches roundedDistance: distance >= min && (max === null || distance <= max)
+      const matchedZone = allZones.find(z => 
+        roundedDistance >= z.minDistance && (z.maxDistance === null || roundedDistance <= z.maxDistance)
+      );
+      
+      if (matchedZone) {
+        zoneName = matchedZone.maxDistance === null ? `${matchedZone.minDistance}+ KM` : `${matchedZone.minDistance}-${matchedZone.maxDistance} KM`;
+        distanceCharge = parseFloat((matchedZone.surchargePerHectare * landSize).toFixed(2));
+      } else if (allZones.length > 0) {
+        // Fallback if no zone matches
+        const lastZone = allZones[allZones.length - 1];
+        if (roadDistance >= lastZone.minDistance) {
+          zoneName = `${lastZone.minDistance}+ KM`;
+          distanceCharge = parseFloat((lastZone.surchargePerHectare * landSize).toFixed(2));
+        }
+      }
+    } else if (zoneId) {
+       // Backward compatibility for old manual zone dropdown
+       const oldZone = await prisma.zone.findUnique({ where: { id: parseInt(zoneId) } });
+       if (oldZone) {
+         distanceKm = oldZone.minDistance;
+         distanceCharge = parseFloat((oldZone.surchargePerHectare * landSize).toFixed(2));
+         zoneName = oldZone.maxDistance === null ? `${oldZone.minDistance}+ KM` : `${oldZone.minDistance}-${oldZone.maxDistance} KM`;
+       }
+    }
   }
 
   // 5. Calculate charges
-  const fuelSurcharge = 0; // kept for schema compatibility (Phase 2)
+  const fuelSurcharge = 0; // kept for schema compatibility
   const totalPrice = parseFloat((basePrice + distanceCharge).toFixed(2));
   const finalPrice = totalPrice;
 
@@ -117,7 +139,13 @@ export const calculateBookingPrice = async (serviceType, landSize, zoneId = null
     finalPrice,
     zoneName,
     airDistance: parseFloat(airDistance.toFixed(2)),
-    roadDistance: parseFloat(roadDistance.toFixed(2))
+    roadDistance: parseFloat(roadDistance.toFixed(2)),
+    pricingMode,
+    serviceName: service.name,
+    hubName: (await prisma.systemConfig.findUnique({ where: { id: 1 } }))?.hubName || 'Main Hub',
+    hubLocation: (await prisma.systemConfig.findUnique({ where: { id: 1 } }))?.hubLocation || 'Ludhiana, Punjab',
+    hubLatitude: baseLatitude,
+    hubLongitude: baseLongitude
   };
 };
 
@@ -142,10 +170,14 @@ export const createBookingRequest = async (farmerId, bookingData) => {
       totalPrice: pricing.totalPrice,
       finalPrice: pricing.finalPrice,
       zoneName: pricing.zoneName,
-      farmerLatitude,
       farmerLongitude,
       airDistance: pricing.airDistance,
       roadDistance: pricing.roadDistance,
+      serviceNameSnapshot: pricing.serviceName,
+      hubName: pricing.hubName,
+      hubLocation: pricing.hubLocation,
+      hubLatitude: pricing.hubLatitude,
+      hubLongitude: pricing.hubLongitude,
       status: 'scheduled'
     },
     include: {

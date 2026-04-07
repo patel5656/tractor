@@ -225,6 +225,9 @@ export const api = {
         body: JSON.stringify(config)
       });
     },
+    getFuelHistory: async () => {
+      return await fetchAPI('/admin/settings/fuel-history');
+    },
     // Distance Zones
     listZones: async () => {
       return await fetchAPI('/admin/settings/zones');
@@ -247,10 +250,19 @@ export const api = {
       });
     },
     // System Settings - Services
+    listServices: async () => {
+      return await fetchAPI('/admin/services');
+    },
     updateServiceRates: async (ratesData) => {
       return await fetchAPI('/admin/services', {
         method: 'PUT',
         body: JSON.stringify(ratesData)
+      });
+    },
+    updateService: async (id, serviceData) => {
+      return await fetchAPI(`/admin/services/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(serviceData)
       });
     }
   },

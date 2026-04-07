@@ -6,7 +6,7 @@
 
 A booking must follow this strict sequence. Status transitions cannot be skipped.
 
-1. Scheduled (Farmer creates booking)
+1. Scheduled (Farmer creates booking + System snapshots hub/service metadata)
 2. Dispatched (Admin assigns tractor and operator)
 3. En Route (Operator starts journey)
 4. In Progress (Operator starts work)
@@ -58,6 +58,7 @@ A booking must follow this strict sequence. Status transitions cannot be skipped
 
 ### 3.4 Pricing & Settlement
 - Price at `Scheduled` is an estimate.
+- **Data Snapshot**: During booking creation (`Scheduled`), the system snapshots the current Hub Name, Location, Coordinates, and Service Name to the `Booking` record.
 - Settlement is triggered by **Admin Only** in Phase 1.
 - Marking as "Paid" creates a physical ledger entry (`admin_settlement`).
 

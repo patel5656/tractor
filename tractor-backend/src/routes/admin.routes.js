@@ -53,6 +53,7 @@ router.get('/reports/farmers', reportController.getFarmers);
 // System Settings - Global Configuration
 router.get('/settings/config', settingsController.getSystemConfig);
 router.post('/settings/config', settingsController.updateSystemConfig);
+router.get('/settings/fuel-history', settingsController.getFuelPriceLogs);
 
 // System Settings - Distance Zones
 router.get('/settings/zones', settingsController.listZones);
@@ -61,7 +62,9 @@ router.put('/settings/zones/:id', settingsController.updateZone);
 router.delete('/settings/zones/:id', settingsController.deleteZone);
 
 // System Settings - Services
+router.get('/services', settingsController.listServices);
 router.put('/services', settingsController.updateServiceRates);
+router.put('/services/:id', settingsController.updateService);
 
 export default router;
 

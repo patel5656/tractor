@@ -59,7 +59,9 @@ The system operates on a **centralized fleet model**, where all tractors and ope
   - Land size (hectares)  
   - Location  
 - System generates estimated price  
+- **Rich Quote View (New)**: Detailed modal showing route flow from Hub to Farmer with clear price itemization.
 - Booking is created with status: **Scheduled**
+- System snapshots current hub/service metadata at creation.
 
 ---
 
@@ -141,10 +143,13 @@ Total price is calculated using:
 
 Total Price = (Base Rate × Land Size) + Distance Surcharge + Fuel Adjustment
 
+- **Historical Integrity**: Rates and Hub locations are captured at booking time to ensure the "Quote" remains consistent for the farmer even if global rates change later.
+
 
 #### Base Rate
 - Defined per service (e.g., plough, harrow)  
-- Calculated per hectare  
+- Calculated per hectare
+- **Effective Rate Management**: Admins can update rates with an `effectiveDate` (supports historical corrections and future updates).
 
 #### Distance Surcharge
 - First 5 km: No charge  

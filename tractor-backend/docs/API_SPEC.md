@@ -56,7 +56,7 @@ This document defines all RESTful API endpoints for the TractorLink backend.
 ---
 
 ### GET /api/farmer/bookings/:id
-- Description: Get single booking details
+- Description: Get single booking details (includes hub and service snapshots for the Quote view).
 
 ---
 
@@ -145,6 +145,22 @@ This document defines all RESTful API endpoints for the TractorLink backend.
   - Generates 8-char random password.
   - Hashes and creates user.
   - Returns `tempPassword` (plain).
+
+---
+
+### GET /api/admin/services
+- Description: Get all service types with current rates and effective dates.
+- Response: `[{ id, name, baseRatePerHectare, effectiveDate }]`
+
+---
+
+### PUT /api/admin/services/:id
+- Description: Update service base rate and effective date.
+- Body: `{ baseRatePerHectare, effectiveDate }`
+- Logic: Validates input and triggers a rate change. 
+- Constraint: `effectiveDate` can be past, present, or future.
+
+---
 
 ---
 

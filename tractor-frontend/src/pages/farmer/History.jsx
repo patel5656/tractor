@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Search, Download, Calendar, Tractor, X, MapPin, CheckCircle, Clock, Mail, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
+import { Search, Download, Calendar, Tractor, X, MapPin, CheckCircle, Clock, Mail, ChevronLeft, ChevronRight, FileText, Navigation, ArrowDown, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -96,18 +96,18 @@ export default function History() {
 
       // 2. Financial Particulars Table
       const financialParticulars = [
-        ["Service Category", booking.service?.name?.toUpperCase() || "N/A"],
-        ["Land Coverage Area", `${booking.landSize} Hectares`],
-        ["Base Rate Per Hectare", `Naira ${booking.basePrice / booking.landSize}`],
-        ["Total Base Amount", `Naira ${booking.basePrice.toLocaleString()}`],
-        ["Distance Surcharge", booking.distanceCharge > 0 ? `Naira ${booking.distanceCharge.toLocaleString()}` : "Included (Zone 0)"],
-        ["Fuel Logistics Surcharge", `Naira ${booking.fuelSurcharge.toLocaleString()}`],
-        ["TOTAL PAYABLE", `Naira ${booking.totalPrice.toLocaleString()}`]
+        ["Service Unit", (booking.serviceNameSnapshot || booking.service?.name || "N/A").toUpperCase()],
+        ["Area Coverage", `${booking.landSize} Hectares`],
+        ["Origin (Hub)", booking.hubName || "Main Hub"],
+        ["Route Distance", `${booking.roadDistance || booking.distanceKm || 0} KM`],
+        ["Base Work Rate", `Naira ${booking.basePrice.toLocaleString()}`],
+        ["Distance Surcharge", booking.distanceCharge > 0 ? `Naira ${booking.distanceCharge.toLocaleString()}` : "Included"],
+        ["TOTAL VALUATION", `Naira ${booking.totalPrice.toLocaleString()}`]
       ];
 
       autoTable(doc, {
         startY: 50,
-        head: [['PARTICULAR / DESCRIPTION', 'AMOUNT / UNIT']],
+        head: [['PARTICULAR / DESCRIPTION', 'VALUATION / CONTEXT']],
         body: financialParticulars,
         theme: 'striped',
         headStyles: { fillColor: [23, 23, 23], textColor: [255, 255, 255], fontSize: 9, fontStyle: 'bold' },
@@ -280,18 +280,18 @@ export default function History() {
       {/* Detailed Modal */}
       <AnimatePresence>
         {selectedBooking && (
-          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-3 md:p-6 overflow-hidden">
+          <div className="fixed inset-0 z-[99999] flex items-start justify-center p-6 md:p-12 overflow-y-auto bg-earth-main/95 backdrop-blur-xl pt-20 pb-20">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedBooking(null)}
-              className="absolute inset-0 bg-earth-main/95 backdrop-blur-xl"
+              className="fixed inset-0 -z-10"
             />
             
             <motion.div
               layoutId={selectedBooking.id}
-              className="bg-earth-main border border-earth-dark/10 w-full max-w-md rounded-[2.5rem] overflow-hidden shadow-[0_0_100px_rgba(0,0,0,0.8)] relative z-10 max-h-[85vh] flex flex-col"
+              className="bg-earth-main border border-earth-dark/10 w-full max-w-md rounded-[2.5rem] shadow-[0_0_100px_rgba(0,0,0,0.8)] relative z-10 max-h-[80vh] flex flex-col my-auto"
             >
               {/* Modal Header - More Compact */}
               <div className="p-6 border-b border-earth-dark/10 flex justify-between items-center bg-earth-dark">
@@ -313,60 +313,112 @@ export default function History() {
               </div>
 
               {/* Modal Content - Refined Spacing */}
-              <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6">
-                
-                {/* Visual Status Header */}
-                <div className="flex justify-between items-center p-4 bg-earth-card/40 rounded-2xl border border-earth-dark/10">
-                    <div className="space-y-0.5">
-                       <p className="text-[10px] font-black text-earth-mut uppercase">Valuation</p>
-                       <p className="text-xl font-black text-earth-brown italic">₦{selectedBooking.totalPrice?.toLocaleString()}</p>
-                    </div>
-                    <Badge className={cn(
-                        "text-[9px] px-3 py-1 font-black uppercase",
-                        selectedBooking.status === 'paid' ? 'bg-earth-primary/10 text-earth-green' : 'bg-orange-500/10 text-orange-400'
-                    )}>
-                        {selectedBooking.status}
-                    </Badge>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-earth-card/30 p-4 rounded-2xl border border-earth-dark/10">
-                    <p className="text-[9px] font-black text-earth-mut uppercase tracking-widest mb-1">Surface Area</p>
-                    <p className="text-sm font-black text-earth-brown">{selectedBooking.landSize} Hectares</p>
-                  </div>
-                  <div className="bg-earth-card/30 p-4 rounded-2xl border border-earth-dark/10">
-                    <p className="text-[9px] font-black text-earth-mut uppercase tracking-widest mb-1">Service Date</p>
-                    <p className="text-sm font-black text-earth-brown">{new Date(selectedBooking.createdAt).toLocaleDateString()}</p>
-                  </div>
-                </div>
-
-                {/* Operator - Compact Profile */}
-                <div className="space-y-3">
-                   <h4 className="text-[10px] font-black text-earth-mut uppercase tracking-widest px-1">Field Specialist</h4>
-                   <div className="bg-earth-card border border-earth-dark/10 rounded-[1.5rem] p-4 flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-full bg-earth-card-alt border-2 border-earth-dark/15 flex items-center justify-center text-sm font-black text-earth-primary">
-                         {selectedBooking.operator?.name?.substring(0,2).toUpperCase() || 'SS'}
+              <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8">
+                {/* 1. Location Selection (Route Flow) */}
+                <div className="space-y-4 text-left">
+                   <h4 className="text-[10px] font-black text-earth-mut uppercase tracking-[0.2em] px-1 flex items-center gap-2">
+                     <Navigation size={12} className="text-earth-primary" />
+                     Service Route Visualization
+                   </h4>
+                   <div className="relative pl-10 space-y-6">
+                      {/* Vertical Line */}
+                      <div className="absolute left-[19px] top-3 bottom-3 w-0.5 bg-dashed border-l border-dashed border-earth-dark/20" />
+                      
+                      {/* From: Hub */}
+                      <div className="relative">
+                        <div className="absolute -left-[30px] top-0 w-5 h-5 rounded-full bg-earth-card border-2 border-earth-primary flex items-center justify-center z-10 shadow-sm">
+                           <div className="w-1.5 h-1.5 rounded-full bg-earth-primary" />
+                        </div>
+                        <div>
+                          <p className="text-[9px] font-black text-earth-mut uppercase tracking-widest leading-none mb-1">Origin Point (Hub)</p>
+                          <p className="text-sm font-black text-earth-brown truncate">
+                            {selectedBooking.hubName || "TractorLink Main Hub"}
+                          </p>
+                          <p className="text-[10px] font-medium text-earth-mut truncate mt-0.5">
+                            {selectedBooking.hubLocation || "Operational Base Registry"}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-black text-earth-brown truncate">{selectedBooking.operator?.name || 'Sukhwinder Singh'}</p>
-                        <p className="text-[9px] font-bold text-earth-mut flex items-center gap-1 mt-0.5"><MapPin size={10} /> Hub Sector-B</p>
+
+                      {/* Distance Indicator Overlay */}
+                      <div className="relative py-2">
+                         <div className="inline-flex items-center gap-2 px-3 py-1 bg-earth-main border border-earth-dark/10 rounded-full text-[10px] font-black text-earth-primary uppercase tracking-widest shadow-sm">
+                            <ArrowDown size={10} />
+                            {selectedBooking.roadDistance || selectedBooking.distanceKm || 0} KM Road Distance
+                         </div>
+                      </div>
+
+                      {/* To: Farmer */}
+                      <div className="relative">
+                        <div className="absolute -left-[30px] top-0 w-5 h-5 rounded-full bg-earth-primary flex items-center justify-center z-10 shadow-lg shadow-earth-primary/30">
+                           <MapPin size={10} className="text-earth-brown" />
+                        </div>
+                        <div>
+                          <p className="text-[9px] font-black text-earth-mut uppercase tracking-widest leading-none mb-1">Destination Point (You)</p>
+                          <p className="text-sm font-black text-earth-brown truncate">
+                            {selectedBooking.location || "Your Site Location"}
+                          </p>
+                          <p className="text-[10px] font-medium text-earth-mut truncate mt-0.5 italic text-left">
+                            Zone: {selectedBooking.zoneName || "Calculated Range"}
+                          </p>
+                        </div>
                       </div>
                    </div>
                 </div>
 
-                {/* Logistics View */}
-                <div className="bg-earth-card/20 rounded-2xl p-4 border border-earth-dark/10 space-y-3">
-                   <div className="flex justify-between text-[10px] font-black uppercase">
-                      <span className="text-earth-mut">Base Price</span>
-                      <span className="text-earth-brown">₦{selectedBooking.basePrice?.toLocaleString()}</span>
+                <div className="h-px bg-earth-dark/5 w-full" />
+
+                {/* 2. Service & Financial Breakdown */}
+                <div className="space-y-6 text-left">
+                   {/* Service Summary */}
+                   <div className="space-y-4">
+                      <h4 className="text-[10px] font-black text-earth-mut uppercase tracking-[0.2em] px-1">Service Particulars</h4>
+                      <div className="p-4 bg-earth-main/40 rounded-2xl border border-earth-dark/10/50 space-y-3">
+                         <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-earth-card border border-earth-dark/10 flex items-center justify-center text-earth-primary">
+                               <Tractor size={18} />
+                            </div>
+                            <div>
+                               <p className="text-sm font-black text-earth-brown uppercase italic leading-none">{selectedBooking.serviceNameSnapshot || selectedBooking.service?.name}</p>
+                               <p className="text-[10px] font-bold text-earth-mut mt-1">{selectedBooking.landSize} Hectares Coverage</p>
+                            </div>
+                         </div>
+                      </div>
                    </div>
-                   <div className="flex justify-between text-[10px] font-black uppercase">
-                      <span className="text-earth-mut">Distance Logistics</span>
-                      <span className="text-earth-brown">{selectedBooking.distanceCharge > 0 ? `₦${selectedBooking.distanceCharge.toLocaleString()}` : "INCLUDED"}</span>
+
+                   {/* Price Ledger */}
+                   <div className="space-y-4">
+                      <h4 className="text-[10px] font-black text-earth-mut uppercase tracking-[0.2em] px-1 text-left">Financial Ledger</h4>
+                      <div className="p-4 bg-earth-card border border-earth-dark/10 rounded-2xl shadow-inner space-y-3">
+                         <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-earth-mut">
+                            <span>Base Work Rate</span>
+                            <span className="text-earth-brown">₦{selectedBooking.basePrice?.toLocaleString()}</span>
+                         </div>
+                         <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-earth-mut">
+                            <span>Distance Logistics</span>
+                            <span className="text-earth-brown">₦{selectedBooking.distanceCharge?.toLocaleString()}</span>
+                         </div>
+                         <div className="h-px bg-earth-dark/10 my-1" />
+                         <div className="flex justify-between items-center bg-earth-primary/10 -mx-4 px-4 py-2">
+                            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-earth-primary italic">Final Valuation</span>
+                            <span className="text-lg font-black text-earth-brown tracking-tighter italic">₦{selectedBooking.totalPrice?.toLocaleString()}</span>
+                         </div>
+                      </div>
                    </div>
-                   <div className="flex justify-between text-[10px] font-black uppercase border-t border-earth-dark/10 pt-3">
-                      <span className="text-earth-primary">Total Invoice</span>
-                      <span className="text-earth-brown">₦{selectedBooking.totalPrice?.toLocaleString()}</span>
+                </div>
+
+                {/* 3. Extra Info & Policy */}
+                <div className="p-4 bg-earth-primary/5 rounded-2xl border border-earth-primary/10 flex gap-4 text-left">
+                   <div className="w-10 h-10 rounded-xl bg-earth-primary/20 flex items-center justify-center shrink-0">
+                      <Info size={16} className="text-earth-primary" />
+                   </div>
+                   <div className="space-y-1">
+                      <p className="text-[10px] font-black text-earth-brown uppercase tracking-widest">Inclusions & Policy</p>
+                      <p className="text-[9px] font-bold text-earth-mut uppercase leading-relaxed tracking-wide">
+                        Quote includes full fuel allocation, professional operator deployment, and equipment mobilization.
+                        <br />
+                        <span className="text-earth-primary font-black italic">Valid for 48 hours for service lock.</span>
+                      </p>
                    </div>
                 </div>
               </div>
