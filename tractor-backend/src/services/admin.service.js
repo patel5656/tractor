@@ -127,6 +127,7 @@ export const getAllBookings = async (query = {}) => {
       include: {
         farmer: { select: { id: true, name: true, email: true } },
         service: { select: { name: true } },
+        payments: true
       },
       orderBy: { createdAt: 'desc' },
       skip,
@@ -236,20 +237,30 @@ export const getAllPayments = async (query = {}) => {
         booking: {
           include: {
             farmer: { select: { id: true, name: true, email: true } },
-            service: { select: { name: true } }
+            service: { select: { name: true } },
+            payments: { select: { amount: true } }
           }
         }
       },
       orderBy: { createdAt: 'desc' }
     });
 
-    combinedLedger.push(...payments.map(p => ({
-      ...p,
-      type: 'payment',
-      amount: p.amount,
-      createdAt: p.createdAt,
-      booking: p.booking
-    })));
+    combinedLedger.push(...payments.map(p => {
+      const paidAmt = p.booking?.payments?.reduce((s, pay) => s + pay.amount, 0) || p.amount;
+      const totalAmt = p.booking?.finalPrice || p.booking?.totalPrice || 0;
+      return {
+        ...p,
+        type: 'payment',
+        amount: p.amount,
+        createdAt: p.createdAt,
+        totalAmount: totalAmt,
+        paidAmount: paidAmt,
+        remainingAmount: Math.max(0, totalAmt - paidAmt),
+        paymentStatus: p.booking?.paymentStatus || 'PAID',
+        method: p.method,
+        booking: p.booking
+      };
+    }));
   }
 
   if (status === 'all' || status === 'pending') {
@@ -263,10 +274,10 @@ export const getAllPayments = async (query = {}) => {
       orderBy: { createdAt: 'desc' }
     });
 
-    // Filter only those with outstanding balance
     const dues = bookings.map(b => {
       const paidAmount = b.payments.reduce((sum, p) => sum + p.amount, 0);
-      const balance = b.totalPrice - paidAmount;
+      const totalAmt = b.finalPrice || b.totalPrice || 0;
+      const balance = totalAmt - paidAmount;
       if (balance <= 0) return null;
 
       return {
@@ -275,6 +286,11 @@ export const getAllPayments = async (query = {}) => {
         amount: balance,
         type: 'due',
         createdAt: b.createdAt,
+        totalAmount: totalAmt,
+        paidAmount: paidAmount,
+        remainingAmount: balance,
+        paymentStatus: b.paymentStatus || 'PENDING',
+        method: 'none',
         booking: b
       };
     }).filter(Boolean);
@@ -315,7 +331,7 @@ export const getAllPayments = async (query = {}) => {
  * Handle Admin Settlement (Phase 1)
  * Creates a payment and marks booking as paid in a transaction.
  */
-export const settleBooking = async (bookingId) => {
+export const settleBooking = async (bookingId, method = 'cash') => {
   const bId = parseInt(bookingId);
   console.log(`[AdminService] Attempting settlement for booking #${bId}`);
 
@@ -343,7 +359,7 @@ export const settleBooking = async (bookingId) => {
       data: {
         bookingId: bId,
         amount: remaining,
-        method: 'admin_settlement',
+        method: method,
         reference: 'manual',
         status: 'full'
       }
@@ -352,7 +368,7 @@ export const settleBooking = async (bookingId) => {
     // 4. Update booking status
     const updatedBooking = await tx.booking.update({
       where: { id: bId },
-      data: { status: 'paid' }
+      data: { status: 'paid', paymentStatus: 'PAID' }
     });
 
     return {

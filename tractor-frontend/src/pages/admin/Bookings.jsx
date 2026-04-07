@@ -214,11 +214,29 @@ export default function Bookings() {
                       </Badge>
                     </td>
                     <td className="px-8 py-6">
-                      <p className="font-black text-earth-brown text-lg tracking-tighter">₦{booking.totalPrice.toLocaleString()}</p>
-                      <div className="flex items-center gap-1.5 mt-1">
-                         {booking.status === 'paid' ? <CheckCircle2 size={10} className="text-earth-green" /> : <Clock size={10} className="text-earth-mut" />}
-                         <span className="text-[9px] font-black text-earth-mut uppercase tracking-widest">{booking.status === 'paid' ? 'PAID' : 'PENDING'}</span>
-                      </div>
+                      {(() => {
+                        const paidAmt = booking.payments?.reduce((s, p) => s + p.amount, 0) || 0;
+                        const balance = booking.totalPrice - paidAmt;
+                        const pStatus = booking.paymentStatus || (booking.status === 'paid' ? 'PAID' : 'PENDING');
+                        
+                        return (
+                          <>
+                            <p className="font-black text-earth-brown text-lg tracking-tighter">₦{booking.totalPrice.toLocaleString()}</p>
+                            <div className="flex flex-col gap-0.5 mt-1">
+                              <div className="flex items-center gap-1.5">
+                                 {pStatus === 'PAID' ? <CheckCircle2 size={10} className="text-earth-green" /> : <Clock size={10} className="text-earth-primary" />}
+                                 <span className={cn(
+                                   "text-[9px] font-black uppercase tracking-widest",
+                                   pStatus === 'PAID' ? "text-earth-green" : pStatus === 'PARTIAL' ? "text-blue-400" : "text-earth-mut"
+                                 )}>{pStatus}</span>
+                              </div>
+                              {balance > 0 && paidAmt > 0 && (
+                                <p className="text-[8px] font-bold text-red-400 uppercase tracking-tighter">Rem: ₦{balance.toLocaleString()}</p>
+                              )}
+                            </div>
+                          </>
+                        );
+                      })()}
                     </td>
                     <td className="px-8 py-6 text-right">
                        <Button 
@@ -356,7 +374,19 @@ export default function Bookings() {
                   <div className="p-4 bg-earth-card/60 rounded-2xl border border-earth-dark/10/50 shadow-inner">
                     <p className="text-[9px] font-black text-earth-mut uppercase tracking-widest mb-1.5 opacity-60">Revenue</p>
                     <p className="text-sm font-black text-earth-brown leading-none">₦{booking.totalPrice?.toLocaleString()}</p>
-                    <p className="text-[8px] font-bold text-earth-mut mt-1 uppercase italic">{booking.status === 'paid' ? 'PAID' : 'DUE'}</p>
+                    {(() => {
+                      const paidAmt = booking.payments?.reduce((s, p) => s + p.amount, 0) || 0;
+                      const balance = booking.totalPrice - paidAmt;
+                      const pStatus = booking.paymentStatus || (booking.status === 'paid' ? 'PAID' : 'PENDING');
+                      return (
+                        <p className={cn(
+                          "text-[8px] font-bold mt-1 uppercase italic",
+                          pStatus === 'PAID' ? "text-earth-green" : pStatus === 'PARTIAL' ? "text-blue-400" : "text-earth-mut"
+                        )}>
+                          {pStatus} {balance > 0 && paidAmt > 0 ? `(Rem: ₦${balance.toLocaleString()})` : ""}
+                        </p>
+                      );
+                    })()}
                   </div>
                 </div>
 

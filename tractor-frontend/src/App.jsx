@@ -76,6 +76,7 @@ function Login() {
     };
     setEmail(roles[role].email);
     setPassword(roles[role].password);
+    // Explicitly focus a field or trigger a visual cue if needed
   };
 
   // If already logged in, redirect them out of the login page

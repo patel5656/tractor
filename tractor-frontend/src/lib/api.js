@@ -151,9 +151,10 @@ export const api = {
     getPayments: async () => {
       return await fetchAPI('/admin/payments');
     },
-    settleBooking: async (bookingId) => {
+    settleBooking: async (bookingId, data = { method: 'cash' }) => {
       return await fetchAPI(`/admin/settle-booking/${bookingId}`, {
-        method: 'POST'
+        method: 'POST',
+        body: JSON.stringify(data)
       });
     },
     listFarmers: async () => {
@@ -172,6 +173,9 @@ export const api = {
       });
     },
     getOperators: async () => {
+      return await fetchAPI('/admin/operator-list');
+    },
+    listOperators: async () => {
       return await fetchAPI('/admin/operator-list');
     },
     createOperator: async (operatorData) => {

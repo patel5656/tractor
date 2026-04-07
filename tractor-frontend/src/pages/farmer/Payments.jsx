@@ -135,7 +135,6 @@ export default function Payments() {
         <div className="lg:col-span-7 xl:col-span-8 space-y-5">
           <div className="flex justify-between items-center mb-1 px-1">
             <h3 className="font-black text-[9px] text-earth-mut uppercase tracking-widest">Pending & Recent Actions</h3>
-            <button className="text-[9px] uppercase font-black text-earth-primary hover:text-earth-primary-hover tracking-widest underline decoration-1 underline-offset-4">Full History</button>
           </div>
           
           <div className="bg-earth-card/50 rounded-[2rem] shadow-xl border border-earth-dark/10/50 overflow-hidden divide-y divide-earth-dark/10">

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Tractor, MapPin, Navigation, Mail, Info, CheckCircle, Calculator, Map as MapIcon, Loader2, ArrowRight, X } from 'lucide-react';
+import { Tractor, MapPin, Navigation, Mail, Info, CheckCircle, Calculator, Map as MapIcon, Loader2, ArrowRight, X, Clock } from 'lucide-react';
 import { Card, CardContent } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -22,6 +22,9 @@ export default function BookTractor() {
   const [isBooking, setIsBooking] = useState(false);
   const [isPreviewLoading, setIsPreviewLoading] = useState(false);
   const [isConfirmed, setIsConfirmed] = useState(false);
+  const [bookingStep, setBookingStep] = useState(1); // 1: Details, 2: Payment
+  const [selectedPaymentOption, setSelectedPaymentOption] = useState('later');
+  const [confirmedBooking, setConfirmedBooking] = useState(null);
   const [errors, setErrors] = useState({});
   const [priceDetails, setPriceDetails] = useState({
     basePrice: 0,
@@ -77,6 +80,11 @@ export default function BookTractor() {
   const handleBookNow = async () => {
     if (!validate()) return;
     
+    if (bookingStep === 1) {
+      setBookingStep(2);
+      return;
+    }
+
     setIsBooking(true);
     try {
       const result = await api.farmer.createBooking({
@@ -84,18 +92,22 @@ export default function BookTractor() {
         landSize: parseFloat(landSize),
         location,
         farmerLatitude: farmerLatitude ? parseFloat(farmerLatitude) : null,
-        farmerLongitude: farmerLongitude ? parseFloat(farmerLongitude) : null
+        farmerLongitude: farmerLongitude ? parseFloat(farmerLongitude) : null,
+        paymentOption: selectedPaymentOption
       });
       
       if (result.success) {
         addBooking(result.data);
+        setConfirmedBooking(result.data);
         setIsConfirmed(true);
         setLandSize('');
         setLocation('');
         setErrors({});
+        setBookingStep(1);
       }
     } catch (error) {
       setErrors({ general: error.message || "Connection failed" });
+      setBookingStep(1);
     } finally {
       setIsBooking(false);
     }
@@ -125,21 +137,42 @@ export default function BookTractor() {
                <span className="text-[10px] font-black text-earth-mut uppercase">Total Amount</span>
                <span className="text-sm font-black text-earth-primary">₦{totalCost.toLocaleString()}</span>
              </div>
+             <div className="flex justify-between border-b border-earth-dark/10 pb-3">
+               <span className="text-[10px] font-black text-earth-mut uppercase">Payment Plan</span>
+               <span className={cn(
+                 "text-[10px] font-black uppercase px-2 py-0.5 rounded-md",
+                 selectedPaymentOption === 'full' ? "bg-earth-green/10 text-earth-green" :
+                 selectedPaymentOption === 'partial' ? "bg-blue-500/10 text-blue-500" :
+                 "bg-earth-mut/10 text-earth-mut"
+               )}>
+                 {selectedPaymentOption === 'full' ? 'Fully Paid' : selectedPaymentOption === 'partial' ? '50% Advance' : 'Pay Later (Cash)'}
+               </span>
+             </div>
              <div className="flex justify-between">
-               <span className="text-[10px] font-black text-earth-mut uppercase">Assigned Time</span>
+               <span className="text-[10px] font-black text-earth-mut uppercase">Scheduled For</span>
                <span className="text-sm font-black text-earth-green uppercase">Today, 3:00 PM</span>
              </div>
           </div>
 
           <div className="pt-4 space-y-3">
             <Button 
-              onClick={() => navigate('/farmer/track')} 
-              className="w-full bg-earth-primary hover:bg-earth-primary-hover text-earth-brown h-14 rounded-2xl font-black uppercase tracking-wide flex items-center justify-center gap-2"
+              onClick={() => navigate('/farmer/payments')} 
+              className="w-full bg-earth-dark text-earth-main hover:bg-earth-dark/90 h-14 rounded-2xl font-black uppercase tracking-wide flex items-center justify-center gap-2 shadow-xl"
             >
-              Track Now <ArrowRight size={20} />
+              Go to Payments <ArrowRight size={20} />
+            </Button>
+            <Button 
+              onClick={() => navigate('/farmer/track')} 
+              variant="outline"
+              className="w-full border-earth-dark/10 text-earth-brown h-12 rounded-2xl font-black uppercase tracking-wide flex items-center justify-center gap-2"
+            >
+              Track Live Map
             </Button>
             <button 
-              onClick={() => setIsConfirmed(false)}
+              onClick={() => {
+                setIsConfirmed(false);
+                setSelectedPaymentOption('later');
+              }}
               className="text-[10px] font-black text-earth-mut uppercase tracking-widest hover:text-earth-brown transition-colors"
             >
               Make another booking
@@ -344,7 +377,7 @@ export default function BookTractor() {
                     Object.keys(errors).length > 0 ? "bg-red-500/20 text-red-500 border border-red-500/30" : "bg-earth-primary hover:bg-earth-primary-hover text-earth-brown shadow-earth-primary/20"
                   )}
                 >
-                  {isBooking ? <Loader2 size={20} className="animate-spin" /> : Object.keys(errors).length > 0 ? "Check Fields" : "Book Now"}
+                  {isBooking ? <Loader2 size={20} className="animate-spin" /> : Object.keys(errors).length > 0 ? "Check Fields" : "Continue"}
                 </Button>
                 <a 
                   href="mailto:support@dummy.com" 
@@ -361,12 +394,99 @@ export default function BookTractor() {
 
       </div>
 
+      {/* Payment Selection Overlay */}
+      {bookingStep === 2 && (
+        <div className="fixed inset-0 bg-earth-dark/80 backdrop-blur-md z-[110] flex items-center justify-center p-4">
+          <div className="bg-earth-card border border-earth-dark/10 w-full max-w-lg p-8 rounded-[2.5rem] shadow-2xl relative space-y-8 animate-in fade-in zoom-in slide-in-from-bottom-10 duration-500">
+            <button 
+              onClick={() => setBookingStep(1)}
+              className="absolute top-6 right-6 text-earth-mut hover:text-earth-brown transition-colors"
+            >
+              <X size={24} />
+            </button>
+
+            <div className="text-center space-y-2">
+              <h3 className="text-3xl font-black text-earth-brown italic uppercase tracking-tight">Payment Plan</h3>
+              <p className="text-[10px] font-bold text-earth-mut uppercase tracking-[0.2em]">Select how you want to settle your dues</p>
+            </div>
+
+            <div className="space-y-3">
+              {[
+                { 
+                  id: 'full', 
+                  label: 'Pay Full Now', 
+                  sub: `₦${totalCost.toLocaleString()}`, 
+                  desc: 'Instant settlement via Online Gateway',
+                  icon: CheckCircle,
+                  color: 'text-earth-green',
+                  bg: 'bg-earth-green/10'
+                },
+                { 
+                  id: 'partial', 
+                  label: 'Pay 50% Advance', 
+                  sub: `₦${(totalCost * 0.5).toLocaleString()}`, 
+                  desc: 'Secure your booking now, pay rest later',
+                  icon: Clock,
+                  color: 'text-blue-500',
+                  bg: 'bg-blue-500/10'
+                },
+                { 
+                  id: 'later', 
+                  label: 'Pay Later (Cash)', 
+                  sub: '₦0 Now', 
+                  desc: 'Pay full amount at the Hub/On-site',
+                  icon: Info,
+                  color: 'text-earth-mut',
+                  bg: 'bg-earth-card-alt'
+                }
+              ].map((opt) => (
+                <button
+                  key={opt.id}
+                  onClick={() => setSelectedPaymentOption(opt.id)}
+                  className={cn(
+                    "w-full p-5 rounded-2xl border-2 text-left transition-all flex items-center gap-5 group",
+                    selectedPaymentOption === opt.id 
+                      ? "border-earth-primary bg-earth-card ring-4 ring-earth-primary/5" 
+                      : "border-earth-dark/10 hover:border-earth-primary/30 bg-earth-card-alt/30"
+                  )}
+                >
+                  <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 transition-all", opt.bg, opt.color, selectedPaymentOption === opt.id && "scale-110")}>
+                    <opt.icon size={28} />
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className={cn("font-black text-sm uppercase italic tracking-wide transition-colors", selectedPaymentOption === opt.id ? "text-earth-primary" : "text-earth-brown")}>{opt.label}</span>
+                      <span className={cn("text-xs font-black tabular-nums", selectedPaymentOption === opt.id ? "text-earth-primary" : "text-earth-brown")}>{opt.sub}</span>
+                    </div>
+                    <p className="text-[10px] font-bold text-earth-mut uppercase tracking-widest">{opt.desc}</p>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <Button 
+              onClick={handleBookNow}
+              disabled={isBooking}
+              className="w-full h-16 bg-earth-primary hover:bg-earth-primary-hover text-earth-brown rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl shadow-earth-primary/20 flex items-center justify-center gap-3 active:scale-95 transition-all"
+            >
+              {isBooking ? <Loader2 size={24} className="animate-spin" /> : "Confirm Booking"} <ArrowRight size={20} />
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Loading Overlay */}
       {isBooking && (
-        <div className="fixed inset-0 bg-earth-main/60 backdrop-blur-sm z-[100] flex items-center justify-center">
-           <div className="bg-earth-card border border-earth-dark/10 p-8 rounded-3xl flex flex-col items-center gap-4 shadow-2xl animate-in fade-in zoom-in duration-300">
-              <Loader2 size={40} className="text-earth-primary animate-spin" />
-              <p className="text-xs font-black text-earth-brown uppercase tracking-[0.2em]">Processing Booking...</p>
+        <div className="fixed inset-0 bg-earth-main/60 backdrop-blur-sm z-[1000] flex items-center justify-center">
+           <div className="bg-earth-card border border-earth-dark/10 p-10 rounded-[3rem] flex flex-col items-center gap-6 shadow-2xl animate-in fade-in zoom-in duration-300">
+              <div className="relative">
+                <Loader2 size={60} className="text-earth-primary animate-spin" />
+                <Tractor size={24} className="absolute inset-0 m-auto text-earth-brown/40" />
+              </div>
+              <div className="text-center space-y-2">
+                <p className="text-sm font-black text-earth-brown uppercase tracking-[0.3em]">Processing...</p>
+                <p className="text-[10px] font-bold text-earth-mut uppercase tracking-widest">Registering your schedule</p>
+              </div>
            </div>
         </div>
       )}

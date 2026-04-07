@@ -48,9 +48,10 @@ export const getPayments = async (req, res) => {
 export const settleBooking = async (req, res) => {
   try {
     const { bookingId } = req.params;
+    const { method = 'cash' } = req.body;
     if (!bookingId) return sendError(res, "Booking ID is required", 400);
 
-    const result = await adminService.settleBooking(bookingId);
+    const result = await adminService.settleBooking(bookingId, method);
     return sendSuccess(res, result, "Booking settled successfully");
   } catch (error) {
     const statusCode = error.message.includes('Already Paid') ? 400 : 

@@ -135,7 +135,7 @@ const validateZones = async (newZone, excludeId = null) => {
     throw new Error('Only one open-ended zone (max distance as NULL) is allowed.');
   }
   if (openEnded.length === 1 && zones[zones.length - 1].maxDistance !== null) {
-    throw new Error('The open-ended zone must be the last zone in the sequence.');
+    throw new Error('Distance Conflict: An active open-ended zone (e.g., "41+ KM") exists, but there are other zones starting at a higher distance. The open-ended zone must always be the final tier.');
   }
 
   // 2. Check for overlaps and gaps
@@ -144,7 +144,7 @@ const validateZones = async (newZone, excludeId = null) => {
     const next = zones[i + 1];
 
     if (current.maxDistance === null) {
-      throw new Error('An open-ended zone cannot be followed by another zone.');
+      throw new Error(`Logical Error: Zone "${current.minDistance}+ KM" is open-ended and cannot be followed by another zone ("${next.minDistance} KM").`);
     }
 
     if (current.maxDistance > next.minDistance) {
@@ -156,10 +156,11 @@ const validateZones = async (newZone, excludeId = null) => {
 /**
  * Create a new zone.
  */
-export const createZone = async (minDistance, maxDistance, surchargePerHectare) => {
+export const createZone = async (minDistance, maxDistance, surchargePerHectare, status = 'ACTIVE') => {
   const min = parseFloat(minDistance);
   const max = maxDistance !== null && maxDistance !== undefined && maxDistance !== '' ? parseFloat(maxDistance) : null;
   const surcharge = parseFloat(surchargePerHectare);
+  const newStatus = status || 'ACTIVE';
 
   if (isNaN(min) || min < 0) throw new Error('Minimum distance must be a valid non-negative number');
   if (max !== null && (isNaN(max) || max <= min)) throw new Error('Maximum distance must be greater than minimum distance');
@@ -172,8 +173,11 @@ export const createZone = async (minDistance, maxDistance, surchargePerHectare) 
   });
   const nextId = maxIdZone ? maxIdZone.id + 1 : 0;
 
-  const newZone = { minDistance: min, maxDistance: max, surchargePerHectare: surcharge, status: 'ACTIVE' };
-  await validateZones(newZone);
+  const newZone = { minDistance: min, maxDistance: max, surchargePerHectare: surcharge, status: newStatus };
+  
+  if (newStatus === 'ACTIVE') {
+    await validateZones(newZone);
+  }
 
   return await prisma.zone.create({
     data: { 
@@ -181,7 +185,7 @@ export const createZone = async (minDistance, maxDistance, surchargePerHectare) 
       minDistance: min,
       maxDistance: max, 
       surchargePerHectare: surcharge,
-      status: 'ACTIVE'
+      status: newStatus
     }
   });
 };

@@ -42,11 +42,14 @@ This document defines all RESTful API endpoints for the TractorLink backend.
 {
   "serviceType": "plough",
   "landSize": 5.5,
-  "location": "Village A"
+  "location": "Village A",
+  "paymentOption": "full" | "partial" | "later"
 }
 - Logic:
   - Pricing calculated automatically
+  - Payment record created immediately if "full" or "partial" is selected
   - Booking status = Scheduled
+  - Payment status = PAID (if full), PARTIAL (if partial), PENDING (if later)
 
 ---
 
@@ -78,9 +81,8 @@ This document defines all RESTful API endpoints for the TractorLink backend.
 
 ## 3. Admin APIs (Protected: Role = admin)
 
-### GET /api/admin/bookings
 - Description: Get all bookings (global registry)
-- Response includes: farmer and service details.
+- Response includes: farmer, service, and payment details (for balance calculation).
 
 ---
 
@@ -119,7 +121,13 @@ This document defines all RESTful API endpoints for the TractorLink backend.
 - Logic:
   - Calculates remaining balance.
   - Creates a Payment record (`method: admin_settlement`).
-  - Status → `paid`.
+  - Updates booking `status` to `paid` and `paymentStatus` to `PAID`.
+
+| **Payment Statuses** | **Context** |
+| :--- | :--- |
+| **PENDING** | Initial state (Payment Option: Later) |
+| **PARTIAL** | 50% Advance paid (Payment Option: Partial) |
+| **PAID** | 100% Settle (Payment Option: Full or Admin Settled) |
 
 ---
 

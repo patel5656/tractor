@@ -32,7 +32,9 @@ export default function Settings() {
   const [newZoneMinDistance, setNewZoneMinDistance] = useState('');
   const [newZoneMaxDistance, setNewZoneMaxDistance] = useState('');
   const [newZoneSurcharge, setNewZoneSurcharge] = useState('');
+  const [newZoneStatus, setNewZoneStatus] = useState('ACTIVE');
   const [editingZoneId, setEditingZoneId] = useState(null);
+  const [zoneError, setZoneError] = useState('');
   const [zoneSearchTerm, setZoneSearchTerm] = useState('');
   
   const [localRates, setLocalRates] = useState(serviceRates);
@@ -127,7 +129,8 @@ export default function Settings() {
       const payload = {
         minDistance: parseFloat(newZoneMinDistance),
         maxDistance: newZoneMaxDistance === '' ? null : parseFloat(newZoneMaxDistance),
-        surchargePerHectare: parseFloat(newZoneSurcharge)
+        surchargePerHectare: parseFloat(newZoneSurcharge),
+        status: newZoneStatus
       };
 
       if (editingZoneId !== 'new' && editingZoneId !== null) {
@@ -137,9 +140,11 @@ export default function Settings() {
           setNewZoneMinDistance('');
           setNewZoneMaxDistance('');
           setNewZoneSurcharge('');
+          setNewZoneStatus('ACTIVE');
           setEditingZoneId(null);
+          setZoneError('');
         } else {
-          console.error('Failed to update zone:', res.message);
+          setZoneError(res.message || 'Failed to update zone');
         }
       } else {
         const res = await api.admin.createZone(payload);
@@ -148,13 +153,15 @@ export default function Settings() {
           setNewZoneMinDistance('');
           setNewZoneMaxDistance('');
           setNewZoneSurcharge('');
+          setNewZoneStatus('ACTIVE');
           setEditingZoneId(null);
+          setZoneError('');
         } else {
-          console.error('Failed to create zone:', res.message);
+          setZoneError(res.message || 'Failed to create zone');
         }
       }
     } catch(e) {
-      console.error('Zone save error:', e);
+      setZoneError(e.message || 'Zone save error');
     }
   };
 
@@ -162,6 +169,8 @@ export default function Settings() {
     setNewZoneMinDistance(zone.minDistance.toString());
     setNewZoneMaxDistance(zone.maxDistance === null ? '' : zone.maxDistance.toString());
     setNewZoneSurcharge(zone.surchargePerHectare.toString());
+    setNewZoneStatus(zone.status || 'ACTIVE');
+    setZoneError('');
     setEditingZoneId(zone.id);
   };
 
@@ -169,6 +178,8 @@ export default function Settings() {
     setNewZoneMinDistance('');
     setNewZoneMaxDistance('');
     setNewZoneSurcharge('');
+    setNewZoneStatus('ACTIVE');
+    setZoneError('');
     setEditingZoneId(null);
   };
 
@@ -588,7 +599,13 @@ export default function Settings() {
                         <X size={18} />
                       </Button>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+
+                    {zoneError && (
+                      <div className="p-4 bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-black uppercase tracking-widest rounded-xl flex items-center gap-2 animate-shake">
+                        <AlertTriangle size={16} /> {zoneError}
+                      </div>
+                    )}
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                       <div className="space-y-2">
                         <label className="text-[9px] uppercase font-black tracking-widest text-earth-sub pl-1">Min Distance (KM)</label>
                         <div className="relative">
@@ -628,6 +645,17 @@ export default function Settings() {
                             className="pl-8 bg-earth-main border-earth-dark/10 font-black text-earth-brown h-12 rounded-xl focus:border-earth-primary shadow-inner" 
                           />
                         </div>
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-[9px] uppercase font-black tracking-widest text-earth-sub pl-1">Status</label>
+                        <select 
+                          value={newZoneStatus} 
+                          onChange={(e) => setNewZoneStatus(e.target.value)}
+                          className="w-full bg-earth-main border border-earth-dark/10 font-black text-earth-brown h-12 rounded-xl focus:border-earth-primary shadow-inner px-4 text-xs appearance-none cursor-pointer"
+                        >
+                          <option value="ACTIVE" className="bg-earth-card">ACTIVE</option>
+                          <option value="INACTIVE" className="bg-earth-card">INACTIVE</option>
+                        </select>
                       </div>
                     </div>
                     <div className="flex justify-end gap-3 pt-2">

@@ -222,18 +222,30 @@ export default function History() {
                         <p className="font-bold text-earth-brown text-sm">{booking.landSize} Hectares</p>
                       </div>
                       <div className="text-right">
-                        <Badge 
-                          className={cn(
-                            "mb-1.5 text-[10px] px-2 py-0.5 border font-black uppercase tracking-widest",
-                            booking.status === 'paid' ? 'bg-earth-primary/20 text-earth-green border-emerald-500/40' :
-                            booking.status === 'completed' ? 'bg-earth-primary/10 text-earth-green border-emerald-500/20' : 
-                            booking.status === 'in_progress' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 
-                            'bg-orange-500/10 text-orange-400 border-orange-500/20'
-                          )}
-                        >
-                          {booking.status}
-                        </Badge>
-                        <p className="font-black text-earth-brown text-lg leading-none tracking-tighter">₦{booking.totalPrice?.toLocaleString()}</p>
+                        {(() => {
+                           const paidAmount = booking.payments?.reduce((s, p) => s + p.amount, 0) || 0;
+                           const balance = booking.totalPrice - paidAmount;
+                           const pStatus = booking.paymentStatus || (booking.status === 'paid' ? 'PAID' : 'PENDING');
+                           
+                           return (
+                             <>
+                               <Badge 
+                                 className={cn(
+                                   "mb-1.5 text-[8px] px-2 py-0 border font-black uppercase tracking-widest",
+                                   pStatus === 'PAID' ? 'bg-earth-primary/20 text-earth-green border-emerald-500/40' :
+                                   pStatus === 'PARTIAL' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 
+                                   'bg-orange-500/10 text-orange-400 border-orange-500/20'
+                                 )}
+                               >
+                                 {pStatus}
+                               </Badge>
+                               <p className="font-black text-earth-brown text-lg leading-none tracking-tighter">₦{booking.totalPrice?.toLocaleString()}</p>
+                               {balance > 0 && paidAmount > 0 && (
+                                 <p className="text-[9px] font-bold text-red-500 mt-1 uppercase tracking-tighter">Balance: ₦{balance.toLocaleString()}</p>
+                               )}
+                             </>
+                           );
+                        })()}
                       </div>
                     </div>
                   </CardContent>

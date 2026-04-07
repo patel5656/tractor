@@ -110,7 +110,7 @@ export default function Payments() {
 
   const handleMarkAsPaid = async (id) => {
     try {
-      const result = await api.admin.settleBooking(id);
+      const result = await api.admin.settleBooking(id, { method: 'cash' });
       if (result.success) {
         fetchPayments(pagination.currentPage);
         setConfirmSettleId(null);
@@ -173,8 +173,10 @@ export default function Payments() {
                   <p className="font-black text-earth-primary uppercase tracking-wider">{String(selectedBooking.id).toUpperCase()}</p>
                 </div>
                 <div className="space-y-1 text-right">
-                  <p className="text-[10px] font-black text-earth-mut uppercase tracking-widest">Invoiced Amount</p>
-                  <p className="text-2xl font-black text-earth-brown italic">₦{(selectedBooking.amount || 0).toLocaleString()}</p>
+                  <p className="text-[10px] font-black text-earth-mut uppercase tracking-widest">Total Invoice</p>
+                  <p className="text-xl font-black text-earth-brown italic leading-none">₦{(selectedBooking.totalAmount || 0).toLocaleString()}</p>
+                  <p className="text-[10px] font-bold text-earth-green tracking-widest mt-1">Paid: ₦{(selectedBooking.paidAmount || 0).toLocaleString()}</p>
+                  <p className="text-[10px] font-bold text-red-500 tracking-widest">Rem: ₦{(selectedBooking.remainingAmount || 0).toLocaleString()}</p>
                 </div>
                 <div className="space-y-1">
                   <p className="text-[10px] font-black text-earth-mut uppercase tracking-widest">Farmer</p>
@@ -197,13 +199,18 @@ export default function Payments() {
                 </div>
                 <div className="flex justify-between items-center pt-3 border-t border-earth-dark/10">
                    <p className="text-[10px] font-black text-earth-mut uppercase tracking-widest">Payment Status</p>
-                   <Badge className={cn(
-                    "text-[9px] px-3 py-1 border uppercase font-black",
-                    selectedBooking.type === 'payment' ? 'bg-primary-500/10 text-primary-400 border-primary-500/20' : 
-                    'bg-red-500/10 text-red-500 border-red-500/20'
-                  )}>
-                    {selectedBooking.type === 'payment' ? 'SETTLED' : 'UNPAID'}
-                  </Badge>
+                   <div className="text-right">
+                     <Badge className={cn(
+                      "text-[9px] px-3 py-1 border uppercase font-black",
+                      selectedBooking.type === 'payment' ? 'bg-primary-500/10 text-primary-400 border-primary-500/20' : 
+                      'bg-red-500/10 text-red-500 border-red-500/20'
+                     )}>
+                      {selectedBooking.type === 'payment' ? 'SETTLED' : 'UNPAID'}
+                     </Badge>
+                     <p className="text-[9px] font-bold text-earth-mut uppercase tracking-widest mt-1">
+                       Method: {selectedBooking.method?.toUpperCase() || 'UNRECORDED'}
+                     </p>
+                   </div>
                 </div>
               </div>
 
@@ -314,8 +321,8 @@ export default function Payments() {
                 <tr>
                   <th className="px-6 py-4">Ledger ID</th>
                   <th className="px-6 py-4">Entity</th>
-                  <th className="px-6 py-4">Amount</th>
-                  <th className="px-6 py-4">Status</th>
+                  <th className="px-6 py-4">Financials</th>
+                  <th className="px-6 py-4">Status & Method</th>
                   <th className="px-6 py-4 text-right">Actions</th>
                 </tr>
               </thead>
@@ -343,17 +350,23 @@ export default function Payments() {
                         <p className="text-[10px] text-earth-mut font-bold uppercase tracking-widest">#{p.bookingId}</p>
                       </td>
                       <td className="px-6 py-3">
-                        <p className="font-black text-earth-brown text-base tracking-tight">₦{p.amount.toLocaleString()}</p>
-                        <p className="text-[9px] text-earth-mut font-bold uppercase tracking-widest">{new Date(p.createdAt).toLocaleDateString()}</p>
+                        <p className="font-black text-earth-brown text-base tracking-tight leading-tight">₦{(p.totalAmount || 0).toLocaleString()}</p>
+                        <div className="flex gap-2 mt-1">
+                          <span className="text-[10px] text-earth-green/80 font-black tracking-widest uppercase">Paid: ₦{(p.paidAmount || 0).toLocaleString()}</span>
+                          <span className="text-[10px] text-red-400 font-black tracking-widest uppercase border-l border-earth-dark/20 pl-2">Rem: ₦{(p.remainingAmount || 0).toLocaleString()}</span>
+                        </div>
                       </td>
                       <td className="px-6 py-3">
                         <Badge className={cn(
                           "text-[8px] px-2 py-0 border uppercase font-black",
                           p.type === 'payment' ? 'bg-primary-500/10 text-primary-400 border-primary-500/20' : 
-                          'bg-red-500/10 text-red-500 border-red-500/20'
+                          'bg-orange-500/10 text-orange-400 border-orange-500/20'
                         )}>
-                          {p.type === 'payment' ? 'SETTLED' : 'UNPAID'}
+                          {p.paymentStatus || (p.type === 'payment' ? 'SETTLED' : 'PENDING')}
                         </Badge>
+                        <p className="text-[8px] text-earth-mut font-black uppercase tracking-widest mt-1">
+                          METHOD: {p.method?.toUpperCase() || 'UNRECORDED'}
+                        </p>
                       </td>
                       <td className="px-6 py-3 text-right">
                         <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-all">
@@ -439,8 +452,8 @@ export default function Payments() {
                       <p className="text-[10px] font-bold text-earth-mut uppercase tracking-widest mt-1.5 italic">#{p.bookingId}</p>
                     </div>
                     <div className="text-right">
-                      <p className="text-xl font-black text-earth-brown leading-none tracking-tighter">₦{p.amount.toLocaleString()}</p>
-                      <p className="text-[9px] font-bold text-earth-mut uppercase tracking-widest mt-1.5">{new Date(p.createdAt).toLocaleDateString()}</p>
+                      <p className="text-xl font-black text-earth-brown leading-none tracking-tighter">₦{(p.totalAmount || 0).toLocaleString()}</p>
+                      <p className="text-[9px] font-black text-red-400 uppercase tracking-widest mt-1.5 leading-none">Rem: ₦{(p.remainingAmount || 0).toLocaleString()}</p>
                     </div>
                   </div>
                 </CardContent>

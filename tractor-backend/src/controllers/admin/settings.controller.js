@@ -46,8 +46,8 @@ export const listZones = async (req, res) => {
 
 export const createZone = async (req, res) => {
   try {
-    const { minDistance, maxDistance, surchargePerHectare } = req.body;
-    const zone = await settingsService.createZone(minDistance, maxDistance, surchargePerHectare);
+    const { minDistance, maxDistance, surchargePerHectare, status } = req.body;
+    const zone = await settingsService.createZone(minDistance, maxDistance, surchargePerHectare, status);
     return sendSuccess(res, zone, "Zone created successfully", 201);
   } catch (error) {
     return sendError(res, error.message, 400);

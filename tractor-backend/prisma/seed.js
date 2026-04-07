@@ -56,21 +56,142 @@ async function main() {
     });
   }
 
+  console.log('Seeding system config...');
+  await prisma.systemConfig.upsert({
+    where: { id: 1 },
+    update: {
+      dieselPrice: 850,
+      avgMileage: 2.5,
+      hubName: 'North-East Agri Hub',
+      hubLocation: 'Borno State, Nigeria',
+      baseLatitude: 11.8333,
+      baseLongitude: 13.1500,
+      perKmRate: 1500,
+      pricingMode: 'ZONE'
+    },
+    create: {
+      id: 1,
+      dieselPrice: 850,
+      avgMileage: 2.5,
+      hubName: 'North-East Agri Hub',
+      hubLocation: 'Borno State, Nigeria',
+      baseLatitude: 11.8333,
+      baseLongitude: 13.1500,
+      perKmRate: 1500,
+      pricingMode: 'ZONE'
+    }
+  });
+
+  console.log('Seeding service zones...');
+  const zones = [
+    { minDistance: 0, maxDistance: 5, surchargePerHectare: 0, status: 'ACTIVE' },
+    { minDistance: 5, maxDistance: 15, surchargePerHectare: 500, status: 'ACTIVE' },
+    { minDistance: 15, maxDistance: 30, surchargePerHectare: 1200, status: 'ACTIVE' },
+    { minDistance: 30, maxDistance: null, surchargePerHectare: 2500, status: 'ACTIVE' }
+  ];
+
+  for (const zone of zones) {
+    await prisma.zone.create({ data: zone });
+  }
+
   console.log('Seeding demo tractor...');
   const operatorUser = await prisma.user.findUnique({ where: { email: 'operator@tractorlink.com' } });
   if (operatorUser) {
     await prisma.tractor.upsert({
       where: { operatorId: operatorUser.id },
       update: { 
-        name: 'Command Unit-01',
-        model: 'Mahindra 575 DI',
+        name: 'Thunderbolt-01',
+        model: 'John Deere 5050D',
         status: 'available' 
       },
       create: {
-        name: 'Command Unit-01',
-        model: 'Mahindra 575 DI',
+        name: 'Thunderbolt-01',
+        model: 'John Deere 5050D',
         status: 'available',
         operatorId: operatorUser.id
+      }
+    });
+  }
+
+  console.log('Seeding demo bookings for farmer...');
+  const farmerUser = await prisma.user.findUnique({ where: { email: 'farmer@tractorlink.com' } });
+  const ploughingService = await prisma.service.findUnique({ where: { name: 'ploughing' } });
+  
+  if (farmerUser && ploughingService) {
+    // 1. Completed & Paid Booking
+    const booking1 = await prisma.booking.create({
+      data: {
+        farmerId: farmerUser.id,
+        serviceId: ploughingService.id,
+        landSize: 10,
+        location: 'Green Valley Farm, Borno',
+        basePrice: 9000,
+        distanceKm: 4.2,
+        distanceCharge: 0,
+        totalPrice: 9000,
+        finalPrice: 9000,
+        status: 'completed',
+        paymentStatus: 'PAID',
+        hubName: 'North-East Agri Hub',
+        serviceNameSnapshot: 'Ploughing'
+      }
+    });
+
+    await prisma.payment.create({
+      data: {
+        bookingId: booking1.id,
+        amount: 9000,
+        method: 'online',
+        status: 'full',
+        reference: 'DEMO-PAY-1'
+      }
+    });
+
+    // 2. Scheduled & Partial Paid Booking
+    const booking2 = await prisma.booking.create({
+      data: {
+        farmerId: farmerUser.id,
+        serviceId: ploughingService.id,
+        landSize: 5,
+        location: 'West Ridge Estate',
+        basePrice: 4500,
+        distanceKm: 12.5,
+        distanceCharge: 2500,
+        totalPrice: 7000,
+        finalPrice: 7000,
+        status: 'scheduled',
+        paymentStatus: 'PARTIAL',
+        hubName: 'North-East Agri Hub',
+        serviceNameSnapshot: 'Ploughing'
+      }
+    });
+
+    await prisma.payment.create({
+      data: {
+        bookingId: booking2.id,
+        amount: 3500,
+        method: 'online',
+        status: 'partial',
+        reference: 'DEMO-PAY-2'
+      }
+    });
+
+    // 3. Pending Booking
+    await prisma.booking.create({
+      data: {
+        farmerId: farmerUser.id,
+        serviceId: ploughingService.id,
+        landSize: 20,
+        location: 'Sandy Plains',
+        basePrice: 18000,
+        distanceKm: 8,
+        distanceCharge: 1000,
+        totalPrice: 19000,
+        finalPrice: 19000,
+        status: 'scheduled',
+        paymentStatus: 'PENDING',
+        hubName: 'North-East Agri Hub',
+        serviceNameSnapshot: 'Ploughing'
       }
     });
   }
