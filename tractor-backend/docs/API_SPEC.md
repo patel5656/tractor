@@ -48,7 +48,7 @@ This document defines all RESTful API endpoints for the TractorLink backend.
 - Logic:
   - Pricing calculated automatically
   - Payment record created immediately if "full" or "partial" is selected
-  - Booking status = Scheduled
+  - Booking status = Pending
   - Payment status = PAID (if full), PARTIAL (if partial), PENDING (if later)
 
 ---
@@ -87,8 +87,18 @@ This document defines all RESTful API endpoints for the TractorLink backend.
 ---
 
 ### GET /api/admin/pending-dispatch
-- Description: Get only bookings with status `scheduled`.
-- Used for: Dispatch Queue.
+- Description: Get bookings that require scheduling (`pending`) or assignment (`scheduled`).
+- Used for: Dispatch Hub Queue.
+
+---
+
+### PUT /api/admin/schedule/:bookingId
+- Description: Schedule a pending booking by setting a deployment datetime.
+- Body: `{ "scheduledDate": "2026-04-10T10:00:00Z" }`
+- Logic:
+  - Transition allowed from `pending`.
+  - Sets `scheduledAt` field.
+  - Updates booking status to `scheduled`.
 
 ---
 

@@ -207,11 +207,22 @@ export default function Bookings() {
                       <Badge className={cn(
                         "text-[9px] px-3 py-0.5 border uppercase font-black tracking-[0.1em]",
                         booking.status === 'completed' || booking.status === 'paid' ? 'bg-earth-primary/20 text-earth-green border-emerald-500/20' : 
+                        booking.status === 'pending' ? 'bg-earth-dark/10 text-earth-mut border-earth-dark/20' :
                         booking.status === 'scheduled' ? 'bg-earth-primary/10 text-earth-primary border-earth-primary/20' : 
+                        booking.status === 'dispatched' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
                         'bg-orange-500/10 text-orange-400 border-orange-500/20'
                       )}>
-                        {booking.status}
+                        {booking.status === 'dispatched' ? 'ASSIGNED' : booking.status}
                       </Badge>
+                       {booking.scheduledAt ? (
+                         <p className="text-[8px] font-bold text-earth-primary mt-1 uppercase tracking-tighter">
+                           @{new Date(booking.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                         </p>
+                       ) : booking.status === 'scheduled' ? (
+                         <p className="text-[8px] font-black text-earth-primary/60 mt-1 uppercase tracking-tighter italic">
+                           pending scheduling
+                         </p>
+                       ) : null}
                     </td>
                     <td className="px-8 py-6">
                       {(() => {
@@ -512,6 +523,34 @@ export default function Bookings() {
                             Zone: {selectedBooking.zoneName || "Calculated Range"}
                           </p>
                         </div>
+                      </div>
+                   </div>
+                </div>
+
+                <div className="h-px bg-earth-dark/5 w-full" />
+
+                {/* Added Scheduled Deployment */}
+                <div className="space-y-4">
+                   <h4 className="text-[10px] font-black text-earth-mut uppercase tracking-[0.2em] px-1 flex items-center gap-2">
+                     <Clock size={12} className="text-earth-primary" />
+                     Registry Deployment Status
+                   </h4>
+                   <div className="p-4 bg-earth-card border border-earth-dark/10 rounded-2xl flex items-center justify-between shadow-inner">
+                      <div className="flex items-center gap-3">
+                         <div className="w-10 h-10 rounded-xl bg-earth-primary/5 border border-earth-primary/10 flex items-center justify-center text-earth-primary">
+                            <Clock size={18} />
+                         </div>
+                         <div>
+                            <p className="text-[9px] font-black text-earth-mut uppercase tracking-[0.2em] leading-none mb-1">Scheduled Deployment</p>
+                            <p className={cn(
+                              "text-sm font-black uppercase",
+                              selectedBooking.scheduledAt ? "text-earth-brown" : "text-earth-primary underline decoration-dotted"
+                            )}>
+                               {selectedBooking.scheduledAt 
+                                 ? new Date(selectedBooking.scheduledAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })
+                                 : "Pending Scheduling"}
+                            </p>
+                         </div>
                       </div>
                    </div>
                 </div>

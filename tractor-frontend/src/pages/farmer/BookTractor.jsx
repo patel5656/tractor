@@ -150,8 +150,9 @@ export default function BookTractor() {
              </div>
              <div className="flex justify-between">
                <span className="text-[10px] font-black text-earth-mut uppercase">Scheduled For</span>
-               <span className="text-sm font-black text-earth-green uppercase">Today, 3:00 PM</span>
+               <span className="text-sm font-black text-earth-primary uppercase italic">Scheduling Pending</span>
              </div>
+             <p className="text-[9px] font-bold text-earth-mut/70 uppercase text-center tracking-widest mt-1">Admin will confirm exact timing shortly</p>
           </div>
 
           <div className="pt-4 space-y-3">

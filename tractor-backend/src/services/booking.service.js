@@ -182,7 +182,7 @@ export const createBookingRequest = async (farmerId, bookingData) => {
       hubLocation: pricing.hubLocation,
       hubLatitude: pricing.hubLatitude,
       hubLongitude: pricing.hubLongitude,
-      status: 'scheduled',
+      status: 'pending',
       paymentStatus: paymentOption === 'full' ? 'PAID' : (paymentOption === 'partial' ? 'PARTIAL' : 'PENDING')
     },
     include: {

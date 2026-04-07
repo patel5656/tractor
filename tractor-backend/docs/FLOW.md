@@ -6,14 +6,15 @@
 
 A booking must follow this strict sequence. Status transitions cannot be skipped.
 
-1. Scheduled (Farmer creates booking + System snapshots hub/service metadata)
+1. Pending (Farmer creates a booking request + System snapshots hub/service metadata)
    - *Optional*: Farmer selects payment intent (Full/Partial/Later)
    - *Result*: Initial Payment record created if Full/Partial chosen.
-2. Dispatched (Admin assigns tractor and operator)
-3. En Route (Operator starts journey)
-4. In Progress (Operator starts work)
-5. Completed (Operator finishes work)
-6. Paid (Payment confirmed)
+2. Scheduled (Admin sets official deployment Date & Time)
+3. Dispatched (aka ASSIGNED) (Admin assigns tractor and operator)
+4. En Route (Operator starts journey)
+5. In Progress (Operator starts work)
+6. Completed (Operator finishes work)
+7. Paid (Payment confirmed)
 
 ---
 
@@ -21,7 +22,8 @@ A booking must follow this strict sequence. Status transitions cannot be skipped
 
 | Current Status | Next Allowed Status | Action | Actor |
 |----------------|-------------------|--------|-------|
-| None | Scheduled | Create Booking | Farmer |
+| None | Pending | Create Booking | Farmer |
+| Pending | Scheduled | Approve & Schedule | Admin |
 | Scheduled | Dispatched / Cancelled | Assign Resources | Admin |
 | Dispatched | En Route | Start Journey | Operator |
 | En Route | In Progress | Start Work | Operator |

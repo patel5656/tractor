@@ -139,6 +139,12 @@ export const api = {
     getPendingBookings: async () => {
       return await fetchAPI('/admin/pending-dispatch');
     },
+    scheduleBooking: async (bookingId, scheduledDate) => {
+      return await fetchAPI(`/admin/schedule/${bookingId}`, {
+        method: 'PUT',
+        body: JSON.stringify({ scheduledDate })
+      });
+    },
     getAvailableOperators: async () => {
       return await fetchAPI('/admin/operators');
     },

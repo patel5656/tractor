@@ -91,7 +91,8 @@ model Booking {
   roadDistance    Float     @default(0) @map("road_distance")
   tractorId      Int?      @map("tractor_id")
   operatorId     Int?      @map("operator_id")
-  status         String    @default("scheduled")
+  status         String    @default("pending")
+  scheduledAt    DateTime? @map("scheduled_at")
   paymentStatus  String    @default("pending") @map("payment_status")
   createdAt      DateTime  @default(now()) @map("created_at")
   updatedAt      DateTime  @updatedAt @map("updated_at")
@@ -129,16 +130,19 @@ model Payment {
 }
 
 model Tractor {
-  id         Int       @id @default(autoincrement())
-  name       String
-  model      String?
-  status     String    @default("available")
-  operatorId Int?      @unique @map("operator_id")
-  createdAt  DateTime  @default(now()) @map("created_at")
-  updatedAt  DateTime  @updatedAt @map("updated_at")
-  bookings   Booking[] @relation("TractorBookings")
-  fuelLogs   FuelLog[] @relation("TractorFuelLogs")
-  operator   User?     @relation("OperatorTractor", fields: [operatorId], references: [id])
+  id                  Int       @id @default(autoincrement())
+  name                String
+  model               String?
+  status              String    @default("AVAILABLE")
+  engineHours         Float     @default(0) @map("engine_hours")
+  lastServiceDate     DateTime? @map("last_service_date")
+  nextServiceDueHours Float     @default(250) @map("next_service_due_hours")
+  operatorId          Int?      @unique @map("operator_id")
+  createdAt           DateTime  @default(now()) @map("created_at")
+  updatedAt           DateTime  @updatedAt @map("updated_at")
+  bookings            Booking[] @relation("TractorBookings")
+  fuelLogs            FuelLog[] @relation("TractorFuelLogs")
+  operator            User?     @relation("OperatorTractor", fields: [operatorId], references: [id])
 
   @@map("tractors")
 }
