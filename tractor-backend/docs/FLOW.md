@@ -7,6 +7,8 @@
 A booking must follow this strict sequence. Status transitions cannot be skipped.
 
 1. Scheduled (Farmer creates booking + System snapshots hub/service metadata)
+   - *Optional*: Farmer selects payment intent (Full/Partial/Later)
+   - *Result*: Initial Payment record created if Full/Partial chosen.
 2. Dispatched (Admin assigns tractor and operator)
 3. En Route (Operator starts journey)
 4. In Progress (Operator starts work)

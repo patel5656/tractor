@@ -168,14 +168,8 @@ Includes:
 - tractor_id
 - operator_id
 
-#### Status
-- scheduled
-- dispatched
-- en_route
-- in_progress
-- completed
-- paid
-- cancelled
+- status: scheduled, dispatched, en_route, in_progress, completed, paid, cancelled
+- payment_status: PENDING, PARTIAL, PAID
 
 ---
 
@@ -284,6 +278,7 @@ model Booking {
   operatorId      Int?     @map("operator_id")
 
   status          String   @default("scheduled")
+  paymentStatus   String   @default("PENDING") @map("payment_status") // PENDING | PARTIAL | PAID
 
   payments        Payment[]
 

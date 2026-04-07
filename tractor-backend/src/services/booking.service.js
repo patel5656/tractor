@@ -151,9 +151,13 @@ export const calculateBookingPrice = async (serviceType, landSize, zoneId = null
 
 /**
  * Create a new booking for a farmer.
+ * Optionally creates a Payment record based on paymentOption:
+ *   'full'    → Payment record for 100% of totalPrice
+ *   'partial' → Payment record for 50% of totalPrice
+ *   'later'   → No Payment record (default, cash at hub)
  */
 export const createBookingRequest = async (farmerId, bookingData) => {
-  const { serviceType, landSize, location, zoneId, farmerLatitude, farmerLongitude } = bookingData;
+  const { serviceType, landSize, location, zoneId, farmerLatitude, farmerLongitude, paymentOption = 'later' } = bookingData;
 
   const pricing = await calculateBookingPrice(serviceType, landSize, zoneId, farmerLatitude, farmerLongitude);
 
@@ -178,14 +182,46 @@ export const createBookingRequest = async (farmerId, bookingData) => {
       hubLocation: pricing.hubLocation,
       hubLatitude: pricing.hubLatitude,
       hubLongitude: pricing.hubLongitude,
-      status: 'scheduled'
+      status: 'scheduled',
+      paymentStatus: paymentOption === 'full' ? 'PAID' : (paymentOption === 'partial' ? 'PARTIAL' : 'PENDING')
     },
     include: {
       service: true
     }
   });
 
-  return booking;
+  // ── Payment Record Creation (optional, based on paymentOption) ──────────────
+  let paymentRecord = null;
+
+  if (paymentOption === 'full') {
+    paymentRecord = await prisma.payment.create({
+      data: {
+        bookingId: booking.id,
+        amount: pricing.totalPrice,
+        method: 'online',
+        status: 'full',
+        reference: `ADVANCE-FULL-${booking.id}-${Date.now()}`
+      }
+    });
+  } else if (paymentOption === 'partial') {
+    const advanceAmount = parseFloat((pricing.totalPrice * 0.5).toFixed(2));
+    paymentRecord = await prisma.payment.create({
+      data: {
+        bookingId: booking.id,
+        amount: advanceAmount,
+        method: 'online',
+        status: 'partial',
+        reference: `ADVANCE-50PCT-${booking.id}-${Date.now()}`
+      }
+    });
+  }
+  // 'later' → no payment record created (cash at hub)
+
+  return {
+    ...booking,
+    paymentOption,
+    advancePayment: paymentRecord
+  };
 };
 
 /**
