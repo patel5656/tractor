@@ -67,35 +67,35 @@ export default function FarmerLayout() {
       <aside 
         ref={sidebarRef}
         className={cn(
-          "bg-earth-dark border-r border-earth-dark/10 flex flex-col transition-all duration-300 ease-in-out h-screen fixed lg:sticky top-0 z-50 shadow-2xl overflow-hidden",
+          "bg-primary border-r border-primary/10 flex flex-col transition-all duration-300 ease-in-out h-screen fixed lg:sticky top-0 z-50 shadow-2xl overflow-hidden",
           isSidebarOpen ? "w-[240px] translate-x-0" : "w-[240px] lg:w-20 -translate-x-[240px] lg:translate-x-0"
         )}
       >
-        <div className="h-20 flex items-center justify-center border-b border-earth-dark/10 shrink-0 px-4 overflow-hidden">
-          <div className={cn("flex items-center transition-all", isSidebarOpen ? "gap-3 w-full opacity-100" : "justify-center opacity-0 lg:opacity-100 w-0 lg:w-auto")}>
-            <img src="/tractorlink-logo.png" alt="TractorLink Logo" className="w-14 h-14 object-contain shrink-0" />
+        <div className="h-20 flex items-center justify-center border-b border-white/10 shrink-0 px-4 overflow-hidden">
+          <div className={cn("flex items-center transition-all", isSidebarOpen ? "gap-2 w-full opacity-100" : "justify-center opacity-0 lg:opacity-100 w-0 lg:w-auto")}>
+            <img src="/tractorlink-logo.png" alt="TractorLink Logo" className="w-10 h-10 object-contain shrink-0" />
             {isSidebarOpen && (
-              <div className="overflow-hidden">
-                <span className="font-black text-lg text-earth-main tracking-tight whitespace-nowrap leading-none block">TractorLink</span>
-                <span className="text-[10px] text-earth-green uppercase tracking-widest font-bold leading-none mt-1">Farmer Portal</span>
+              <div className="flex-1 min-w-0">
+                <span className="font-black text-base text-white tracking-tight whitespace-nowrap leading-none block uppercase">Tractor<span className="text-accent">Link</span></span>
+                <span className="text-[9px] text-white/70 uppercase tracking-widest font-bold leading-none mt-1">Farmer Portal</span>
               </div>
             )}
           </div>
         </div>
         
         <div className="flex-1 overflow-y-auto px-2 py-8 space-y-1.5 scrollbar-hide">
-          <p className={cn("px-4 text-[10px] font-bold text-earth-main/50 uppercase tracking-widest transition-all", isSidebarOpen ? "mb-4 opacity-100" : "opacity-0 h-0 overflow-hidden mb-0")}>Navigation</p>
+          <p className={cn("px-4 text-[10px] font-bold text-earth-dark/50 uppercase tracking-widest transition-all", isSidebarOpen ? "mb-4 opacity-100" : "opacity-0 h-0 overflow-hidden mb-0")}>Navigation</p>
           {navItems.map(item => {
             const isActive = location.pathname === item.path;
             return (
               <Link key={item.path} to={item.path} title={!isSidebarOpen ? item.label : undefined} className={cn(
-                "flex items-center rounded-xl text-sm font-semibold transition-all uppercase tracking-wide",
-                isSidebarOpen ? "px-4 py-3.5 gap-3.5" : "justify-center py-3.5",
+                "flex items-center rounded-xl text-[13px] font-black transition-all uppercase tracking-wide",
+                isSidebarOpen ? "px-4 py-3.5 gap-3.5 mx-2" : "justify-center py-3.5",
                 isActive
-                  ? "bg-earth-primary text-earth-brown shadow-inner border border-earth-dark/15/50" 
-                  : "text-earth-main/60 hover:bg-earth-main/10 hover:text-earth-main border border-transparent"
+                  ? "bg-accent text-white shadow-[0_8px_25px_rgba(255,152,0,0.4)] border border-accent/20 scale-[1.02] z-10" 
+                  : "text-white/70 hover:bg-white/5 hover:text-white border border-transparent"
               )}>
-                <item.icon size={isActive ? 20 : 18} className={isActive ? "text-earth-brown" : "text-earth-main/60"} />
+                <item.icon size={isActive ? 20 : 18} className={isActive ? "text-white" : "text-white/50 group-hover:text-white"} />
                 {isSidebarOpen && <span className="whitespace-nowrap">{item.label}</span>}
               </Link>
             )
@@ -104,10 +104,11 @@ export default function FarmerLayout() {
         
         <div className="p-4 mt-auto border-t border-earth-dark/10 space-y-3">
           <button onClick={logout} className={cn(
-             "flex items-center text-earth-sub hover:text-earth-brown transition-colors w-full",
-             isSidebarOpen ? "px-4 py-3 gap-2 font-semibold text-sm justify-center" : "justify-center py-3"
-           )}>
-            <LogOut size={18} /> {isSidebarOpen && "Sign Out"}
+             "flex items-center text-white/60 hover:text-white hover:bg-white/5 rounded-xl transition-all w-full group",
+             isSidebarOpen ? "px-4 py-3 gap-3.5 font-black text-[13px] uppercase tracking-wide" : "justify-center py-3.5"
+           )} title="Sign Out">
+            <LogOut size={isSidebarOpen ? 18 : 22} className="shrink-0 text-white/40 group-hover:text-white" />
+            {isSidebarOpen && <span className="whitespace-nowrap">Sign Out</span>}
           </button>
         </div>
       </aside>
@@ -217,7 +218,7 @@ export default function FarmerLayout() {
                   isActive ? "text-earth-primary -translate-y-1" : "text-earth-mut hover:text-earth-brown"
                 )}
               >
-                <div className={cn("transition-transform", isActive ? "drop-shadow-[0_0_8px_rgba(234,179,8,0.5)]" : "")}>
+                <div className={cn("transition-transform", isActive ? "drop-shadow-[0_0_8px_rgba(46,125,50,0.5)]" : "")}>
                    <item.icon size={22} strokeWidth={isActive ? 2.5 : 2} />
                 </div>
                 <span className={cn("text-[10px] tracking-widest uppercase mt-1", isActive ? "font-black" : "font-bold")}>{item.label}</span>

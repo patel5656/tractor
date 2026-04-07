@@ -101,7 +101,7 @@ export default function Operators() {
           </div>
           <Button 
             onClick={() => setIsModalOpen(true)}
-            className="h-12 px-8 rounded-2xl bg-earth-primary hover:bg-earth-primary-hover text-earth-brown font-black uppercase tracking-widest text-xs shadow-[0_0_20px_rgba(234,179,8,0.2)] border-none"
+            className="h-12 px-8 rounded-2xl bg-accent hover:opacity-90 text-white font-black uppercase tracking-widest text-xs shadow-[0_0_20px_rgba(255,152,0,0.2)] border-none"
           >
             <Plus size={18} className="mr-2" /> Recruit Operator
           </Button>
@@ -295,7 +295,7 @@ export default function Operators() {
                  </Button>
                  <Button 
                    disabled={isSubmitting}
-                   className="flex-1 h-12 rounded-2xl bg-earth-primary hover:bg-earth-primary-hover text-earth-brown font-black uppercase tracking-widest text-[10px] border-none shadow-lg"
+                   className="flex-1 h-12 rounded-2xl bg-accent hover:opacity-90 text-white font-black uppercase tracking-widest text-[10px] border-none shadow-lg"
                  >
                    {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : "Finalize Recruit"}
                  </Button>

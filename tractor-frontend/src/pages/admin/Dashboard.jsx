@@ -81,17 +81,17 @@ export default function Dashboard() {
         {stats.map((stat, i) => (
           <Card key={i} className={cn(
             "bg-earth-card-alt border-earth-dark/15/50 shadow-sm relative overflow-hidden group transition-all rounded-[1.5rem]",
-            stat.highlight && "border-earth-primary/50 bg-earth-primary/[0.02]"
+            stat.highlight && "border-primary/50 bg-primary/[0.02]"
           )}>
             <CardContent className="p-5 md:p-6 relative z-10 flex flex-col h-full">
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-widest text-earth-mut mb-1">{stat.title}</p>
-                  <h3 className="text-2xl md:text-3xl font-black tracking-tight text-earth-brown mb-1 group-hover:text-earth-primary transition-colors">{stat.value}</h3>
+                  <h3 className="text-2xl md:text-3xl font-black tracking-tight text-earth-brown mb-1 group-hover:text-primary transition-colors">{stat.value}</h3>
                 </div>
                 <div className={cn(
-                  "w-12 h-12 rounded-xl bg-earth-card flex items-center justify-center text-earth-primary border border-earth-dark/15 shadow-inner shrink-0",
-                  stat.highlight && "text-earth-primary border-earth-primary/30"
+                  "w-12 h-12 rounded-xl bg-earth-card flex items-center justify-center text-primary border border-earth-dark/15 shadow-inner shrink-0",
+                  stat.highlight && "text-primary border-primary/30"
                 )}>
                   <stat.icon size={22} className={stat.highlight ? 'animate-pulse' : ''} />
                 </div>
@@ -166,7 +166,7 @@ export default function Dashboard() {
                             <div>{booking.land_size} Hectares</div>
                             <div className="text-[10px] opacity-60 flex items-center gap-1"><MapPin size={10} /> {booking.location || 'Standard Zone'}</div>
                           </td>
-                          <td className="px-6 py-4 text-xs font-black text-earth-green">
+                          <td className="px-6 py-4 text-xs font-black text-primary">
                             ₦{booking.total_price.toLocaleString()}
                           </td>
                           <td className="px-6 py-4 text-right">
@@ -175,7 +175,7 @@ export default function Dashboard() {
                                 onClick={() => handleAssign(booking.id)}
                                 disabled={dispatchStatus === booking.id}
                                 variant="primary" 
-                                className="bg-earth-primary hover:bg-earth-primary-hover text-earth-brown h-8 px-4 text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-earth-primary/20"
+                                className="bg-accent hover:opacity-90 text-white h-8 px-4 text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-accent/20"
                               >
                                 {dispatchStatus === booking.id ? "Assigning..." : "Assign"}
                               </Button>

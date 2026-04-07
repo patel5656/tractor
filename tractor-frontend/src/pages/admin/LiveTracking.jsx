@@ -62,7 +62,7 @@ export default function LiveTracking() {
                 className={cn(
                   "p-4 rounded-2xl transition-all cursor-pointer group border flex flex-col gap-3",
                   isSelected 
-                    ? "bg-earth-primary border-earth-primary shadow-lg shadow-earth-primary/20" 
+                    ? "bg-accent border-accent shadow-lg shadow-accent/20" 
                     : "bg-earth-card/50 border-earth-dark/10 hover:border-earth-dark/15"
                 )}
               >
@@ -169,7 +169,7 @@ export default function LiveTracking() {
                 <div className={cn(
                   "w-10 h-10 sm:w-14 sm:h-14 rounded-2xl border flex items-center justify-center transition-all duration-500 group-hover:scale-125 shadow-2xl",
                   isSelected 
-                    ? "bg-earth-card-alt border-earth-primary text-earth-brown scale-125 z-50 ring-4 ring-earth-primary/20" 
+                    ? "bg-earth-card-alt border-accent text-earth-brown scale-125 z-50 ring-4 ring-accent/20" 
                     : tractor.status === 'available' 
                       ? "bg-earth-card/90 border-emerald-500/50 text-earth-green" 
                       : "bg-earth-card/90 border-earth-primary/50 text-earth-primary"
@@ -198,17 +198,17 @@ export default function LiveTracking() {
         {/* BOTTOM TELEMETRY OVERLAY (Appears on selection) */}
         {selectedUnit && (
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 w-[90%] sm:w-[600px] z-[60] animate-in slide-in-from-bottom-10 duration-500">
-             <Card className="bg-earth-card/95 backdrop-blur-xl border border-earth-primary/30 shadow-[0_0_50px_rgba(0,0,0,0.5)] rounded-[2rem] overflow-hidden">
+             <Card className="bg-earth-card/95 backdrop-blur-xl border border-accent/30 shadow-[0_0_50px_rgba(0,0,0,0.5)] rounded-[2rem] overflow-hidden">
                 <CardContent className="p-6">
                    <div className="flex justify-between items-start mb-6">
                       <div className="flex items-center gap-4">
-                         <div className="w-16 h-16 bg-earth-primary rounded-2xl flex items-center justify-center text-earth-brown shadow-lg shadow-earth-primary/20">
+                         <div className="w-16 h-16 bg-accent rounded-2xl flex items-center justify-center text-white shadow-lg shadow-accent/20">
                             <Navigation size={32} />
                          </div>
                          <div>
                             <h3 className="text-xl font-black text-earth-brown uppercase tracking-tight leading-none mb-1">{selectedUnit.operator}</h3>
                             <div className="flex items-center gap-3">
-                               <Badge className="bg-earth-primary/10 text-earth-primary border-earth-primary/20 text-[10px] uppercase font-black px-2 py-0.5">{selectedUnit.id}</Badge>
+                               <Badge className="bg-accent/10 text-accent border-accent/20 text-[10px] uppercase font-black px-2 py-0.5">{selectedUnit.id}</Badge>
                                <span className="text-[10px] font-bold text-earth-mut uppercase tracking-widest flex items-center gap-1">
                                   <MapPin size={10} /> Sector-L5, Northern Grid
                                </span>

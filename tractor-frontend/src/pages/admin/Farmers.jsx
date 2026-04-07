@@ -186,7 +186,7 @@ export default function Farmers() {
                         size="sm"
                         variant="outline"
                         onClick={() => navigate(`/admin/bookings?search=${farmer.email}`)}
-                        className="text-[9px] px-4 font-black uppercase tracking-widest h-9 rounded-xl bg-earth-primary/10 text-earth-primary border-earth-primary/20 hover:bg-earth-primary hover:text-earth-brown transition-all"
+                        className="text-[9px] px-4 font-black uppercase tracking-widest h-9 rounded-xl bg-accent text-white border-accent hover:opacity-90 transition-all shadow-sm"
                       >
                         <History size={12} className="mr-1" /> History
                       </Button>
@@ -199,7 +199,7 @@ export default function Farmers() {
                           "text-[9px] px-4 font-black uppercase tracking-widest h-9 rounded-xl transition-all",
                           farmer.status === 'active' 
                             ? 'bg-earth-card-alt border-earth-dark/15 text-earth-sub hover:text-red-500 hover:border-red-500/30' 
-                            : 'bg-earth-primary/5 border-emerald-500/20 text-earth-green hover:bg-earth-primary hover:text-earth-brown'
+                            : 'bg-accent text-white border-accent hover:opacity-90 transition-all shadow-sm'
                         )}
                       >
                         {updatingId === farmer.id ? (

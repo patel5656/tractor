@@ -107,8 +107,8 @@ export default function BookTractor() {
     return (
       <div className="p-4 md:p-6 flex items-center justify-center min-h-[80vh]">
         <Card className="bg-earth-card border-earth-dark/10 w-full max-w-lg p-8 text-center space-y-6 rounded-[2rem] shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 left-0 w-full h-1 bg-earth-primary"></div>
-          <div className="w-20 h-20 bg-earth-primary/10 text-earth-green rounded-full flex items-center justify-center mx-auto mb-4 animate-in zoom-in duration-500">
+          <div className="absolute top-0 left-0 w-full h-1 bg-primary"></div>
+          <div className="w-20 h-20 bg-primary/10 text-primary rounded-full flex items-center justify-center mx-auto mb-4 animate-in zoom-in duration-500">
             <CheckCircle size={48} />
           </div>
           <div className="space-y-2">
@@ -123,18 +123,18 @@ export default function BookTractor() {
              </div>
              <div className="flex justify-between border-b border-earth-dark/10 pb-3">
                <span className="text-[10px] font-black text-earth-mut uppercase">Total Amount</span>
-               <span className="text-sm font-black text-earth-primary">₦{totalCost.toLocaleString()}</span>
+               <span className="text-sm font-black text-primary">₦{totalCost.toLocaleString()}</span>
              </div>
              <div className="flex justify-between">
                <span className="text-[10px] font-black text-earth-mut uppercase">Assigned Time</span>
-               <span className="text-sm font-black text-earth-green uppercase">Today, 3:00 PM</span>
+               <span className="text-sm font-black text-primary uppercase">Today, 3:00 PM</span>
              </div>
           </div>
 
           <div className="pt-4 space-y-3">
             <Button 
               onClick={() => navigate('/farmer/track')} 
-              className="w-full bg-earth-primary hover:bg-earth-primary-hover text-earth-brown h-14 rounded-2xl font-black uppercase tracking-wide flex items-center justify-center gap-2"
+              className="w-full bg-accent hover:opacity-90 text-white h-14 rounded-2xl font-black uppercase tracking-wide flex items-center justify-center gap-2 shadow-xl shadow-accent/20 transition-all transform hover:-translate-y-1"
             >
               Track Now <ArrowRight size={20} />
             </Button>
@@ -157,7 +157,7 @@ export default function BookTractor() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-earth-card/50 p-4 rounded-2xl border border-earth-dark/10">
         <div className="flex flex-col md:flex-row md:items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-earth-primary rounded-xl flex items-center justify-center text-earth-brown shadow-[0_0_15px_rgba(234,179,8,0.3)]">
+            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center text-white shadow-[0_0_15px_rgba(46,125,50,0.3)]">
               <Tractor size={20} />
             </div>
             <div>
@@ -341,7 +341,7 @@ export default function BookTractor() {
                   disabled={isBooking}
                   className={cn(
                     "w-full h-12 rounded-xl font-black uppercase tracking-wide shadow-lg flex items-center justify-center gap-2 transition-all",
-                    Object.keys(errors).length > 0 ? "bg-red-500/20 text-red-500 border border-red-500/30" : "bg-earth-primary hover:bg-earth-primary-hover text-earth-brown shadow-earth-primary/20"
+                    Object.keys(errors).length > 0 ? "bg-red-500/20 text-red-500 border border-red-500/30" : "bg-accent hover:opacity-90 text-white shadow-accent/20"
                   )}
                 >
                   {isBooking ? <Loader2 size={20} className="animate-spin" /> : Object.keys(errors).length > 0 ? "Check Fields" : "Book Now"}

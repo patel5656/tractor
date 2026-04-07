@@ -199,7 +199,7 @@ export default function Status() {
                         : "border-earth-dark/30 bg-earth-main opacity-20 cursor-not-allowed"
                   )}
                 >
-                  {isActive && <div className="absolute inset-y-0 left-0 w-1 bg-earth-primary"></div>}
+                  {isActive && <div className="absolute inset-y-0 left-0 w-1 bg-accent"></div>}
                   
                   <div className={cn(
                     "w-10 h-10 md:w-12 md:h-12 rounded-xl flex items-center justify-center mr-4 md:mr-6 shrink-0 transition-all border shadow-inner",
@@ -251,7 +251,7 @@ export default function Status() {
                            <p className="text-xs text-earth-sub font-bold uppercase tracking-wide">Connecting to Farmer Portal via ARC-UNIT-7</p>
                            <p className="text-sm font-black text-earth-brown uppercase italic">Initializing Voice/Chat Link...</p>
                         </div>
-                        <Button onClick={() => setActiveDialog(null)} className="w-full h-12 bg-earth-primary text-earth-brown font-black uppercase tracking-widest text-[9px] rounded-xl">Enter Channel</Button>
+                        <Button onClick={() => setActiveDialog(null)} className="w-full h-12 bg-accent text-white font-black uppercase tracking-widest text-[9px] rounded-xl hover:opacity-90">Enter Channel</Button>
                      </div>
                    )}
 

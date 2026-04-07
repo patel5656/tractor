@@ -250,8 +250,8 @@ export default function Settings() {
                 className={cn(
                   "gap-2 font-black uppercase tracking-widest h-12 px-8 rounded-xl border-none transition-all shadow-lg",
                   saveStatus === 'success' 
-                    ? "bg-primary-500 text-earth-brown scale-105" 
-                    : "bg-earth-primary hover:bg-earth-primary-hover text-earth-brown"
+                    ? "bg-accent text-white scale-105" 
+                    : "bg-accent hover:opacity-90 text-white"
                 )}
               >
                 {isSaving ? "Syncing..." : saveStatus === 'success' ? <><CheckCircle2 size={18} /> Synced</> : <><Save size={18} /> Update Node</>}
@@ -640,7 +640,7 @@ export default function Settings() {
                       </Button>
                       <Button 
                         onClick={handleSaveZone} 
-                        className="bg-earth-primary hover:bg-earth-primary-hover text-earth-brown uppercase font-black tracking-widest rounded-xl h-11 px-8 text-[10px] shadow-lg shadow-earth-primary/20"
+                        className="bg-accent hover:opacity-90 text-white uppercase font-black tracking-widest rounded-xl h-11 px-8 text-[10px] shadow-lg shadow-accent/20"
                       >
                         {editingZoneId === 'new' ? 'Confirm Addition' : 'Save Changes'}
                       </Button>

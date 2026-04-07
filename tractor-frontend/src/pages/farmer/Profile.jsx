@@ -211,7 +211,7 @@ export default function Profile() {
                       <Button 
                         onClick={handleSaveProfile}
                         disabled={isSubmitting}
-                        className="w-full h-12 rounded-xl mt-2 font-black uppercase tracking-widest text-[10px] bg-earth-primary text-earth-brown hover:bg-earth-primary-hover border-none shadow-lg disabled:opacity-50"
+                        className="w-full h-12 rounded-xl mt-2 font-black uppercase tracking-widest text-[10px] bg-accent text-white hover:opacity-90 border-none shadow-lg disabled:opacity-50"
                       >
                          {isSubmitting ? "Saving..." : "Save Profile"}
                       </Button>
@@ -242,7 +242,7 @@ export default function Profile() {
                       <Button 
                         onClick={handlePasswordChange}
                         disabled={isSubmitting}
-                        className="w-full h-12 rounded-xl mt-2 font-black uppercase tracking-widest text-[10px] bg-earth-primary text-earth-brown hover:bg-earth-primary-hover border-none shadow-lg disabled:opacity-50"
+                        className="w-full h-12 rounded-xl mt-2 font-black uppercase tracking-widest text-[10px] bg-accent text-white hover:opacity-90 border-none shadow-lg disabled:opacity-50"
                       >
                          {isSubmitting ? "Updating..." : "Update Password"}
                       </Button>

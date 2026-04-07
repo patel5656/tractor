@@ -79,7 +79,7 @@ export default function Reports() {
               onClick={() => setRange(r)}
               className={cn(
                 "flex-1 sm:flex-none px-4 sm:px-5 py-2 rounded-lg transition-all",
-                range === r ? "bg-earth-primary text-earth-brown shadow-[0_0_10px_rgba(234,179,8,0.3)]" : "text-earth-mut hover:text-earth-brown hover:bg-earth-card-alt"
+                range === r ? "bg-accent text-white shadow-[0_0_10px_rgba(255,152,0,0.3)]" : "text-earth-mut hover:text-earth-brown hover:bg-earth-card-alt"
               )}
             >
               {r === '7d' ? '7 Days' : r === '30d' ? '30 Days' : 'Year'}

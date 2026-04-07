@@ -49,11 +49,11 @@ export default function Jobs() {
   const getStatusAction = (status) => {
     switch (status) {
       case 'dispatched':
-        return { label: 'Start En Route', next: 'en_route', color: 'bg-earth-primary/20 hover:bg-earth-primary/30 text-earth-brown border border-earth-primary/30' };
+        return { label: 'Start En Route', next: 'en_route', color: 'bg-accent/20 hover:bg-accent/30 text-accent border border-accent/30' };
       case 'en_route':
-        return { label: 'Start Work', next: 'in_progress', color: 'bg-earth-primary/40 hover:bg-earth-primary/50 text-earth-brown border border-earth-primary/40' };
+        return { label: 'Start Work', next: 'in_progress', color: 'bg-accent/40 hover:bg-accent/50 text-white border border-accent/40' };
       case 'in_progress':
-        return { label: 'Mark Completed', next: 'completed', color: 'bg-earth-primary hover:bg-earth-primary-hover text-earth-brown' };
+        return { label: 'Mark Completed', next: 'completed', color: 'bg-accent hover:opacity-90 text-white' };
       default:
         return null;
     }

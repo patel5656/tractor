@@ -94,7 +94,7 @@ export default function Payments() {
                 <Button 
                   onClick={handlePayFull}
                   disabled={pendingData.totalOutstanding <= 0 || isLoading}
-                  className="w-full bg-earth-primary text-earth-brown hover:bg-earth-primary-hover h-12 font-black uppercase tracking-widest text-[9px] rounded-xl shadow-lg shadow-earth-primary/20 active:scale-95 transition-all"
+                  className="w-full bg-accent text-white hover:opacity-90 h-12 font-black uppercase tracking-widest text-[9px] rounded-xl shadow-lg shadow-accent/20 active:scale-95 transition-all"
                 >
                   {isLoading ? 'Loading...' : 'Settle All Dues'}
                 </Button>
@@ -185,7 +185,7 @@ export default function Payments() {
                           setPaymentPortal({ open: true, type: `Payment for ${booking.serviceType}`, amount: booking.remainingAmount, targetId: booking.id });
                           setPaymentStep('method');
                         }}
-                        className="bg-earth-primary text-earth-brown hover:bg-earth-primary-hover px-5 h-9 font-black uppercase tracking-widest text-[8px] rounded-lg shadow-lg shadow-earth-primary/10 transition-all"
+                        className="bg-accent text-white hover:opacity-90 px-5 h-9 font-black uppercase tracking-widest text-[8px] rounded-lg shadow-lg shadow-accent/10 transition-all"
                       >
                         Pay Now
                       </Button>
@@ -245,7 +245,7 @@ export default function Payments() {
                  </div>
                  <div className="grid grid-cols-2 gap-3">
                     <Button onClick={() => alert('Receipt downloaded')} variant="outline" className="h-12 rounded-xl border-earth-dark/10 text-earth-mut font-black uppercase tracking-widest text-[8px] hover:text-earth-brown">PDF Receipt</Button>
-                    <Button className="h-12 rounded-xl bg-earth-primary text-earth-brown font-black uppercase tracking-widest text-[8px]">Print</Button>
+                    <Button className="h-12 rounded-xl bg-accent text-white font-black uppercase tracking-widest text-[8px]">Print</Button>
                  </div>
               </div>
             </motion.div>
@@ -263,7 +263,7 @@ export default function Payments() {
                initial={{ y: 10, opacity: 0 }} 
                animate={{ y: 0, opacity: 1 }} 
                exit={{ y: 10, opacity: 0 }}
-               className="bg-earth-card border border-earth-dark/10 w-full max-w-sm rounded-[2.5rem] overflow-hidden shadow-2xl relative z-10 border-t-2 border-t-earth-primary"
+               className="bg-earth-card border border-earth-dark/10 w-full max-w-sm rounded-[2.5rem] overflow-hidden shadow-2xl relative z-10 border-t-2 border-t-accent"
             >
               {paymentStep === 'method' && (
                 <div className="p-7 space-y-6">
@@ -283,7 +283,7 @@ export default function Payments() {
                   <div className="space-y-2">
                      <button onClick={startPayment} className="w-full h-14 bg-earth-card border border-earth-dark/10 rounded-xl px-4 flex items-center justify-between transition-all group">
                         <div className="flex items-center gap-3">
-                           <CreditCard size={18} className="text-earth-primary" />
+                           <CreditCard size={18} className="text-accent" />
                            <span className="font-black text-xs text-earth-brown uppercase italic">Credit Card</span>
                         </div>
                         <ArrowUpRight size={16} className="text-earth-mut" />
@@ -312,7 +312,7 @@ export default function Payments() {
 
               {paymentStep === 'success' && (
                 <div className="p-10 text-center space-y-6">
-                   <div className="w-16 h-16 bg-earth-primary rounded-2xl flex items-center justify-center text-earth-brown mx-auto shadow-lg shadow-emerald-500/20">
+                   <div className="w-16 h-16 bg-accent rounded-2xl flex items-center justify-center text-white mx-auto shadow-lg shadow-orange-500/20">
                       <CheckCircle size={32} strokeWidth={2.5} />
                    </div>
                    <div>

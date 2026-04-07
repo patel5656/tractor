@@ -3,12 +3,12 @@ import { forwardRef } from 'react';
 
 const Button = forwardRef(({ className, variant = 'primary', size = 'md', children, ...props }, ref) => {
   const variants = {
-    primary: "bg-emerald-600 text-earth-brown font-black uppercase tracking-widest shadow-[0_0_15px_rgba(16,185,129,0.2)] hover:bg-earth-primary",
-    secondary: "bg-earth-card-alt text-earth-brown border border-earth-dark/15 shadow-sm hover:bg-earth-card font-bold",
-    outline: "bg-transparent text-earth-primary border-2 border-earth-primary/50 hover:bg-earth-primary/10 font-black uppercase tracking-widest",
+    primary: "bg-accent text-white font-black uppercase tracking-widest shadow-lg shadow-accent/20 hover:opacity-90",
+    secondary: "bg-transparent text-primary border-2 border-primary hover:bg-primary hover:text-white font-black uppercase tracking-widest shadow-sm",
+    accent: "bg-accent text-white font-black uppercase tracking-widest shadow-lg shadow-accent/20 hover:opacity-90",
+    outline: "bg-transparent text-primary border-2 border-primary/50 hover:bg-primary/10 font-black uppercase tracking-widest",
     ghost: "bg-transparent text-earth-sub hover:bg-earth-card-alt hover:text-earth-brown font-bold",
-    accent: "bg-earth-primary text-earth-brown font-black uppercase tracking-widest shadow-[0_0_15px_rgba(234,179,8,0.2)] hover:bg-earth-primary-hover",
-    destructive: "bg-red-500 text-earth-brown font-black uppercase tracking-widest shadow-[0_0_15px_rgba(239,68,68,0.2)] hover:bg-red-600",
+    destructive: "bg-red-500 text-white font-black uppercase tracking-widest shadow-lg shadow-red-500/20 hover:bg-red-600",
   };
 
   const sizes = {

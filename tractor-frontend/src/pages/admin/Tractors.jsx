@@ -98,7 +98,7 @@ export default function Tractors() {
           </div>
           <Button 
             onClick={() => setShowAddModal(true)}
-            className="h-12 px-6 rounded-2xl bg-earth-primary text-earth-brown font-black uppercase tracking-widest text-[11px] shadow-lg shadow-earth-primary/20 hover:scale-[1.02] transform transition-all active:scale-95"
+            className="h-12 px-6 rounded-2xl bg-accent text-white font-black uppercase tracking-widest text-[11px] shadow-lg shadow-accent/20 hover:scale-[1.02] transform transition-all active:scale-95"
           >
             <Plus size={16} className="mr-2 stroke-[3]" /> Add New Tractor
           </Button>
@@ -112,14 +112,14 @@ export default function Tractors() {
            { label: 'Active Service', value: tractors.filter(t => t.status === 'available' || t.status === 'busy').length, icon: ShieldCheck, color: 'text-earth-green', bg: 'bg-earth-primary/10' },
            { label: 'Maintenance', value: tractors.filter(t => t.status === 'maintenance').length, icon: AlertTriangle, color: 'text-red-500', bg: 'bg-red-500/10' },
          ].map((stat, i) => (
-           <Card key={i} className="bg-earth-card border-earth-dark/10 shadow-sm rounded-[2rem] border-b-4 border-b-earth-primary/20">
-              <CardContent className="p-6 flex items-center justify-between">
+           <Card key={i} className="bg-earth-card border-earth-dark/10 shadow-sm rounded-2xl border-b-4 border-b-earth-primary/20">
+              <CardContent className="p-4 flex items-center justify-between">
                  <div>
-                   <p className="text-[10px] font-black text-earth-mut uppercase tracking-[0.2em] mb-1 font-outfit">{stat.label}</p>
-                   <h3 className="text-3xl font-black text-earth-brown tracking-tighter">{stat.value.toString().padStart(2, '0')}</h3>
+                   <p className="text-[9px] font-black text-earth-mut uppercase tracking-[0.15em] mb-0.5 font-outfit">{stat.label}</p>
+                   <h3 className="text-2xl font-black text-earth-brown tracking-tighter">{stat.value.toString().padStart(2, '0')}</h3>
                  </div>
-                 <div className={cn("p-4 rounded-2xl shrink-0 shadow-inner", stat.bg)}>
-                    <stat.icon size={20} className={stat.color} />
+                 <div className={cn("p-3 rounded-xl shrink-0 shadow-inner", stat.bg)}>
+                    <stat.icon size={18} className={stat.color} />
                  </div>
               </CardContent>
            </Card>
@@ -127,8 +127,8 @@ export default function Tractors() {
       </div>
 
       {/* Tractors List */}
-      <Card className="bg-earth-card border-earth-dark/10 shadow-sm rounded-[2rem] overflow-hidden">
-        <CardHeader className="p-8 border-b border-earth-dark/10 flex flex-row items-center justify-between bg-earth-card/50">
+      <Card className="bg-earth-card border-earth-dark/10 shadow-sm rounded-2xl overflow-hidden">
+        <CardHeader className="p-6 border-b border-earth-dark/10 flex flex-row items-center justify-between bg-earth-card/50">
           <div>
             <CardTitle className="text-base font-black text-earth-brown uppercase tracking-wider italic font-outfit">Fleet Registry</CardTitle>
             <CardDescription className="text-[10px] font-bold text-earth-mut uppercase mt-1 tracking-[0.1em]">Verified heavy machinery assets</CardDescription>
@@ -242,7 +242,7 @@ export default function Tractors() {
                           className={cn(
                             "text-[9px] px-4 font-black uppercase tracking-widest h-10 rounded-xl transition-all border-b-2 active:translate-y-0.5",
                             tractor.status === 'maintenance' 
-                              ? 'bg-earth-primary/10 border-earth-primary/30 text-earth-green hover:bg-earth-primary hover:text-earth-brown' 
+                              ? 'bg-accent/10 border-accent/30 text-accent hover:bg-accent hover:text-white' 
                               : 'bg-earth-card-alt border-earth-dark/15 text-earth-sub hover:text-red-500 hover:border-red-500/30'
                           )}
                         >
@@ -311,7 +311,7 @@ export default function Tractors() {
                        <Button 
                          type="submit"
                          disabled={isSubmitting}
-                         className="flex-1 h-14 rounded-2xl bg-earth-primary text-earth-brown font-black uppercase tracking-widest text-[11px] hover:scale-105 active:scale-95 transition-all shadow-lg shadow-earth-primary/20"
+                         className="flex-1 h-14 rounded-2xl bg-accent text-white font-black uppercase tracking-widest text-[11px] hover:scale-105 active:scale-95 transition-all shadow-lg shadow-accent/20"
                        >
                          {isSubmitting ? <Loader2 className="animate-spin" /> : "Deploy Asset"}
                        </Button>

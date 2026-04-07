@@ -164,7 +164,7 @@ export default function Bookings() {
              <Button 
                onClick={handleExport} 
                disabled={isExporting}
-               className="shrink-0 bg-earth-primary hover:bg-earth-primary-hover text-earth-brown font-black uppercase tracking-widest h-12 px-6 rounded-xl shadow-lg border-none transition-all"
+               className="shrink-0 bg-accent hover:opacity-90 text-white font-black uppercase tracking-widest h-12 px-6 rounded-xl shadow-lg border-none transition-all"
              >
                {isExporting ? <span className="animate-pulse">Exporting...</span> : <><FileText size={18} className="mr-2" /> Export</>}
              </Button>
@@ -225,7 +225,7 @@ export default function Bookings() {
                          variant="ghost" 
                          size="sm" 
                          onClick={() => handleViewDetails(booking.id)}
-                         className="bg-earth-primary/10 text-earth-primary hover:bg-earth-primary hover:text-earth-brown font-black uppercase text-[10px] tracking-widest px-4 py-2 rounded-lg border border-earth-primary/20 transition-all"
+                         className="bg-accent/10 text-accent hover:bg-accent hover:text-white font-black uppercase text-[10px] tracking-widest px-4 py-2 rounded-lg border border-accent/20 transition-all"
                        >
                          <Eye size={12} className="mr-2" /> View Details
                        </Button>
@@ -307,7 +307,7 @@ export default function Bookings() {
             <Button 
               onClick={handleExport} 
               disabled={isExporting}
-              className="shrink-0 bg-earth-primary text-earth-brown px-4 font-black uppercase h-12 rounded-2xl"
+              className="shrink-0 bg-accent text-white px-4 font-black uppercase h-12 rounded-2xl"
             >
                <FileText size={16} />
             </Button>
@@ -340,7 +340,7 @@ export default function Bookings() {
                        variant="outline" 
                        size="sm" 
                        onClick={() => handleViewDetails(booking.id)}
-                       className="bg-earth-primary text-earth-brown hover:bg-earth-primary-hover font-black uppercase text-[10px] tracking-widest px-4 rounded-xl h-10 border-none w-full"
+                       className="bg-accent text-white hover:opacity-90 font-black uppercase text-[10px] tracking-widest px-4 rounded-xl h-10 border-none w-full"
                     >
                       <Eye size={14} className="mr-2" /> View Details
                     </Button>

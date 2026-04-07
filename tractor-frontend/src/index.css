@@ -1,17 +1,21 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100;200;300;400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
 @theme {
-  --color-earth-main: #f3e3c9;
-  --color-earth-card: #f8f5ef;
-  --color-earth-card-alt: #efe8dc;
-  --color-earth-dark: #2d321e;
-  --color-earth-primary: #f5a415;
-  --color-earth-primary-hover: #fabb52;
-  --color-earth-brown: #301e10;
-  --color-earth-green: #6c9336;
-  --color-earth-green-dark: #2c5f24;
-  --color-earth-sub: #5a5a4a;
-  --color-earth-mut: #8a8a7a;
+  --color-primary: #2E7D32;
+  --color-accent: #FF9800;
+  --color-earth-main: #FFFFFF;
+  --color-earth-card: #FFFFFF;
+  --color-earth-card-alt: #F9FAFB;
+  --color-earth-dark: #1A2218;
+  --color-earth-primary: #2E7D32;
+  --color-earth-primary-hover: #1B5E20;
+  --color-earth-brown: #1A2218;
+  --color-earth-green: #2E7D32;
+  --color-earth-green-dark: #1B5E20;
+  --color-earth-sub: #4B5563;
+  --color-earth-mut: #9CA3AF;
+  --color-earth-accent: #FF9800;
 
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
 }
@@ -27,6 +31,28 @@
     box-shadow: 0 4px 30px -2px rgba(0, 0, 0, 0.05);
   }
   .glass-card {
-    @apply bg-earth-card shadow-lg border border-earth-dark/10;
+    @apply bg-earth-card shadow-lg border-1 border-earth-dark/10;
+  }
+  /* Custom Scrollbar for premium feel */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  /* Utility to hide standard scrollbar */
+  .scrollbar-hide {
+    -ms-overflow-style: none; /* IE, Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none; /* Chrome, Safari, Opera */
   }
 }

@@ -188,7 +188,7 @@ export default function Fuel() {
               <Button 
                 onClick={handleCommit}
                 disabled={submitting}
-                className="w-full bg-earth-primary text-earth-brown hover:bg-earth-primary-hover font-black px-6 py-4 rounded-xl shadow-lg transition-all hover:-translate-y-0.5 active:scale-95 text-sm uppercase tracking-widest border-none mt-2 disabled:opacity-50"
+                className="w-full bg-accent text-white hover:opacity-90 font-black px-6 py-4 rounded-xl shadow-lg transition-all hover:-translate-y-0.5 active:scale-95 text-sm uppercase tracking-widest border-none mt-2 disabled:opacity-50"
               >
                 {submitting ? "Committing..." : "Commit Entry"} <ArrowRight size={18} className="ml-2" />
               </Button>

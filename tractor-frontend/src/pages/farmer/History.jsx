@@ -168,7 +168,7 @@ export default function History() {
             <Button 
               onClick={handleExport}
               disabled={isExporting}
-              className="h-11 gap-2 font-black uppercase tracking-widest bg-earth-primary hover:bg-earth-primary-hover text-earth-brown rounded-xl shadow-lg shadow-earth-primary/20 px-6"
+              className="h-11 gap-2 font-black uppercase tracking-widest bg-accent hover:opacity-90 text-white rounded-xl shadow-lg shadow-accent/20 px-6"
             >
               {isExporting ? <Clock className="animate-spin" size={16} /> : <Download size={16} />}
               <span className="hidden sm:inline">Export</span>
@@ -428,7 +428,7 @@ export default function History() {
                 <Button 
                    onClick={() => handleDownloadInvoice(selectedBooking)}
                    disabled={isDownloading}
-                   className="w-full bg-earth-primary hover:bg-earth-primary-hover text-earth-brown font-black uppercase tracking-widest h-12 rounded-2xl shadow-lg transition-all"
+                   className="w-full bg-accent hover:opacity-90 text-white font-black uppercase tracking-widest h-12 rounded-2xl shadow-lg transition-all"
                 >
                   {isDownloading ? <Clock className="animate-spin mr-2" size={16} /> : <FileText className="mr-2" size={16} />}
                   {isDownloading ? "Generating PDF..." : "Download Invoice"}

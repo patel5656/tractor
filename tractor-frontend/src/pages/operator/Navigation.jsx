@@ -96,7 +96,7 @@ export default function Navigation() {
           }}
         >
           <div className="relative group">
-             <div className="bg-earth-primary p-2.5 rounded-2xl text-black border-2 border-earth-dark/20 shadow-[0_0_25px_rgba(234,179,8,0.5)]">
+             <div className="bg-accent p-2.5 rounded-2xl text-white border-2 border-accent/20 shadow-[0_0_25px_rgba(255,152,0,0.5)]">
                 <Navigation2 size={22} fill="currentColor" />
              </div>
              <div className="absolute top-12 left-1/2 -translate-x-1/2 whitespace-nowrap px-3 py-1.5 bg-earth-main/90 backdrop-blur-md text-earth-brown text-[9px] font-black rounded-lg border border-earth-dark/10 shadow-xl">
@@ -108,7 +108,7 @@ export default function Navigation() {
         {/* Map Overlays */}
         <div className="absolute top-4 left-4 right-4 flex justify-between items-start pointer-events-none">
            <div className="bg-earth-main/40 backdrop-blur-md border border-earth-dark/10/50 p-3 rounded-2xl flex items-center gap-3 pointer-events-auto">
-             <div className="bg-earth-primary p-1.5 rounded-lg text-black">
+             <div className="bg-accent p-1.5 rounded-lg text-white">
                <Clock size={14} />
              </div>
              <div>
@@ -137,7 +137,7 @@ export default function Navigation() {
         {/* Header */}
         <div className="p-6 border-b border-earth-dark/10 bg-earth-card/50 sticky top-0 z-20 backdrop-blur-md">
           <div className="flex items-center gap-2 mb-1.5">
-             <span className="px-2 py-0.5 bg-earth-primary/10 text-earth-primary rounded text-[9px] font-black uppercase tracking-widest border border-earth-primary/20">Mission Active</span>
+             <span className="px-2 py-0.5 bg-accent/10 text-accent rounded text-[9px] font-black uppercase tracking-widest border border-accent/20">Mission Active</span>
              <ChevronRight size={14} className="text-earth-mut" />
              <span className="text-[10px] font-black text-earth-mut uppercase tracking-widest">Target: Plot 42</span>
           </div>
@@ -150,7 +150,7 @@ export default function Navigation() {
           <div className="bg-earth-card border border-earth-dark/10 p-4 rounded-2xl space-y-4 shadow-inner">
              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                   <div className="w-12 h-12 bg-earth-card rounded-xl flex items-center justify-center text-earth-primary font-black text-xl border border-earth-dark/10 shadow-sm">
+                   <div className="w-12 h-12 bg-earth-card rounded-xl flex items-center justify-center text-accent font-black text-xl border border-earth-dark/10 shadow-sm">
                      <Search size={20} />
                    </div>
                    <div>
@@ -220,7 +220,7 @@ export default function Navigation() {
              variant="default" 
              className={cn(
                "w-full h-12 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all",
-               isNavigating ? "bg-earth-brown text-earth-main hover:bg-earth-dark" : "bg-earth-primary hover:bg-earth-primary-hover text-earth-brown"
+               isNavigating ? "bg-earth-dark hover:bg-neutral-800 text-white" : "bg-accent hover:opacity-90 text-white"
              )}
            >
              {isNavigating ? <><X size={16} className="mr-2" /> End Mission</> : <><Play size={16} className="mr-2" /> Start Navigation</>}

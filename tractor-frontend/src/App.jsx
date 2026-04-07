@@ -1,6 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate, useNavigate, Link } from 'react-router-dom';
 import { useState } from 'react';
-import { Tractor, UserCircle, Shield, Briefcase, Lock, Mail } from 'lucide-react';
+import { Tractor, UserCircle, Shield, Briefcase, Lock, Mail, ArrowLeft } from 'lucide-react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { SettingsProvider } from './context/SettingsContext';
 import { BookingProvider } from './context/BookingContext';
@@ -104,32 +104,32 @@ function Login() {
     <div className="min-h-screen bg-earth-main flex font-sans">
       
       {/* Left Branding Panel (Hidden on Mobile) */}
-      <div className="hidden lg:flex flex-1 bg-earth-dark border-r border-earth-dark/10 relative overflow-hidden items-center justify-center p-12">
-        <div className="absolute inset-0 opacity-10" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, #fbbf24 1px, transparent 0)', backgroundSize: '32px 32px' }}></div>
+      <div className="hidden lg:flex flex-1 bg-white border-r border-gray-100 relative overflow-hidden items-center justify-center p-12">
+        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, #2E7D32 1px, transparent 0)', backgroundSize: '32px 32px' }}></div>
         <div className="absolute top-0 right-0 p-24 opacity-5 transform translate-x-20 -translate-y-10">
           <Tractor size={400} className="text-earth-primary" />
         </div>
         
-        <div className="relative z-10 max-w-lg text-earth-main">
-          <h1 className="text-5xl font-black mb-6 flex items-center gap-4 text-earth-main">
+        <div className="relative z-10 max-w-lg text-earth-dark">
+          <h1 className="text-5xl font-black mb-6 flex items-center gap-4 text-earth-dark uppercase">
             <img src="/tractorlink-logo.png" alt="TractorLink Logo" className="w-24 h-24 object-contain" />
             TractorLink
           </h1>
-          <p className="text-xl text-earth-main opacity-80 font-bold leading-relaxed">
+          <p className="text-xl text-earth-sub font-bold leading-relaxed">
             The leading smart agriculture network connecting farm owners with machinery and professional operators seamlessly.
           </p>
           
           <div className="mt-12 space-y-4">
-               <div className="flex items-center gap-4 bg-earth-card-alt/80 p-4 rounded-2xl border border-earth-dark/15 shadow-inner backdrop-blur-sm">
-                 <div className="w-10 h-10 bg-earth-primary rounded-xl flex items-center justify-center text-earth-brown font-black shrink-0">1</div>
-                 <p className="font-bold text-earth-brown">Verify your email address securely</p>
+               <div className="flex items-center gap-4 bg-gray-50/80 p-4 rounded-2xl border border-gray-200 shadow-inner backdrop-blur-sm">
+                 <div className="w-10 h-10 bg-earth-primary rounded-xl flex items-center justify-center text-white font-black shrink-0">1</div>
+                 <p className="font-bold text-earth-dark">Verify your email address securely</p>
                </div>
-             <div className="flex items-center gap-4 bg-earth-card-alt/80 p-4 rounded-2xl border border-earth-dark/15 shadow-inner backdrop-blur-sm">
-               <div className="w-10 h-10 bg-earth-primary rounded-xl flex items-center justify-center text-earth-brown font-black shrink-0">2</div>
-               <p className="font-bold text-earth-brown">Select your primary organization role</p>
+             <div className="flex items-center gap-4 bg-gray-50/80 p-4 rounded-2xl border border-gray-200 shadow-inner backdrop-blur-sm">
+               <div className="w-10 h-10 bg-earth-primary rounded-xl flex items-center justify-center text-white font-black shrink-0">2</div>
+               <p className="font-bold text-earth-dark">Select your primary organization role</p>
              </div>
-             <div className="flex items-center gap-4 bg-earth-card-alt/80 p-4 rounded-2xl border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)] backdrop-blur-sm">
-               <div className="w-10 h-10 bg-earth-primary rounded-xl flex items-center justify-center text-earth-brown font-black shrink-0">3</div>
+             <div className="flex items-center gap-4 bg-gray-50/80 p-4 rounded-2xl border border-earth-primary/10 shadow-[0_0_15px_rgba(46,125,50,0.05)] backdrop-blur-sm">
+               <div className="w-10 h-10 bg-earth-primary rounded-xl flex items-center justify-center text-white font-black shrink-0">3</div>
                <p className="font-bold text-earth-green">Access tailored operational dashboards</p>
              </div>
           </div>
@@ -138,6 +138,11 @@ function Login() {
       
       {/* Right Login Panel */}
       <div className="flex-1 flex items-center justify-center p-6 md:p-12 relative bg-earth-main">
+        {/* Back to Home Button */}
+        <Link to="/" className="absolute top-8 right-8 p-3 bg-white border border-gray-100 rounded-2xl shadow-sm text-earth-sub hover:text-earth-primary transition-all hover:scale-110 active:scale-95 group flex items-center gap-2 font-bold text-xs uppercase tracking-widest">
+           <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
+           Home
+        </Link>
         <div className="w-full max-w-md">
           
           <div className="lg:hidden flex items-center gap-3 mb-10 text-earth-brown font-black text-3xl">
@@ -194,7 +199,7 @@ function Login() {
               type="submit" 
               disabled={isSubmitting}
               className={cn(
-                "w-full h-14 text-base md:text-lg font-black uppercase tracking-widest rounded-2xl bg-earth-primary hover:bg-earth-primary-hover text-earth-brown shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] transition-all mt-8 border-none",
+                "w-full h-14 text-base md:text-lg font-black uppercase tracking-widest rounded-2xl bg-accent hover:opacity-90 text-white shadow-lg shadow-accent/30 transition-all mt-8 border-none",
                 isSubmitting && "opacity-50 cursor-not-allowed"
               )}
             >

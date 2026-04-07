@@ -39,31 +39,31 @@ export default function Register() {
 
   return (
     <div className="min-h-screen bg-earth-main flex items-center justify-center p-4">
-      <div className="max-w-5xl w-full bg-earth-card rounded-[2rem] shadow-2xl shadow-black/50 overflow-hidden flex flex-col md:flex-row border border-earth-dark/10">
+      <div className="max-w-5xl w-full bg-white rounded-[2rem] shadow-2xl overflow-hidden flex flex-col md:flex-row border border-gray-100">
         
         {/* Left Branding */}
-        <div className="w-full md:w-5/12 bg-earth-dark border-r border-earth-dark/10 p-8 md:p-12 text-earth-main flex flex-col justify-center relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-full h-full opacity-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-earth-primary via-transparent to-transparent pointer-events-none"></div>
+        <div className="w-full md:w-5/12 bg-white border-r border-gray-100 p-8 md:p-12 text-earth-dark flex flex-col justify-center relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-full h-full opacity-[0.03] bg-[radial-gradient(ellipse_at_top_right,_var(--color-primary),_transparent)] pointer-events-none"></div>
           
           <div className="relative z-10 space-y-6">
             <div className="flex items-center gap-4">
               <img src="/tractorlink-logo.png" alt="TractorLink Logo" className="w-20 h-20 object-contain" />
-              <h2 className="text-3xl font-black tracking-tight text-earth-main">TractorLink</h2>
+              <h2 className="text-3xl font-black tracking-tight text-earth-dark uppercase">TractorLink</h2>
             </div>
-            <p className="text-earth-main/80 font-bold leading-relaxed">Join the leading smart agriculture network today.</p>
+            <p className="text-earth-sub font-bold leading-relaxed">Join the leading smart agriculture network today.</p>
 
             <div className="space-y-4 mt-12 hidden md:block">
-              <div className="flex items-center gap-4 bg-earth-main/5 p-4 rounded-2xl border border-earth-main/10 shadow-inner">
-                <div className="w-10 h-10 rounded-xl bg-earth-primary text-earth-brown flex items-center justify-center font-black">1</div>
-                <p className="text-sm font-bold text-earth-main">Create a secure account</p>
+              <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-inner">
+                <div className="w-10 h-10 rounded-xl bg-accent text-white flex items-center justify-center font-black">1</div>
+                <p className="text-sm font-bold text-earth-dark">Create a secure account</p>
               </div>
-              <div className="flex items-center gap-4 bg-earth-main/5 p-4 rounded-2xl border border-earth-main/10 shadow-inner">
-                <div className="w-10 h-10 rounded-xl bg-earth-primary text-earth-brown flex items-center justify-center font-black">2</div>
-                <p className="text-sm font-bold text-earth-main">Select your organization role</p>
+              <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-2xl border border-gray-100 shadow-inner">
+                <div className="w-10 h-10 rounded-xl bg-accent text-white flex items-center justify-center font-black">2</div>
+                <p className="text-sm font-bold text-earth-dark">Select your organization role</p>
               </div>
-              <div className="flex items-center gap-4 bg-earth-card/80 p-4 rounded-2xl border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)] backdrop-blur-sm">
-                <div className="w-10 h-10 rounded-xl bg-earth-primary text-earth-brown flex items-center justify-center font-black shadow-[0_0_10px_rgba(16,185,129,0.5)]">3</div>
-                <p className="text-sm font-bold text-earth-green">Access your dashboard</p>
+              <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-2xl border-accent/10 shadow-[0_0_15px_rgba(255,152,0,0.05)] backdrop-blur-sm">
+                <div className="w-10 h-10 rounded-xl bg-accent text-white flex items-center justify-center font-black shadow-[0_0_10px_rgba(255,152,0,0.3)]">3</div>
+                <p className="text-sm font-bold text-accent">Access your dashboard</p>
               </div>
             </div>
           </div>
@@ -77,8 +77,8 @@ export default function Register() {
           <form onSubmit={handleRegister} className="space-y-6">
             
             {success ? (
-              <div className="bg-earth-primary/10 border border-emerald-500/20 p-8 rounded-3xl text-center space-y-4">
-                <div className="w-16 h-16 bg-earth-primary rounded-full flex items-center justify-center text-earth-brown mx-auto shadow-[0_0_20px_rgba(16,185,129,0.4)]">
+              <div className="bg-primary/10 border border-emerald-500/20 p-8 rounded-3xl text-center space-y-4">
+                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center text-white mx-auto shadow-[0_0_20px_rgba(46,125,50,0.4)]">
                   <Shield size={32} />
                 </div>
                 <h3 className="text-xl font-black text-earth-brown">Registration Successful!</h3>
@@ -103,14 +103,14 @@ export default function Register() {
                         className={cn(
                           "flex flex-col items-center justify-center py-4 rounded-2xl border-2 transition-all",
                           role === r.id 
-                            ? 'border-earth-primary bg-earth-card-alt shadow-[0_0_15px_rgba(234,179,8,0.1)]' 
+                            ? 'border-earth-primary bg-earth-card-alt shadow-[0_0_15px_rgba(46,125,50,0.1)]' 
                             : 'border-earth-dark/10 bg-earth-card/50 hover:bg-earth-card-alt hover:border-earth-dark/15 text-earth-mut'
                         )}
                       >
                         <div className={cn("p-2 rounded-xl mb-2 transition-colors border shadow-inner", role === r.id ? "bg-earth-primary/10 text-earth-primary border-earth-primary/50" : "bg-earth-card-alt text-earth-mut border-earth-dark/15")}>
                           <r.icon size={20} />
                         </div>
-                        <span className={cn("text-xs font-black uppercase tracking-widest", role === r.id ? "text-earth-brown" : "text-earth-sub")}>{r.label}</span>
+                        <span className={cn("text-xs font-black uppercase tracking-widest", role === r.id ? "text-earth-dark" : "text-earth-sub")}>{r.label}</span>
                       </button>
                     ))}
                   </div>
@@ -165,7 +165,7 @@ export default function Register() {
                   type="submit" 
                   disabled={isSubmitting}
                   className={cn(
-                    "w-full h-14 text-base md:text-lg font-black uppercase tracking-widest bg-earth-primary hover:bg-earth-primary-hover text-earth-brown rounded-2xl transition-all transform hover:-translate-y-0.5 shadow-[0_0_20px_rgba(16,185,129,0.3)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] mt-8",
+                    "w-full h-14 text-base md:text-lg font-black uppercase tracking-widest bg-accent hover:opacity-90 text-white rounded-2xl transition-all transform hover:-translate-y-0.5 shadow-[0_0_20px_rgba(255,152,0,0.3)] hover:shadow-[0_0_30px_rgba(255,152,0,0.5)] mt-8",
                     isSubmitting && "opacity-50 cursor-not-allowed"
                   )}
                 >

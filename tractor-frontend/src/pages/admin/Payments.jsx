@@ -147,7 +147,7 @@ export default function Payments() {
                 <Button variant="ghost" onClick={() => setConfirmSettleId(null)} className="flex-1 h-12 rounded-2xl bg-earth-card-alt border-earth-dark/15 text-earth-sub font-black uppercase text-[10px] tracking-widest hover:text-earth-brown">
                   Cancel
                 </Button>
-                <Button onClick={() => handleMarkAsPaid(confirmSettleId)} className="flex-1 h-12 rounded-2xl bg-earth-primary text-earth-brown font-black uppercase text-[10px] tracking-widest hover:bg-earth-primary-hover">
+                <Button onClick={() => handleMarkAsPaid(confirmSettleId)} className="flex-1 h-12 rounded-2xl bg-accent text-white font-black uppercase text-[10px] tracking-widest hover:opacity-90">
                   Confirm
                 </Button>
              </div>
@@ -210,7 +210,7 @@ export default function Payments() {
               {selectedBooking.type !== 'payment' && (
                 <Button 
                   onClick={() => { setConfirmSettleId(selectedBooking.bookingId); setSelectedBooking(null); }}
-                  className="w-full h-12 rounded-2xl bg-earth-primary hover:bg-earth-primary-hover text-earth-brown font-black uppercase tracking-widest text-xs"
+                  className="w-full h-12 rounded-2xl bg-accent hover:opacity-90 text-white font-black uppercase tracking-widest text-xs"
                 >
                   Confirm Settlement
                 </Button>
@@ -249,7 +249,7 @@ export default function Payments() {
             <Button 
               onClick={handleExport}
               disabled={isExporting}
-              className="flex-1 md:flex-none gap-2 font-black uppercase tracking-wider bg-earth-card hover:bg-earth-card-alt text-earth-primary border border-earth-dark/10 h-10 px-4 text-[10px]"
+              className="flex-1 md:flex-none gap-2 font-black uppercase tracking-wider bg-earth-card hover:bg-earth-card-alt text-accent border border-earth-dark/10 h-10 px-4 text-[10px]"
             >
               <Download size={14} /> EXPORT
             </Button>
@@ -284,7 +284,7 @@ export default function Payments() {
                     <p className="text-[9px] font-black uppercase tracking-widest text-earth-primary mb-2">Pending Escrow</p>
                     <h3 className="text-2xl font-black text-earth-brown italic">₦{pendRev.toLocaleString()}</h3>
                   </div>
-                  <div className="w-10 h-10 rounded-xl bg-earth-primary/10 text-earth-primary flex items-center justify-center border border-earth-primary/20">
+                  <div className="w-10 h-10 rounded-xl bg-accent/10 text-accent flex items-center justify-center border border-accent/20">
                     <Clock size={18} />
                   </div>
                 </CardContent>
@@ -361,7 +361,7 @@ export default function Payments() {
                             <Button 
                               size="sm"
                               onClick={() => setConfirmSettleId(p.bookingId)}
-                              className="h-8 px-3 rounded-lg bg-primary-500 hover:bg-primary-400 text-earth-brown font-black text-[9px] uppercase tracking-widest"
+                              className="h-8 px-3 rounded-lg bg-accent hover:opacity-90 text-white font-black text-[9px] uppercase tracking-widest"
                             >
                               Settle
                             </Button>

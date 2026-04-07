@@ -133,7 +133,7 @@ export default function Dispatch() {
                     variant={isSelected ? "primary" : "outline"}
                     className={cn(
                       "rounded-xl font-black text-[10px] uppercase tracking-widest px-6 h-9 transition-all",
-                      isSelected ? "bg-earth-primary text-earth-brown border-earth-primary" : "border-earth-dark/15 text-earth-sub group-hover:border-earth-primary group-hover:text-earth-primary"
+                      isSelected ? "bg-accent text-white border-accent" : "border-earth-dark/15 text-earth-sub group-hover:border-accent group-hover:text-accent"
                     )}
                   >
                     {isSelected ? "Selected" : "Select"}
@@ -211,8 +211,8 @@ export default function Dispatch() {
                       className={cn(
                         "gap-2 px-5 font-black uppercase tracking-wide transition-all h-9 rounded-lg",
                         isOperatorSelected 
-                          ? "bg-earth-primary text-earth-brown" 
-                          : "bg-earth-card hover:bg-earth-card-alt text-earth-sub hover:text-earth-brown"
+                          ? "bg-accent text-white" 
+                          : "bg-earth-card hover:bg-earth-card-alt text-earth-sub hover:text-accent"
                       )}
                     >
                       {isOperatorSelected ? "Confirm" : "Assign"} <ArrowRight size={14} />
