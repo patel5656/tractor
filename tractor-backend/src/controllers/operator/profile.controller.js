@@ -8,9 +8,7 @@ export const getProfile = async (req, res) => {
     const operator = await prisma.user.findUnique({
       where: { id: req.user.id },
       include: {
-        tractors: {
-          take: 1
-        }
+        tractor: true
       }
     });
 
@@ -26,7 +24,7 @@ export const getProfile = async (req, res) => {
         phone: operator.phone || '',
         role: operator.role,
         language: operator.language,
-        tractor: operator.tractors.length > 0 ? operator.tractors[0].modelName : 'Unassigned'
+        tractor: operator.tractor ? operator.tractor.name : 'Unassigned'
       }
     });
   } catch (error) {

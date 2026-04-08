@@ -73,6 +73,15 @@ model Zone {
   @@map("zones")
 }
 
+enum BookingStatus {
+  PENDING
+  SCHEDULED
+  DISPATCHED
+  IN_PROGRESS
+  COMPLETED
+  PAID
+}
+
 model Booking {
   id             Int       @id @default(autoincrement())
   farmerId       Int       @map("farmer_id")
@@ -91,7 +100,7 @@ model Booking {
   roadDistance    Float     @default(0) @map("road_distance")
   tractorId      Int?      @map("tractor_id")
   operatorId     Int?      @map("operator_id")
-  status         String    @default("pending")
+  status         BookingStatus @default(PENDING)
   scheduledAt    DateTime? @map("scheduled_at")
   paymentStatus  String    @default("pending") @map("payment_status")
   createdAt      DateTime  @default(now()) @map("created_at")

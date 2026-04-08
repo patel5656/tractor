@@ -15,7 +15,7 @@ export const getDashboardMetrics = async (farmerId) => {
     prisma.booking.count({
       where: { 
         farmerId: parseInt(farmerId),
-        status: { in: ['scheduled', 'dispatched', 'en_route', 'in_progress'] }
+        status: { in: ['SCHEDULED', 'DISPATCHED', 'IN_PROGRESS'] }
       }
     }),
     prisma.booking.count({
@@ -68,7 +68,7 @@ export const getUpcomingJobs = async (farmerId) => {
   const bookings = await prisma.booking.findMany({
     where: { 
       farmerId: parseInt(farmerId),
-      status: { in: ['scheduled', 'dispatched', 'en_route'] }
+      status: { in: ['SCHEDULED', 'DISPATCHED'] }
     },
     include: {
       service: { select: { name: true } }
@@ -82,3 +82,4 @@ export const getUpcomingJobs = async (farmerId) => {
     status: b.status
   }));
 };
+

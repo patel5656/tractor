@@ -20,25 +20,37 @@ export default function OperatorLayout() {
     { id: 3, title: 'System Check', message: 'Diagnostic check passed for all units', time: '4h ago', icon: CheckCircle2, color: 'text-earth-green', unread: false },
   ];
 
-  // Close sidebar when route changes on mobile
+  // Only close sidebar when route changes on mobile
   useEffect(() => {
     if (window.innerWidth < 1024) {
       setIsSidebarOpen(false);
     }
   }, [location.pathname]);
 
-  // Handle window resize
+  // Handle window resize - forced expanded for desktop
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 1024) {
         setIsSidebarOpen(true);
-      } else {
-        setIsSidebarOpen(false);
       }
     };
+    handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Handle click outside to close sidebar on mobile
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (window.innerWidth < 1024 && sidebarRef.current && !sidebarRef.current.contains(event.target)) {
+        setIsSidebarOpen(false);
+      }
+    }
+    if (isSidebarOpen && window.innerWidth < 1024) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isSidebarOpen]);
 
   // Click outside to close notifications
   useEffect(() => {
@@ -67,23 +79,26 @@ export default function OperatorLayout() {
         ref={sidebarRef}
         className={cn(
           "bg-primary border-r border-primary/10 flex flex-col transition-all duration-300 ease-in-out h-screen fixed lg:sticky top-0 z-50 shadow-2xl overflow-hidden",
-          isSidebarOpen ? "w-[240px] translate-x-0" : "w-[240px] lg:w-20 -translate-x-[240px] lg:translate-x-0"
+          isSidebarOpen ? "w-[240px] translate-x-0" : "w-[240px] -translate-x-[240px]"
         )}
       >
-        <div className="h-20 flex items-center justify-center border-b border-white/10 shrink-0 px-4 overflow-hidden">
-          <div className={cn("flex items-center transition-all", isSidebarOpen ? "gap-2 w-full opacity-100" : "justify-center opacity-0 lg:opacity-100 w-0 lg:w-auto")}>
+        <div className="h-20 flex items-center justify-between border-b border-white/10 shrink-0 px-4 overflow-hidden">
+          <div className="flex items-center gap-2 opacity-100 transition-all min-w-0">
             <img src="/tractorlink-logo.png" alt="TractorLink Logo" className="w-10 h-10 object-contain shrink-0" />
-            {isSidebarOpen && (
-              <div className="flex-1 min-w-0">
-                <span className="font-black text-base text-white tracking-tight whitespace-nowrap leading-none block uppercase">Tractor<span className="text-accent">Link</span></span>
-                <span className="text-[9px] text-white/70 uppercase tracking-widest font-bold leading-none mt-1">Operator Pro</span>
-              </div>
-            )}
+            <div className="flex-1 min-w-0">
+              <span className="font-black text-base text-white tracking-tight whitespace-nowrap leading-none block uppercase">Tractor<span className="text-accent">Link</span></span>
+              <span className="text-[9px] text-white/70 uppercase tracking-widest font-bold leading-none mt-1">Operator Pro</span>
+            </div>
           </div>
+          <button 
+            onClick={() => setIsSidebarOpen(false)}
+            className="lg:hidden p-2 text-white/40 hover:text-white transition-colors shrink-0"
+          >
+            <X size={20} strokeWidth={2.5} />
+          </button>
         </div>
         
         <div className="flex-1 overflow-y-auto px-2 py-8 space-y-1.5 scrollbar-hide">
-          <p className={cn("px-4 text-[10px] font-bold text-earth-dark/50 uppercase tracking-widest transition-all", isSidebarOpen ? "mb-4 opacity-100" : "opacity-0 h-0 overflow-hidden mb-0")}>Core Controls</p>
           {navItems.map(item => {
             const isActive = location.pathname === item.path;
             return (
@@ -119,16 +134,15 @@ export default function OperatorLayout() {
         <header className="hidden md:flex h-16 bg-earth-card/80 backdrop-blur-md border-b border-earth-dark/10 items-center justify-between px-6 z-20 shrink-0 shadow-sm">
           <div className="flex items-center gap-4">
             <button 
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
-              className="p-2.5 bg-earth-card-alt hover:bg-earth-card border border-earth-dark/15 rounded-xl text-earth-sub hover:text-earth-brown transition-all shadow-inner active:scale-95"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsSidebarOpen(!isSidebarOpen);
+              }} 
+              className="lg:hidden p-2.5 bg-earth-card-alt border border-earth-dark/15 rounded-xl text-earth-sub hover:text-earth-brown transition-all shadow-inner active:scale-95 flex items-center justify-center shrink-0"
             >
-              <ListCollapse size={18} strokeWidth={2.5} />
+              {isSidebarOpen ? <X size={18} strokeWidth={2.5} /> : <Menu size={18} strokeWidth={2.5} />}
             </button>
-            <div className="flex items-center gap-3 text-sm text-earth-sub font-medium">
-                 <span className="text-earth-brown font-bold capitalize tracking-wide italic uppercase">
-                    {location.pathname.split('/').pop() || 'JOBS'}
-                 </span>
-            </div>
+            {/* Mission status breadcrumbs removed for clarity */}
           </div>
           
           <div className="flex items-center gap-5 text-sm">
@@ -201,7 +215,7 @@ export default function OperatorLayout() {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto relative scrollbar-hide h-full">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden relative scrollbar-hide h-full">
             {/* Subtle grid bg consistent with other panels */}
             <div className="absolute inset-0 pointer-events-none opacity-[0.01]" style={{ backgroundImage: 'radial-gradient(circle at center, white 1px, transparent 1px)', backgroundSize: '20px 20px' }}></div>
             <div className="w-full h-full relative z-10 pb-24 md:pb-0">

@@ -6,18 +6,48 @@ import { dummyTractors } from '../../data/dummyData';
 import { useBookings } from '../../context/BookingContext';
 import { cn } from '../../lib/utils';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 
 export default function TrackJob() {
+  const { user } = useAuth();
   const { bookings } = useBookings();
-  const farmerId = 'f1';
   
-  // Find first active booking
-  const activeBooking = bookings.find(b => b.farmerId === farmerId && (b.status === 'In Progress' || b.status === 'Scheduled'));
+  // Find first active booking for the current user
+  const activeBooking = bookings.find(b => 
+    b.farmerId === user?.id && 
+    (b.status?.toUpperCase() === 'IN_PROGRESS' || 
+     b.status?.toUpperCase() === 'SCHEDULED' || 
+     b.status?.toUpperCase() === 'DISPATCHED')
+  );
   
-  // If no active booking, we don't need a tractor
-  const tractor = activeBooking && activeBooking.tractorId 
-    ? dummyTractors.find(t => t.id === activeBooking.tractorId) 
-    : { operator: 'Pending Assignment', id: 'TBD', email: '', model: 'Pending' };
+  // Robust tractor data resolution
+  const getTractorData = () => {
+    if (!activeBooking) return null;
+    
+    // 1. Try to find in dummy data (for simulation)
+    const dummy = activeBooking.tractorId ? dummyTractors.find(t => t.id === activeBooking.tractorId) : null;
+    if (dummy) return dummy;
+
+    // 2. Try to pull from real booking data (Prisma relations)
+    if (activeBooking.tractor) {
+        return {
+            operator: activeBooking.operator?.name || 'Assigned Operator',
+            id: activeBooking.tractor.id,
+            email: activeBooking.operator?.email || '',
+            model: activeBooking.tractor.name || activeBooking.tractor.model || 'Standard Unit'
+        };
+    }
+
+    // 3. Absolute Fallback
+    return { 
+        operator: 'Pending Assignment', 
+        id: 'TBD', 
+        email: '', 
+        model: 'Processing' 
+    };
+  };
+
+  const tractor = getTractorData();
 
   const [progress, setProgress] = useState(0);
   const [activeAction, setActiveAction] = useState(null); // 'message', 'emergency', null
@@ -39,10 +69,28 @@ export default function TrackJob() {
   }, []);
 
   const steps = [
-    { title: 'Scheduled', time: activeBooking ? new Date(activeBooking.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Pending', status: activeBooking ? 'done' : 'pending' },
-    { title: 'En Route', time: 'Pending', status: activeBooking?.status === 'Scheduled' ? 'active' : activeBooking?.status === 'In Progress' ? 'done' : 'pending' },
-    { title: 'In Progress', time: 'Pending', status: activeBooking?.status === 'In Progress' ? 'active' : 'pending' },
-    { title: 'Completed', time: 'Pending', status: 'pending' },
+    { 
+      title: 'Scheduled', 
+      time: activeBooking ? new Date(activeBooking.createdAt).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 'Pending', 
+      status: activeBooking ? 'done' : 'pending' 
+    },
+    { 
+      title: 'Ready', 
+      time: 'Pending', 
+      status: activeBooking?.status?.toUpperCase() === 'SCHEDULED' ? 'active' : 
+              (['DISPATCHED', 'IN_PROGRESS', 'COMPLETED'].includes(activeBooking?.status?.toUpperCase())) ? 'done' : 'pending' 
+    },
+    { 
+      title: 'In Progress', 
+      time: 'Pending', 
+      status: activeBooking?.status?.toUpperCase() === 'IN_PROGRESS' || activeBooking?.status?.toUpperCase() === 'DISPATCHED' ? 'active' : 
+              activeBooking?.status?.toUpperCase() === 'COMPLETED' ? 'done' : 'pending' 
+    },
+    { 
+      title: 'Completed', 
+      time: 'Pending', 
+      status: activeBooking?.status?.toUpperCase() === 'COMPLETED' ? 'done' : 'pending' 
+    },
   ];
 
   if (!activeBooking) {
@@ -135,7 +183,7 @@ export default function TrackJob() {
                 <Navigation size={22} fill="currentColor" />
              </div>
              <div className="absolute top-12 left-1/2 -translate-x-1/2 whitespace-nowrap px-3 py-1.5 bg-earth-main/90 backdrop-blur-md text-earth-brown text-[9px] font-black rounded-lg border border-earth-dark/10 shadow-xl">
-               Operator: {tractor.operator}
+               Operator: {tractor?.operator || 'TBD'}
              </div>
           </div>
         </div>
@@ -165,7 +213,9 @@ export default function TrackJob() {
         {/* Fixed Header on Desktop, Scrolled on Mobile */}
         <div className="p-6 border-b border-earth-dark/10 bg-earth-card/50 sticky top-0 z-20 backdrop-blur-md">
           <div className="flex items-center gap-2 mb-1.5">
-             <span className="px-2 py-0.5 bg-earth-primary/10 text-earth-green rounded text-[9px] font-black uppercase tracking-widest border border-emerald-500/20">Task Active</span>
+             <span className="px-2 py-0.5 bg-earth-primary/10 text-earth-green rounded text-[9px] font-black uppercase tracking-widest border border-emerald-500/20">
+               {activeBooking.status?.toUpperCase() === 'COMPLETED' ? 'Job Completed' : 'Task Active'}
+             </span>
              <ChevronRight size={14} className="text-earth-mut" />
              <span className="text-[10px] font-black text-earth-mut uppercase tracking-widest">Job ID: {activeBooking.id}</span>
           </div>
@@ -179,18 +229,18 @@ export default function TrackJob() {
              <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                    <div className="w-12 h-12 bg-earth-card rounded-xl flex items-center justify-center text-earth-primary font-black text-xl border border-earth-dark/10 shadow-sm">
-                     {tractor.operator.charAt(0)}
+                     {tractor?.operator?.charAt(0) || '?'}
                    </div>
                    <div>
                      <p className="text-[9px] font-black text-earth-mut uppercase tracking-widest">Operator on Duty</p>
-                     <p className="text-base font-black text-earth-brown leading-none mt-1">{tractor.operator}</p>
+                     <p className="text-base font-black text-earth-brown leading-none mt-1">{tractor?.operator || 'Pending'}</p>
                      <p className="text-[11px] font-bold text-earth-sub mt-1.5 flex items-center gap-1.5">
-                       <Tractor size={12} className="text-earth-primary" /> {tractor.model}
+                       <Tractor size={12} className="text-earth-primary" /> {tractor?.model || 'Searching...'}
                      </p>
                    </div>
                 </div>
                 <div className="flex gap-2">
-                   {tractor.email && (
+                   {tractor?.email && (
                      <a 
                       href={`mailto:${tractor.email}`} 
                       className="w-10 h-10 bg-earth-card hover:bg-earth-card-alt border border-earth-dark/15 rounded-xl flex items-center justify-center text-earth-green transition-all active:scale-95 shadow-lg"

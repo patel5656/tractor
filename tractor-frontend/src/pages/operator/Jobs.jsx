@@ -8,7 +8,7 @@ import { Card, CardContent } from '../../components/ui/Card';
 
 export default function Jobs() {
   const [jobData, setJobData] = useState({ current_job: null, queue: [] });
-  const [statsData, setStatsData] = useState({ hectares_done: 0, fuel_efficiency: 0, shift_time: '00:00', unit_health: 0 });
+  const [statsData, setStatsData] = useState({ hectares_done: 0, total_jobs: 0, engine_hours: 0, unit_health: 100 });
   const [loading, setLoading] = useState(true);
   const fetchData = async () => {
     try {
@@ -34,20 +34,14 @@ export default function Jobs() {
   const upcomingJobs = jobData.queue;
 
   const stats = [
-    { label: 'Hectares Done', value: statsData.hectares_done.toFixed(1), unit: 'HA', icon: MapIcon, color: 'text-earth-green' },
-    { label: 'Fuel Efficiency', value: statsData.fuel_efficiency.toFixed(1), unit: 'L/HA', icon: Zap, color: 'text-amber-400' },
-    { label: 'Shift Time', value: statsData.shift_time, unit: 'HRS', icon: Timer, color: 'text-blue-400' },
-    { label: 'Unit Health', value: statsData.unit_health, unit: '%', icon: Activity, color: 'text-earth-primary' },
-  ];
-
-  const weather = [
-    { label: 'Temp', value: '28°C', icon: Thermometer },
-    { label: 'Humidity', value: '45%', icon: Droplets },
-    { label: 'Wind', value: '12km/h', icon: Wind },
+    { label: 'Hectares Done', value: (statsData.hectares_done || 0).toFixed(1), unit: 'HA', icon: MapIcon, color: 'text-earth-green', bg: 'bg-earth-green' },
+    { label: 'Total Jobs', value: statsData.total_jobs || 0, unit: 'JOBS', icon: CheckCircle2, color: 'text-amber-400', bg: 'bg-amber-400' },
+    { label: 'Engine Hours', value: (statsData.engine_hours || 0).toFixed(1), unit: 'HRS', icon: Timer, color: 'text-blue-400', bg: 'bg-blue-400' },
+    { label: 'Unit Health', value: statsData.unit_health || 100, unit: '%', icon: Activity, color: 'text-earth-primary', bg: 'bg-earth-primary' },
   ];
 
   const getStatusAction = (status) => {
-    switch (status) {
+    switch (status?.toLowerCase()) {
       case 'dispatched':
         return { label: 'Start En Route', next: 'en_route', color: 'bg-accent/20 hover:bg-accent/30 text-accent border border-accent/30' };
       case 'en_route':
@@ -64,20 +58,11 @@ export default function Jobs() {
   return (
     <div className="p-4 md:p-6 lg:p-8 space-y-6 max-w-6xl mx-auto pb-24 md:pb-8">
       
-      {/* Header with Weather integration */}
+      {/* Header */}
       <header className="flex flex-col md:flex-row justify-between md:items-end gap-6 border-b border-earth-dark/10 pb-6">
         <div>
           <h1 className="text-xl md:text-2xl font-black text-earth-brown tracking-tight uppercase italic">Active Mission Control</h1>
-          <p className="text-[9px] uppercase font-black tracking-[0.2em] text-earth-mut mt-1.5">Fleet Unit #T24 Deployment Dashboard</p>
-        </div>
-        
-        <div className="flex items-center gap-4 bg-earth-card/50 border border-earth-dark/10/50 px-4 py-2.5 rounded-2xl shadow-inner divide-x divide-earth-dark/10">
-           {weather.map((w, i) => (
-             <div key={i} className={cn("flex items-center gap-2.5 px-3", i === 0 && "pl-0")}>
-                <w.icon size={14} className="text-earth-mut" />
-                <span className="text-[10px] font-black text-earth-brown uppercase tracking-widest">{w.value}</span>
-             </div>
-           ))}
+          <p className="text-[9px] uppercase font-black tracking-[0.2em] text-earth-mut mt-1.5">Deployment Dashboard</p>
         </div>
       </header>
 
@@ -89,8 +74,11 @@ export default function Jobs() {
              initial={{ opacity: 0, y: 10 }}
              animate={{ opacity: 1, y: 0 }}
              transition={{ delay: i * 0.1 }}
-             className="bg-earth-card border border-earth-dark/10/50 p-4 rounded-2xl relative overflow-hidden group hover:border-earth-dark/15 transition-all"
+             className="bg-white border-none shadow-[0_15px_35px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] p-4 rounded-[1.2rem] relative overflow-hidden group transition-shadow"
            >
+              <div className={cn("absolute top-0 left-0 w-full h-1.5", s.bg)}></div>
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-earth-primary/5 to-transparent rounded-full blur-2xl transform translate-x-1/2 -translate-y-1/2 pointer-events-none group-hover:scale-150 transition-transform duration-700"></div>
+              
               <div className="absolute -right-2 -bottom-2 opacity-[0.03] group-hover:scale-110 transition-transform duration-500">
                  <s.icon size={50} />
               </div>
@@ -111,7 +99,7 @@ export default function Jobs() {
             <div className="w-1.5 h-1.5 bg-earth-primary rounded-full animate-pulse shadow-[0_0_8px_rgba(234,179,8,0.6)]"></div> Primary Objective
           </div>
           
-          <div className="bg-earth-card border border-earth-dark/10 rounded-[2rem] p-6 md:p-8 shadow-2xl relative overflow-hidden group hover:border-earth-primary/30 transition-all duration-500">
+          <div className="bg-white border-none rounded-[2rem] p-6 md:p-8 shadow-[0_15px_35px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] relative overflow-hidden group transition-all duration-500">
             <div className="absolute top-0 right-0 p-8 opacity-[0.02] pointer-events-none transform translate-x-1/4 -translate-y-1/4 group-hover:scale-110 group-hover:opacity-10 transition-all duration-1000">
               <Play size={200} />
             </div>
@@ -191,7 +179,7 @@ export default function Jobs() {
                 <motion.div 
                   whileHover={{ x: 4 }}
                   key={job.id} 
-                  className="bg-earth-card/80 border border-earth-dark/10 rounded-2xl p-4 flex gap-4 hover:border-earth-primary/20 hover:bg-earth-card transition-all group cursor-pointer shadow-sm relative overflow-hidden"
+                  className="bg-white border-none shadow-[0_10px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] rounded-[1.2rem] p-4 flex gap-4 transition-all group cursor-pointer relative overflow-hidden"
                 >
                   <div className="bg-earth-main border border-earth-dark/30 text-earth-sub w-12 h-12 rounded-xl flex flex-col items-center justify-center font-black text-[9px] shrink-0 shadow-inner group-hover:text-earth-primary group-hover:border-earth-primary/30 transition-colors">
                     <span className="text-[7px] text-earth-mut uppercase tracking-tighter mb-0.5 font-bold">UNIT</span>
@@ -215,7 +203,7 @@ export default function Jobs() {
                   </div>
                 </motion.div>
               )) : (
-                <div className="bg-earth-card/30 border-2 border-dashed border-earth-dark/10/50 rounded-[2rem] p-10 text-center">
+                <div className="bg-white border-none shadow-[0_10px_30px_rgba(0,0,0,0.03)] rounded-[1.2rem] p-10 text-center">
                   <MapIcon className="w-8 h-8 text-earth-mut mx-auto mb-3 opacity-20" />
                   <p className="font-black uppercase tracking-[0.2em] text-[8px] text-earth-mut">Queue Terminal Clear</p>
                 </div>
@@ -223,33 +211,7 @@ export default function Jobs() {
             </div>
           </div>
 
-          {/* Unit Diagnostics Card */}
-          <div className="bg-earth-card/50 border border-earth-dark/10 rounded-[2rem] p-6 shadow-xl relative overflow-hidden group">
-             <div className="absolute top-[-10%] right-[-10%] w-32 h-32 bg-earth-primary/5 blur-3xl rounded-full" />
-             <div className="flex justify-between items-center mb-6">
-                <h3 className="text-[10px] font-black text-earth-brown uppercase tracking-widest">Diagnostics</h3>
-                <Badge className="bg-earth-primary/10 text-earth-green border-none font-black text-[8px] uppercase">All Systems Nominal</Badge>
-             </div>
-             
-             <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5 px-3 py-2 bg-earth-main/50 rounded-xl border border-earth-dark/10">
-                   <p className="text-[7px] font-black text-earth-mut uppercase">Engine Temp</p>
-                   <p className="text-xs font-black text-earth-brown">82°C <span className="text-[8px] text-earth-green ml-1">NORMAL</span></p>
-                </div>
-                <div className="space-y-1.5 px-3 py-2 bg-earth-main/50 rounded-xl border border-earth-dark/10">
-                   <p className="text-[7px] font-black text-earth-mut uppercase">Oil Pressure</p>
-                   <p className="text-xs font-black text-earth-brown">45 PSI <span className="text-[8px] text-earth-green ml-1">NORMAL</span></p>
-                </div>
-                <div className="space-y-1.5 px-3 py-2 bg-earth-main/50 rounded-xl border border-earth-dark/10">
-                   <p className="text-[7px] font-black text-earth-mut uppercase">Hydraulics</p>
-                   <p className="text-xs font-black text-earth-brown">OPTIMAL <span className="text-[8px] text-earth-green ml-1">100%</span></p>
-                </div>
-                <div className="space-y-1.5 px-3 py-2 bg-earth-main/50 rounded-xl border border-earth-dark/10">
-                   <p className="text-[7px] font-black text-earth-mut uppercase">Signal</p>
-                   <p className="text-xs font-black text-earth-brown">5G HUB <span className="text-[8px] text-earth-primary ml-1">HIGH</span></p>
-                </div>
-             </div>
-          </div>
+
           
           <div className="pt-2 text-center">
             <button className="text-[9px] font-black text-earth-mut hover:text-earth-brown underline uppercase tracking-widest transition-colors flex items-center justify-center gap-2 mx-auto">

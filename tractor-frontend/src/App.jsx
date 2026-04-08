@@ -61,7 +61,8 @@ function ProtectedRoute({ children, allowedRole }) {
 
 // --- Modern Dark Theme Login Page ---
 function Login() {
-  const { login, isAuthenticated, user } = useAuth();
+  const auth = useAuth();
+  const { login, isAuthenticated, user } = auth || {};
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -102,52 +103,52 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-earth-main flex font-sans">
+    <div className="h-screen w-full bg-earth-main flex font-sans overflow-hidden">
       
       {/* Left Branding Panel (Hidden on Mobile) */}
-      <div className="hidden lg:flex flex-1 bg-white border-r border-gray-100 relative overflow-hidden items-center justify-center p-12">
-        <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, #2E7D32 1px, transparent 0)', backgroundSize: '32px 32px' }}></div>
-        <div className="absolute top-0 right-0 p-24 opacity-5 transform translate-x-20 -translate-y-10">
-          <Tractor size={400} className="text-earth-primary" />
+      <div className="hidden lg:flex flex-1 bg-earth-green border-r border-earth-dark/10 relative overflow-hidden items-center justify-center p-12 h-full">
+        <div className="absolute inset-0 opacity-[0.05]" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, #ffffff 1px, transparent 0)', backgroundSize: '32px 32px' }}></div>
+        <div className="absolute top-0 right-0 p-24 opacity-[0.07] transform translate-x-20 -translate-y-10">
+          <Tractor size={400} className="text-white" />
         </div>
         
-        <div className="relative z-10 max-w-lg text-earth-dark">
-          <h1 className="text-5xl font-black mb-6 flex items-center gap-4 text-earth-dark uppercase">
-            <img src="/tractorlink-logo.png" alt="TractorLink Logo" className="w-24 h-24 object-contain" />
+        <div className="relative z-10 max-w-lg text-white">
+          <h1 className="text-5xl font-black mb-6 flex items-center gap-4 text-white uppercase">
+            <img src="/tractorlink-logo.png" alt="TractorLink Logo" className="w-24 h-24 object-contain drop-shadow-xl" />
             TractorLink
           </h1>
-          <p className="text-xl text-earth-sub font-bold leading-relaxed">
+          <p className="text-xl text-white/90 font-bold leading-relaxed">
             The leading smart agriculture network connecting farm owners with machinery and professional operators seamlessly.
           </p>
           
           <div className="mt-12 space-y-4">
-               <div className="flex items-center gap-4 bg-gray-50/80 p-4 rounded-2xl border border-gray-200 shadow-inner backdrop-blur-sm">
+               <div className="flex items-center gap-4 bg-white/10 p-4 rounded-2xl border border-white/20 shadow-inner backdrop-blur-sm">
                  <div className="w-10 h-10 bg-earth-primary rounded-xl flex items-center justify-center text-white font-black shrink-0">1</div>
-                 <p className="font-bold text-earth-dark">Verify your email address securely</p>
+                 <p className="font-bold text-white">Verify your email address securely</p>
                </div>
-             <div className="flex items-center gap-4 bg-gray-50/80 p-4 rounded-2xl border border-gray-200 shadow-inner backdrop-blur-sm">
+             <div className="flex items-center gap-4 bg-white/10 p-4 rounded-2xl border border-white/20 shadow-inner backdrop-blur-sm">
                <div className="w-10 h-10 bg-earth-primary rounded-xl flex items-center justify-center text-white font-black shrink-0">2</div>
-               <p className="font-bold text-earth-dark">Select your primary organization role</p>
+               <p className="font-bold text-white">Select your primary organization role</p>
              </div>
-             <div className="flex items-center gap-4 bg-gray-50/80 p-4 rounded-2xl border border-earth-primary/10 shadow-[0_0_15px_rgba(46,125,50,0.05)] backdrop-blur-sm">
+             <div className="flex items-center gap-4 bg-white/20 p-4 rounded-2xl border border-white/30 shadow-[0_0_15px_rgba(255,255,255,0.1)] backdrop-blur-sm">
                <div className="w-10 h-10 bg-earth-primary rounded-xl flex items-center justify-center text-white font-black shrink-0">3</div>
-               <p className="font-bold text-earth-green">Access tailored operational dashboards</p>
+               <p className="font-bold text-white">Access tailored operational dashboards</p>
              </div>
           </div>
         </div>
       </div>
       
       {/* Right Login Panel */}
-      <div className="flex-1 flex items-center justify-center p-6 md:p-12 relative bg-earth-main">
+      <div className="flex-1 flex flex-col overflow-y-auto p-6 md:p-12 relative bg-earth-main h-full">
         {/* Back to Home Button */}
-        <Link to="/" className="absolute top-8 right-8 p-3 bg-white border border-gray-100 rounded-2xl shadow-sm text-earth-sub hover:text-earth-primary transition-all hover:scale-110 active:scale-95 group flex items-center gap-2 font-bold text-xs uppercase tracking-widest">
-           <ArrowLeft size={18} className="group-hover:-translate-x-1 transition-transform" />
+        <Link to="/" className="absolute top-4 right-4 md:top-8 md:right-8 p-2.5 md:p-3 bg-white border border-earth-primary/20 rounded-2xl shadow-sm text-earth-primary hover:bg-earth-primary hover:text-white transition-all hover:scale-105 active:scale-95 group flex items-center gap-2 font-black text-[10px] md:text-xs uppercase tracking-widest z-50">
+           <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform md:w-[18px] md:h-[18px]" />
            Home
         </Link>
-        <div className="w-full max-w-md">
+        <div className="w-full max-w-md m-auto">
           
-          <div className="lg:hidden flex items-center gap-3 mb-10 text-earth-brown font-black text-3xl">
-            <img src="/tractorlink-logo.png" alt="TractorLink Logo" className="w-14 h-14 object-contain" /> TractorLink
+          <div className="lg:hidden flex items-center gap-3 mb-12 text-earth-brown font-black text-2xl sm:text-3xl mt-4">
+            <img src="/tractorlink-logo.png" alt="TractorLink Logo" className="w-12 h-12 sm:w-14 sm:h-14 object-contain" /> TractorLink
           </div>
           
           <div className="mb-8">
@@ -207,7 +208,7 @@ function Login() {
               {isSubmitting ? 'Authenticating...' : 'Authenticate & Login'}
             </Button>
             
-            <div className="pt-8 border-t border-earth-dark/10/50 mt-8">
+            <div className="pt-8 border-t border-earth-dark/10 mt-8">
               <label className="text-[10px] font-bold text-earth-mut uppercase tracking-widest mb-4 block text-center">Quick Demo Access</label>
               <div className="grid grid-cols-3 gap-3">
                 <button 

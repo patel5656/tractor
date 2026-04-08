@@ -182,7 +182,7 @@ export const createBookingRequest = async (farmerId, bookingData) => {
       hubLocation: pricing.hubLocation,
       hubLatitude: pricing.hubLatitude,
       hubLongitude: pricing.hubLongitude,
-      status: 'pending',
+      status: 'PENDING',
       paymentStatus: paymentOption === 'full' ? 'PAID' : (paymentOption === 'partial' ? 'PARTIAL' : 'PENDING')
     },
     include: {
@@ -235,13 +235,14 @@ export const getFarmerBookings = async (farmerId, query = {}) => {
   const where = { farmerId };
 
   if (status !== 'all') {
-    where.status = status.toLowerCase();
+    where.status = status.toUpperCase();
   }
 
   if (search) {
     const searchInt = parseInt(search);
     where.OR = [
-      { service: { name: { contains: search } } }
+      { service: { name: { contains: search } } },
+      { serviceNameSnapshot: { contains: search } }
     ];
     if (!isNaN(searchInt)) {
       where.OR.push({ id: searchInt });

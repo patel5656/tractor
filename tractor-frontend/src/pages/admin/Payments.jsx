@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { CheckCircle2, Search, Filter, Download, MoreVertical, Eye, CreditCard, Clock, CheckCircle, X, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import jsPDF from 'jspdf';
@@ -121,110 +122,142 @@ export default function Payments() {
   };
 
   const [selectedBooking, setSelectedBooking] = useState(null);
+  const isAnyModalOpen = !!(confirmSettleId || selectedBooking);
+
+  // Handle scroll lock when modal is open
+  useEffect(() => {
+    if (isAnyModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isAnyModalOpen]);
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-24 lg:pb-8">
       
       {/* Settle Confirmation Modal */}
-      {confirmSettleId && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+      {confirmSettleId && createPortal(
+        <div className="fixed inset-0 z-[1000] overflow-hidden">
           <motion.div 
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="absolute inset-0 bg-earth-main/90 backdrop-blur-sm"
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            className="fixed inset-0 bg-earth-main/60 backdrop-blur-xl"
             onClick={() => setConfirmSettleId(null)}
           />
-          <motion.div 
-             initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
-             className="relative z-10 w-full max-w-sm bg-earth-card border border-earth-dark/10 rounded-3xl overflow-hidden p-8 text-center space-y-6"
-          >
-             <div className="w-16 h-16 rounded-full bg-primary-500/10 text-primary-400 flex items-center justify-center mx-auto border border-primary-500/20">
-                <CreditCard size={32} />
-             </div>
-             <div>
-                <h4 className="text-xl font-black text-earth-brown uppercase italic">Settle Payment</h4>
-                <p className="text-xs font-bold text-earth-mut mt-2 uppercase tracking-widest leading-relaxed">Are you sure you want to mark this booking as settled? This will record a manual payment.</p>
-             </div>
-             <div className="flex gap-3">
-                <Button variant="ghost" onClick={() => setConfirmSettleId(null)} className="flex-1 h-12 rounded-2xl bg-earth-card-alt border-earth-dark/15 text-earth-sub font-black uppercase text-[10px] tracking-widest hover:text-earth-brown">
-                  Cancel
-                </Button>
-                <Button onClick={() => handleMarkAsPaid(confirmSettleId)} className="flex-1 h-12 rounded-2xl bg-accent text-white font-black uppercase text-[10px] tracking-widest hover:opacity-90">
-                  Confirm
-                </Button>
-             </div>
-          </motion.div>
-        </div>
+          <div className="fixed inset-0 overflow-y-auto flex items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && setConfirmSettleId(null)}>
+            <motion.div 
+               initial={{ scale: 0.95, opacity: 0 }} 
+               animate={{ scale: 1, opacity: 1 }}
+               className="relative z-10 w-full max-w-sm bg-earth-card border border-earth-dark/10 rounded-[2.5rem] shadow-2xl p-8 text-center space-y-6"
+            >
+               <div className="w-16 h-16 rounded-2xl bg-primary-500/10 text-primary-400 flex items-center justify-center mx-auto border border-primary-500/20">
+                  <CreditCard size={32} />
+               </div>
+               <div>
+                  <h4 className="text-xl font-black text-earth-brown uppercase italic">Settle Payment</h4>
+                  <p className="text-xs font-bold text-earth-mut mt-2 uppercase tracking-widest leading-relaxed">Are you sure you want to mark this booking as settled? This will record a manual payment.</p>
+               </div>
+               <div className="flex gap-3">
+                  <Button variant="ghost" onClick={() => setConfirmSettleId(null)} className="flex-1 h-12 rounded-2xl bg-earth-card-alt border-earth-dark/15 text-earth-sub font-black uppercase text-[10px] tracking-widest hover:text-earth-brown">
+                    Cancel
+                  </Button>
+                  <Button onClick={() => handleMarkAsPaid(confirmSettleId)} className="flex-1 h-12 rounded-2xl bg-accent text-white font-black uppercase text-[10px] tracking-widest hover:opacity-90 shadow-lg shadow-accent/20">
+                    Confirm
+                  </Button>
+               </div>
+            </motion.div>
+          </div>
+        </div>,
+        document.body
       )}
 
       {/* Detail Modal Overlay */}
-      {selectedBooking && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 text-left">
-          <div className="absolute inset-0 bg-earth-main/80 backdrop-blur-md" onClick={() => setSelectedBooking(null)}></div>
-          <Card className="relative z-10 w-full max-w-lg bg-earth-card border-earth-dark/10 shadow-2xl rounded-3xl overflow-hidden scale-in-center">
-            <div className="p-6 border-b border-earth-dark/10 flex justify-between items-center bg-earth-card/50">
-              <h3 className="text-xl font-black text-earth-brown uppercase tracking-tight">Transaction Details</h3>
-              <Button variant="ghost" size="icon" onClick={() => setSelectedBooking(null)} className="text-earth-mut hover:text-earth-brown rounded-full">
-                <X size={20} />
-              </Button>
-            </div>
-            <CardContent className="p-8 space-y-6">
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black text-earth-mut uppercase tracking-widest">Ledger ID</p>
-                  <p className="font-black text-earth-primary uppercase tracking-wider">{String(selectedBooking.id).toUpperCase()}</p>
-                </div>
-                <div className="space-y-1 text-right">
-                  <p className="text-[10px] font-black text-earth-mut uppercase tracking-widest">Total Invoice</p>
-                  <p className="text-xl font-black text-earth-brown italic leading-none">₦{(selectedBooking.totalAmount || 0).toLocaleString()}</p>
-                  <p className="text-[10px] font-bold text-earth-green tracking-widest mt-1">Paid: ₦{(selectedBooking.paidAmount || 0).toLocaleString()}</p>
-                  <p className="text-[10px] font-bold text-red-500 tracking-widest">Rem: ₦{(selectedBooking.remainingAmount || 0).toLocaleString()}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[10px] font-black text-earth-mut uppercase tracking-widest">Farmer</p>
-                  <p className="font-black text-earth-brown text-lg leading-tight">{selectedBooking.booking?.farmer?.name || 'Unknown'}</p>
-                </div>
-                <div className="space-y-1 text-right">
-                  <p className="text-[10px] font-black text-earth-mut uppercase tracking-widest">Date</p>
-                  <p className="font-bold text-earth-brown">{new Date(selectedBooking.createdAt).toLocaleDateString()}</p>
-                </div>
-              </div>
-              
-              <div className="p-4 bg-earth-main/50 rounded-2xl border border-earth-dark/10 space-y-3">
-                <div className="flex justify-between items-center">
-                   <p className="text-[10px] font-black text-earth-mut uppercase tracking-widest">Service Provided</p>
-                   <span className="text-xs font-black text-earth-brown uppercase">{selectedBooking.booking?.service?.name}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                   <p className="text-[10px] font-black text-earth-mut uppercase tracking-widest">Land size</p>
-                   <span className="text-xs font-black text-earth-brown uppercase">{selectedBooking.booking?.landSize} Hectares</span>
-                </div>
-                <div className="flex justify-between items-center pt-3 border-t border-earth-dark/10">
-                   <p className="text-[10px] font-black text-earth-mut uppercase tracking-widest">Payment Status</p>
-                   <div className="text-right">
-                     <Badge className={cn(
-                      "text-[9px] px-3 py-1 border uppercase font-black",
-                      selectedBooking.type === 'payment' ? 'bg-primary-500/10 text-primary-400 border-primary-500/20' : 
-                      'bg-red-500/10 text-red-500 border-red-500/20'
-                     )}>
-                      {selectedBooking.type === 'payment' ? 'SETTLED' : 'UNPAID'}
-                     </Badge>
-                     <p className="text-[9px] font-bold text-earth-mut uppercase tracking-widest mt-1">
-                       Method: {selectedBooking.method?.toUpperCase() || 'UNRECORDED'}
-                     </p>
-                   </div>
-                </div>
-              </div>
-
-              {selectedBooking.type !== 'payment' && (
-                <Button 
-                  onClick={() => { setConfirmSettleId(selectedBooking.bookingId); setSelectedBooking(null); }}
-                  className="w-full h-12 rounded-2xl bg-accent hover:opacity-90 text-white font-black uppercase tracking-widest text-xs"
-                >
-                  Confirm Settlement
+      {selectedBooking && createPortal(
+        <div className="fixed inset-0 z-[999] overflow-hidden">
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            className="fixed inset-0 bg-earth-main/60 backdrop-blur-xl" 
+            onClick={() => setSelectedBooking(null)}
+          />
+          <div className="fixed inset-0 overflow-y-auto flex items-center justify-center p-4 sm:p-6" onClick={(e) => e.target === e.currentTarget && setSelectedBooking(null)}>
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0 }} 
+              animate={{ scale: 1, opacity: 1 }}
+              className="relative z-10 w-full max-w-lg bg-earth-card border border-earth-dark/10 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.2)] rounded-[2.5rem] overflow-hidden"
+            >
+              <div className="p-6 md:p-8 border-b border-earth-dark/10 flex justify-between items-center bg-white/50">
+                <h3 className="text-xl md:text-2xl font-black text-earth-brown uppercase tracking-tight italic">Transaction Details</h3>
+                <Button variant="ghost" size="icon" onClick={() => setSelectedBooking(null)} className="h-10 w-10 text-earth-mut hover:text-earth-brown hover:bg-earth-card-alt rounded-xl transition-all">
+                  <X size={20} />
                 </Button>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+              </div>
+              <CardContent className="p-8 space-y-6">
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black text-earth-mut uppercase tracking-widest">Ledger ID</p>
+                    <p className="font-black text-earth-primary uppercase tracking-wider">{String(selectedBooking.id).toUpperCase()}</p>
+                  </div>
+                  <div className="space-y-1 text-right">
+                    <p className="text-[10px] font-black text-earth-mut uppercase tracking-widest">Total Invoice</p>
+                    <p className="text-xl md:text-2xl font-black text-earth-brown italic leading-none">₦{(selectedBooking.totalAmount || 0).toLocaleString()}</p>
+                    <p className="text-[10px] font-bold text-earth-green tracking-widest mt-1">Paid: ₦{(selectedBooking.paidAmount || 0).toLocaleString()}</p>
+                    <p className="text-[10px] font-bold text-red-500 tracking-widest">Rem: ₦{(selectedBooking.remainingAmount || 0).toLocaleString()}</p>
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-[10px] font-black text-earth-mut uppercase tracking-widest">Farmer</p>
+                    <p className="font-black text-earth-brown text-lg leading-tight">{selectedBooking.booking?.farmer?.name || 'Unknown'}</p>
+                  </div>
+                  <div className="space-y-1 text-right">
+                    <p className="text-[10px] font-black text-earth-mut uppercase tracking-widest">Date</p>
+                    <p className="font-bold text-earth-brown">{new Date(selectedBooking.createdAt).toLocaleDateString()}</p>
+                  </div>
+                </div>
+                
+                <div className="p-5 md:p-6 bg-earth-main/50 rounded-[2rem] border border-earth-dark/10 shadow-inner space-y-4">
+                  <div className="flex justify-between items-center">
+                     <p className="text-[10px] font-black text-earth-mut uppercase tracking-widest">Service Provided</p>
+                     <span className="text-sm font-black text-earth-brown uppercase italic">{selectedBooking.booking?.service?.name}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                     <p className="text-[10px] font-black text-earth-mut uppercase tracking-widest">Land size</p>
+                     <span className="text-sm font-black text-earth-brown uppercase italic">{selectedBooking.booking?.landSize} Hectares</span>
+                  </div>
+                  <div className="h-px bg-earth-dark/5 my-2" />
+                  <div className="flex justify-between items-center pt-2">
+                     <p className="text-[10px] font-black text-earth-mut uppercase tracking-widest">Payment Status</p>
+                     <div className="text-right">
+                       <Badge className={cn(
+                        "text-[9px] px-3 py-1 border uppercase font-black",
+                        selectedBooking.type === 'payment' ? 'bg-primary-500/10 text-primary-400 border-primary-500/20' : 
+                        'bg-red-500/10 text-red-500 border-red-500/20'
+                       )}>
+                        {selectedBooking.type === 'payment' ? 'SETTLED' : 'UNPAID'}
+                       </Badge>
+                       <p className="text-[9px] font-bold text-earth-mut uppercase tracking-widest mt-1">
+                         Method: {selectedBooking.method?.toUpperCase() || 'UNRECORDED'}
+                       </p>
+                     </div>
+                  </div>
+                </div>
+
+                {selectedBooking.type !== 'payment' && (
+                  <Button 
+                    onClick={() => { setConfirmSettleId(selectedBooking.bookingId); setSelectedBooking(null); }}
+                    className="w-full h-14 rounded-2xl bg-accent hover:opacity-90 text-white font-black uppercase tracking-widest text-xs shadow-lg shadow-accent/20"
+                  >
+                    Confirm Settlement
+                  </Button>
+                )}
+              </CardContent>
+            </motion.div>
+          </div>
+        </div>,
+        document.body
       )}
       
       {/* Header & Controls */}
@@ -369,7 +402,7 @@ export default function Payments() {
                         </p>
                       </td>
                       <td className="px-6 py-3 text-right">
-                        <div className="flex justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-all">
+                        <div className="flex justify-end gap-1.5 transition-all">
                           {p.type === 'due' && (
                             <Button 
                               size="sm"

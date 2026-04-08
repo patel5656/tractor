@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useState, useRef, useEffect } from 'react';
-import { LayoutDashboard, Compass, Radio, Calendar, Users, Briefcase, ListCollapse, TrendingUp, SettingsIcon, LogOut, ChevronRight, Bell, Tractor, CheckCircle2, AlertCircle, MessageSquare, Truck } from 'lucide-react';
+import { LayoutDashboard, Compass, Radio, Calendar, Users, Briefcase, ListCollapse, TrendingUp, SettingsIcon, LogOut, ChevronRight, Bell, Tractor, CheckCircle2, AlertCircle, MessageSquare, Truck, Menu, X } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useAuth } from '../context/AuthContext';
 
@@ -12,40 +12,37 @@ export default function AdminLayout() {
   const notificationRef = useRef(null);
   const sidebarRef = useRef(null);
 
-  // Close sidebar when route changes on mobile
+  // Only close sidebar when route changes on mobile
   useEffect(() => {
     if (window.innerWidth < 1024) {
       setIsSidebarOpen(false);
     }
   }, [location.pathname]);
 
-  // Handle click outside to close sidebar on mobile
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (window.innerWidth < 1024 && sidebarRef.current && !sidebarRef.current.contains(event.target) && isSidebarOpen) {
-        // Also check if we didn't click the toggle button
-        const toggleBtn = document.getElementById('sidebar-toggle');
-        if (toggleBtn && !toggleBtn.contains(event.target)) {
-          setIsSidebarOpen(false);
-        }
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isSidebarOpen]);
-
-  // Handle window resize
+  // Handle window resize - keep it simple, true for desktop
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth < 1024) {
-        setIsSidebarOpen(false);
-      } else {
+      if (window.innerWidth >= 1024) {
         setIsSidebarOpen(true);
       }
     };
+    handleResize();
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, []);
+
+  // Handle click outside to close sidebar on mobile
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (window.innerWidth < 1024 && sidebarRef.current && !sidebarRef.current.contains(event.target)) {
+        setIsSidebarOpen(false);
+      }
+    }
+    if (isSidebarOpen && window.innerWidth < 1024) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isSidebarOpen]);
 
   const notifications = [
     { id: 1, title: 'New Booking', message: 'Farmer Ramesh booked a Mahindra 575 DI', time: '2 min ago', icon: CheckCircle2, color: 'text-earth-green', unread: true },
@@ -114,27 +111,39 @@ export default function AdminLayout() {
         ></div>
       )}
 
+      {/* Mobile Overlay */}
+      {isSidebarOpen && (
+        <div 
+          className="lg:hidden fixed inset-0 bg-black/40 backdrop-blur-sm z-40 animate-in fade-in duration-300"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
       {/* Dark Sidebar Section */}
       <aside 
         ref={sidebarRef}
         className={cn(
           "bg-primary border-r border-primary/10 flex flex-col transition-all duration-300 ease-in-out h-screen fixed lg:sticky top-0 z-50 shadow-2xl overflow-hidden",
-          isSidebarOpen ? "w-[240px] translate-x-0" : "w-[240px] lg:w-20 -translate-x-[240px] lg:translate-x-0"
+          isSidebarOpen ? "w-[240px] translate-x-0" : "w-[240px] -translate-x-[240px]"
         )}
       >
-        <div className="h-20 flex items-center justify-center border-b border-white/10 shrink-0 px-4 overflow-hidden">
-          <div className={cn("flex items-center transition-all", isSidebarOpen ? "gap-2 w-full opacity-100" : "justify-center opacity-0 lg:opacity-100 w-0 lg:w-auto")}>
+        <div className="h-20 flex items-center justify-between border-b border-white/10 shrink-0 px-4 overflow-hidden">
+          <div className="flex items-center gap-2 opacity-100 transition-all min-w-0">
             <img src="/tractorlink-logo.png" alt="TractorLink Logo" className="w-10 h-10 object-contain shrink-0" />
-            {isSidebarOpen && (
-              <div className="flex-1 min-w-0">
-                <span className="font-black text-base text-white tracking-tight whitespace-nowrap leading-none block uppercase">Tractor<span className="text-accent">Link</span></span>
-                <span className="text-[9px] flex items-center gap-1.5 text-white/70 font-bold uppercase tracking-widest mt-0.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse"></span>
-                  Admin HQ
-                </span>
-              </div>
-            )}
+            <div className="flex-1 min-w-0">
+              <span className="font-black text-base text-white tracking-tight whitespace-nowrap leading-none block uppercase">Tractor<span className="text-accent">Link</span></span>
+              <span className="text-[9px] flex items-center gap-1.5 text-white/70 font-bold uppercase tracking-widest mt-0.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse"></span>
+                Admin HQ
+              </span>
+            </div>
           </div>
+          <button 
+            onClick={() => setIsSidebarOpen(false)}
+            className="lg:hidden p-2 text-white/40 hover:text-white transition-colors shrink-0"
+          >
+            <X size={20} strokeWidth={2.5} />
+          </button>
         </div>
 
         <div className="flex-1 overflow-y-auto py-6 overflow-x-hidden scrollbar-hide">
@@ -177,19 +186,16 @@ export default function AdminLayout() {
           <div className="flex items-center gap-3 sm:gap-4">
             <button 
               id="sidebar-toggle"
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
-              className="p-2.5 bg-earth-card-alt hover:bg-earth-card border border-earth-dark/15 rounded-xl text-earth-sub hover:text-earth-brown transition-all shadow-inner active:scale-95"
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsSidebarOpen(!isSidebarOpen);
+              }} 
+              className="lg:hidden p-2.5 bg-earth-card-alt border border-earth-dark/15 rounded-xl text-earth-sub hover:text-earth-brown transition-all shadow-inner active:scale-95 flex items-center justify-center shrink-0"
             >
-              <ListCollapse size={18} strokeWidth={2.5} />
+              {isSidebarOpen ? <X size={20} strokeWidth={2.5} /> : <Menu size={20} strokeWidth={2.5} />}
             </button>
             
-            <div className="hidden sm:flex items-center gap-2 text-sm text-earth-sub font-medium">
-              <span>Terminal</span>
-              <ChevronRight size={14} className="text-earth-mut" />
-              <span className="text-earth-brown font-bold capitalize tracking-wide">
-                {location.pathname.split('/').pop() === 'admin' ? 'Overview' : location.pathname.split('/').pop()}
-              </span>
-            </div>
+            {/* Breadcrumbs removed for clean header */}
           </div>
           
           <div className="flex items-center gap-4 text-sm relative">
@@ -261,7 +267,7 @@ export default function AdminLayout() {
         </header>
 
         {/* Dynamic Page Content */}
-        <div className="flex-1 overflow-y-auto relative scrollbar-hide">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden relative scrollbar-hide">
           {/* Subtle noise/grid background overlay */}
           <div className="absolute inset-0 pointer-events-none opacity-[0.02]" style={{ backgroundImage: 'radial-gradient(circle at center, white 1px, transparent 1px)', backgroundSize: '24px 24px' }}></div>
           <div className="p-4 lg:p-8 max-w-[1600px] mx-auto min-h-full relative z-10">

@@ -1,13 +1,13 @@
 import prisma from '../config/db.js';
 
 const allowedTransitions = {
-  scheduled: ['dispatched', 'cancelled'],
-  dispatched: ['en_route'],
-  en_route: ['in_progress'],
-  in_progress: ['completed'],
-  completed: ['paid'],
-  paid: [],
-  cancelled: []
+  SCHEDULED: ['DISPATCHED', 'CANCELLED'],
+  DISPATCHED: ['EN_ROUTE', 'IN_PROGRESS'],
+  EN_ROUTE: ['IN_PROGRESS'],
+  IN_PROGRESS: ['COMPLETED'],
+  COMPLETED: ['PAID'],
+  PAID: [],
+  CANCELLED: []
 };
 
 // Returns operator specific jobs split into current and queue
@@ -22,9 +22,9 @@ export const getOperatorJobs = async (operatorId) => {
   });
 
   // Current job is anything that is active
-  const currentJob = jobs.find(j => ['dispatched', 'en_route', 'in_progress'].includes(j.status));
+  const currentJob = jobs.find(j => ['DISPATCHED', 'EN_ROUTE', 'IN_PROGRESS'].includes(j.status?.toUpperCase()));
   // Queue is all other dispatched jobs
-  const queue = jobs.filter(j => j.status === 'dispatched' && j.id !== currentJob?.id);
+  const queue = jobs.filter(j => ['DISPATCHED', 'SCHEDULED'].includes(j.status?.toUpperCase()) && j.id !== currentJob?.id);
 
   return {
     current_job: currentJob || null,
@@ -37,19 +37,52 @@ export const getOperatorStats = async (operatorId) => {
   const completedStats = await prisma.booking.aggregate({
     where: {
       operatorId: parseInt(operatorId),
-      status: 'completed'
+      status: 'COMPLETED'
     },
     _sum: {
       landSize: true
     }
   });
 
-  // Mocking the other telemetry data for now as per PRD
+  // Calculate Fuel Efficiency
+  const fuelStats = await prisma.fuelLog.aggregate({
+    where: { operatorId: parseInt(operatorId) },
+    _sum: { liters: true }
+  });
+
+  const totalHectares = completedStats._sum.landSize || 0;
+  const totalLiters = fuelStats._sum.liters || 0;
+  
+  // L/HA
+  let efficiency = 0;
+  if (totalHectares > 0) {
+    efficiency = totalLiters / totalHectares;
+  }
+
+  // Get Tractor Data
+  const tractor = await prisma.tractor.findFirst({
+    where: { operatorId: parseInt(operatorId) }
+  });
+
+  let engineHours = 0;
+  let unitHealth = 100;
+  
+  if (tractor) {
+    engineHours = tractor.engineHours;
+    if (tractor.nextServiceDueHours > 0) {
+       unitHealth = Math.max(0, 100 - (tractor.engineHours / tractor.nextServiceDueHours) * 100);
+    }
+  }
+
+  const totalJobs = await prisma.booking.count({
+    where: { operatorId: parseInt(operatorId) }
+  });
+
   return {
-    hectares_done: completedStats._sum.landSize || 0,
-    fuel_efficiency: 4.2, // Hardcoded L/HA for now
-    shift_time: "06:12",   // Mocked
-    unit_health: 98       // Mocked %
+    hectares_done: totalHectares,
+    total_jobs: totalJobs,
+    engine_hours: parseFloat(engineHours.toFixed(1)),   
+    unit_health: Math.round(unitHealth)
   };
 };
 
@@ -73,19 +106,18 @@ export const updateJobStatus = async (operatorId, bookingId, nextStatus) => {
     return booking; // Already at the requested status
   }
 
-  // 4. Strict State Machine Validation
-  const currentAllowed = allowedTransitions[booking.status] || [];
-  if (!currentAllowed.includes(nextStatus)) {
+  const currentAllowed = allowedTransitions[booking.status?.toUpperCase()] || [];
+  if (!currentAllowed.includes(nextStatus?.toUpperCase())) {
     throw new Error(`INVALID_TRANSITION: Cannot transition from ${booking.status} to ${nextStatus}`);
   }
 
   // 5. Transaction or Standard Update depending on target state
-  if (nextStatus === 'completed') {
+  if (nextStatus?.toUpperCase() === 'COMPLETED') {
     // Requires transaction to free resources
     const [updatedBooking] = await prisma.$transaction([
       prisma.booking.update({
         where: { id: booking.id },
-        data: { status: 'completed' }
+        data: { status: 'COMPLETED' }
       }),
       prisma.user.update({
         where: { id: booking.operatorId },
@@ -93,7 +125,7 @@ export const updateJobStatus = async (operatorId, bookingId, nextStatus) => {
       }),
       prisma.tractor.update({
         where: { id: booking.tractorId },
-        data: { status: 'available' }
+        data: { status: 'AVAILABLE' }
       })
     ]);
     return updatedBooking;
@@ -101,7 +133,7 @@ export const updateJobStatus = async (operatorId, bookingId, nextStatus) => {
     // Normal progress update (en_route, in_progress)
     return await prisma.booking.update({
       where: { id: booking.id },
-      data: { status: nextStatus }
+      data: { status: nextStatus.toUpperCase() }
     });
   }
 };

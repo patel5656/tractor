@@ -46,7 +46,7 @@ export default function Dispatch() {
 
   const handleDispatch = () => {
     if (!selectedJob || !selectedOperator) return;
-    if (selectedJob.status === 'pending') {
+    if (selectedJob.status?.toUpperCase() === 'PENDING') {
       alert("Please schedule this job first!");
       return;
     }
@@ -154,23 +154,33 @@ export default function Dispatch() {
                 
                 <div className="pt-4 border-t border-earth-dark/10/50 flex justify-between items-center">
                   <div className="flex flex-col">
-                    <span className="text-[9px] font-black text-earth-mut uppercase tracking-widest mb-1">{job.status === 'pending' ? 'Request Date' : 'Scheduled Time'}</span>
+                    <span className="text-[9px] font-black text-earth-mut uppercase tracking-widest mb-1">{job.status?.toUpperCase() === 'PENDING' ? 'Request Date' : 'Scheduled Time'}</span>
                     <span className="text-xs font-black text-earth-brown">
                       {job.scheduledAt 
                         ? new Date(job.scheduledAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })
                         : new Date(job.createdAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
                     </span>
                   </div>
-                  <Button 
-                    size="sm" 
-                    variant={isSelected ? "primary" : "outline"}
-                    className={cn(
-                      "rounded-xl font-black text-[10px] uppercase tracking-widest px-6 h-9 transition-all",
-                      isSelected ? "bg-earth-primary text-earth-brown border-earth-primary" : "border-earth-dark/15 text-earth-sub group-hover:border-earth-primary group-hover:text-earth-primary"
-                    )}
-                  >
-                    {isSelected ? "Selected" : "Select"}
-                  </Button>
+                  {job.status?.toUpperCase() === 'PENDING' ? (
+                    <Button 
+                      size="sm" 
+                      onClick={(e) => { e.stopPropagation(); setSchedulingJob(job); }}
+                      className="rounded-xl font-black text-[10px] uppercase tracking-widest px-6 h-9 transition-all bg-earth-brown text-white hover:bg-earth-primary hover:text-earth-brown"
+                    >
+                      Review & Schedule
+                    </Button>
+                  ) : (
+                    <Button 
+                      size="sm" 
+                      variant={isSelected ? "primary" : "outline"}
+                      className={cn(
+                        "rounded-xl font-black text-[10px] uppercase tracking-widest px-6 h-9 transition-all",
+                        isSelected ? "bg-earth-primary text-earth-brown border-earth-primary" : "border-earth-dark/15 text-earth-sub group-hover:border-earth-primary group-hover:text-earth-primary"
+                      )}
+                    >
+                      {isSelected ? "Selected" : "Select"}
+                    </Button>
+                  )}
                 </div>
               </Card>
             );
@@ -256,7 +266,7 @@ export default function Dispatch() {
             </div>
           </div>
 
-          {!selectedJob || selectedJob.status === 'pending' ? (
+          {!selectedJob || selectedJob.status?.toUpperCase() === 'PENDING' ? (
             <div className="absolute inset-0 flex items-center justify-center p-8 bg-earth-card/10 backdrop-blur-[1px] z-20 text-center">
                <div className="bg-earth-main/80 border border-earth-dark/10 p-6 rounded-3xl shadow-2xl max-w-[280px]">
                   <div className="w-12 h-12 bg-earth-card rounded-full flex items-center justify-center mx-auto mb-4 border border-earth-dark/10">
@@ -264,7 +274,7 @@ export default function Dispatch() {
                   </div>
                   <h5 className="text-xs font-black text-earth-brown uppercase tracking-widest mb-2">Fleet Locked</h5>
                   <p className="text-[10px] font-bold text-earth-mut leading-relaxed uppercase">
-                    {selectedJob?.status === 'pending' 
+                    {selectedJob?.status?.toUpperCase() === 'PENDING' 
                       ? "This job must be scheduled first before assigning resources." 
                       : "Select a scheduled job from the left queue to unlock the fleet for dispatching."
                     }

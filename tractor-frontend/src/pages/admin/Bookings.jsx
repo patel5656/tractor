@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useSearchParams } from 'react-router-dom';
 import { Eye, Search, Filter, MoreVertical, FileText, Clock, Tractor as TractorIcon, CheckCircle2, ChevronDown, Trash2, CheckCircle, X, MapPin, Navigation, ArrowDown, Info } from 'lucide-react';
 import { Card, CardContent } from '../../components/ui/Card';
@@ -28,6 +29,8 @@ export default function Bookings() {
   // Sync with server on filter/search/page change
   useEffect(() => {
     const delayDebounceFn = setTimeout(() => {
+      // Determine if we should reset to page 1 (if filter/search changed)
+      // or use the current requested page
       fetchBookings({ 
         page: pagination.currentPage, 
         status: statusFilter, 
@@ -38,10 +41,34 @@ export default function Bookings() {
     return () => clearTimeout(delayDebounceFn);
   }, [statusFilter, searchTerm, pagination.currentPage]);
 
+  // Reset page to 1 whenever filters change
+  useEffect(() => {
+    if (pagination.currentPage !== 1) {
+      // Small delay to ensure state consistency
+      fetchBookings({ page: 1, status: statusFilter, search: searchTerm });
+    }
+  }, [statusFilter, searchTerm]);
+
+  // Handle scroll lock when modal is open
+  useEffect(() => {
+    if (isViewModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isViewModalOpen]);
+
   const handleViewDetails = async (id) => {
     try {
-      setLoadingDetails(true);
+      const basicInfo = bookings.find(b => b.id === id);
+      if (basicInfo) setSelectedBooking(basicInfo);
+      
       setIsViewModalOpen(true);
+      setLoadingDetails(true);
+      
       const res = await api.admin.getBooking(id);
       if (res.success) {
         setSelectedBooking(res.data);
@@ -206,13 +233,14 @@ export default function Bookings() {
                     <td className="px-8 py-6">
                       <Badge className={cn(
                         "text-[9px] px-3 py-0.5 border uppercase font-black tracking-[0.1em]",
-                        booking.status === 'completed' || booking.status === 'paid' ? 'bg-earth-primary/20 text-earth-green border-emerald-500/20' : 
-                        booking.status === 'pending' ? 'bg-earth-dark/10 text-earth-mut border-earth-dark/20' :
-                        booking.status === 'scheduled' ? 'bg-earth-primary/10 text-earth-primary border-earth-primary/20' : 
-                        booking.status === 'dispatched' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
-                        'bg-orange-500/10 text-orange-400 border-orange-500/20'
+                        booking.status?.toLowerCase() === 'completed' || booking.status?.toLowerCase() === 'paid' ? 'bg-earth-primary/20 text-earth-green border-emerald-500/20' : 
+                        booking.status?.toLowerCase() === 'pending' ? 'bg-earth-dark/10 text-earth-mut border-earth-dark/20' :
+                        booking.status?.toLowerCase() === 'scheduled' ? 'bg-earth-primary/10 text-earth-primary border-earth-primary/20' : 
+                        booking.status?.toLowerCase() === 'dispatched' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
+                        booking.status?.toLowerCase() === 'in_progress' ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' :
+                        'bg-earth-dark/10 text-earth-mut border-earth-dark/15'
                       )}>
-                        {booking.status === 'dispatched' ? 'ASSIGNED' : booking.status}
+                        {booking.status?.toLowerCase() === 'dispatched' ? 'ASSIGNED' : booking.status}
                       </Badge>
                        {booking.scheduledAt ? (
                          <p className="text-[8px] font-bold text-earth-primary mt-1 uppercase tracking-tighter">
@@ -312,13 +340,18 @@ export default function Bookings() {
               />
             </div>
             <div className="relative">
-               <Button 
-                variant="outline" 
+               <button 
                 onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                className={cn("shrink-0 border-earth-dark/10 h-12 w-12 rounded-2xl", statusFilter !== 'All' ? "bg-earth-primary/10 text-earth-primary border-earth-primary/20" : "bg-earth-card text-earth-mut")}
+                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                className={cn(
+                  "shrink-0 border h-12 w-12 rounded-2xl transition-all shadow-sm", 
+                  statusFilter !== 'All' 
+                    ? "bg-earth-primary text-white border-earth-primary" 
+                    : "bg-earth-main/5 text-earth-primary border-earth-dark/20"
+                )}
                >
-                 <Filter size={18} />
-               </Button>
+                 <Filter size={22} strokeWidth={2.5} className={statusFilter !== 'All' ? "text-white" : "text-earth-primary"} />
+               </button>
                {showFilterDropdown && (
                   <div className="absolute right-0 top-full mt-2 w-48 bg-earth-card border border-earth-dark/15 rounded-xl shadow-2xl z-50 p-1 flex flex-col gap-1">
                      {['All', 'Scheduled', 'In Progress', 'Completed', 'Paid'].map(opt => (
@@ -345,56 +378,52 @@ export default function Bookings() {
 
         {bookings.length > 0 ? bookings.map((booking) => {
           return (
-            <Card key={booking.id} className="shadow-2xl bg-earth-card-alt border-earth-dark/15/50 rounded-[2rem] overflow-hidden active:scale-95 transition-all group">
-              <div className="p-5 bg-earth-card/40 border-b border-earth-dark/10 flex justify-between items-center">
-                 <span className="text-[10px] font-black text-earth-mut uppercase tracking-widest bg-earth-card px-3 py-1 rounded-xl border border-earth-dark/15/50">NODE-#{String(booking.id).toUpperCase()}</span>
-                 <Badge className={cn(
-                  "text-[9px] font-black uppercase tracking-widest px-3 py-1 border",
-                  booking.status === 'completed' || booking.status === 'paid' ? 'bg-earth-primary/20 text-earth-green border-emerald-500/20' : 
-                  booking.status === 'scheduled' ? 'bg-earth-primary/10 text-earth-primary border-earth-primary/20' : 
-                  'bg-orange-500/10 text-orange-400 border-orange-500/20'
-                )}>
-                  {booking.status}
-                </Badge>
+            <Card key={booking.id} className="shadow-xl bg-white border border-earth-dark/15 rounded-[2rem] overflow-hidden active:scale-[0.98] transition-all">
+              {/* Compact Header for Mobile */}
+              <div className="p-4 bg-earth-main/5 border-b border-earth-dark/10 flex justify-between items-center gap-3">
+                 <div className="flex-1 min-w-0">
+                   <div className="flex items-center gap-2 mb-0.5">
+                     <span className="text-[9px] font-black text-earth-mut uppercase tracking-widest bg-white/80 px-2 py-0.5 rounded-lg border border-earth-dark/10">NODE-#{booking.id}</span>
+                     <Badge className={cn(
+                        "text-[8px] font-black uppercase tracking-widest px-2 py-0 border shrink-0",
+                        booking.status?.toLowerCase() === 'completed' || booking.status?.toLowerCase() === 'paid' ? 'bg-earth-primary/20 text-earth-green border-emerald-500/20' : 
+                        booking.status?.toLowerCase() === 'scheduled' ? 'bg-earth-primary/10 text-earth-primary border-earth-primary/20' : 
+                        'bg-orange-500/10 text-orange-400 border-orange-500/20'
+                      )}>
+                        {booking.status}
+                      </Badge>
+                   </div>
+                   <h4 className="font-black text-earth-brown text-base tracking-tight truncate">{booking.farmer?.name || 'Unknown'}</h4>
+                 </div>
+                 
+                 <Button 
+                   size="icon"
+                   onClick={() => handleViewDetails(booking.id)}
+                   className="bg-accent text-white shadow-lg shadow-accent/20 h-11 w-11 rounded-2xl shrink-0 active:scale-90 transition-transform"
+                 >
+                   <Eye size={20} />
+                 </Button>
               </div>
               
-              <CardContent className="p-6 space-y-6">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="font-black text-earth-brown text-xl tracking-tight leading-none">{booking.farmer?.name || 'Unknown'}</h4>
-                    <p className="text-[10px] font-bold text-earth-mut uppercase tracking-widest mt-2">{booking.farmer?.email || 'N/A'}</p>
+              <CardContent className="p-5 space-y-5">
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-earth-card/40 rounded-[1.2rem] border border-earth-dark/5 shadow-inner">
+                    <p className="text-[8px] font-black text-earth-mut uppercase tracking-widest mb-1 opacity-60">Service Unit</p>
+                    <p className="text-[11px] font-black text-earth-primary uppercase leading-none truncate">{booking.service?.name}</p>
+                    <p className="text-[8px] font-bold text-earth-mut mt-1 uppercase italic leading-none">{booking.landSize} Ha</p>
                   </div>
-                  <div className="flex items-center">
-                    <Button 
-                       variant="outline" 
-                       size="sm" 
-                       onClick={() => handleViewDetails(booking.id)}
-                       className="bg-accent text-white hover:opacity-90 font-black uppercase text-[10px] tracking-widest px-4 rounded-xl h-10 border-none w-full"
-                    >
-                      <Eye size={14} className="mr-2" /> View Details
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="p-4 bg-earth-card/60 rounded-2xl border border-earth-dark/10/50 shadow-inner">
-                    <p className="text-[9px] font-black text-earth-mut uppercase tracking-widest mb-1.5 opacity-60">Service Unit</p>
-                    <p className="text-xs font-black text-earth-primary uppercase leading-none">{booking.service?.name}</p>
-                    <p className="text-[8px] font-bold text-earth-mut mt-1 uppercase italic">{booking.landSize} Hectares</p>
-                  </div>
-                  <div className="p-4 bg-earth-card/60 rounded-2xl border border-earth-dark/10/50 shadow-inner">
-                    <p className="text-[9px] font-black text-earth-mut uppercase tracking-widest mb-1.5 opacity-60">Revenue</p>
-                    <p className="text-sm font-black text-earth-brown leading-none">₦{booking.totalPrice?.toLocaleString()}</p>
+                  <div className="p-3 bg-earth-card/40 rounded-[1.2rem] border border-earth-dark/5 shadow-inner">
+                    <p className="text-[8px] font-black text-earth-mut uppercase tracking-widest mb-1 opacity-60">Revenue</p>
+                    <p className="text-xs font-black text-earth-brown leading-none">₦{booking.totalPrice?.toLocaleString()}</p>
                     {(() => {
                       const paidAmt = booking.payments?.reduce((s, p) => s + p.amount, 0) || 0;
-                      const balance = booking.totalPrice - paidAmt;
                       const pStatus = booking.paymentStatus || (booking.status === 'paid' ? 'PAID' : 'PENDING');
                       return (
                         <p className={cn(
-                          "text-[8px] font-bold mt-1 uppercase italic",
-                          pStatus === 'PAID' ? "text-earth-green" : pStatus === 'PARTIAL' ? "text-blue-400" : "text-earth-mut"
+                          "text-[8px] font-bold mt-1 uppercase italic leading-none",
+                          pStatus === 'PAID' ? "text-earth-green" : "text-earth-mut"
                         )}>
-                          {pStatus} {balance > 0 && paidAmt > 0 ? `(Rem: ₦${balance.toLocaleString()})` : ""}
+                          {pStatus}
                         </p>
                       );
                     })()}
@@ -444,198 +473,161 @@ export default function Bookings() {
         </div>
       </div>
 
-      {/* Booking Details Modal */}
-      <AnimatePresence>
-        {isViewModalOpen && selectedBooking && (
-          <div className="fixed inset-0 z-[100] flex items-start justify-center p-6 md:p-12 overflow-y-auto bg-earth-main/80 backdrop-blur-sm pt-20 pb-20">
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setIsViewModalOpen(false)}
-              className="fixed inset-0 -z-10"
-            />
-            <motion.div 
-              initial={{ opacity: 0, scale: 0.95, y: 10 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className="relative w-full max-w-xl bg-earth-card border border-earth-dark/15/50 rounded-[2.5rem] shadow-[0_0_80px_rgba(0,0,0,0.6)] flex flex-col max-h-[80vh] my-auto"
-            >
-              <div className="p-6 border-b border-earth-dark/10 flex items-center justify-between bg-earth-main/20">
-                <div>
-                   <h3 className="text-xl font-black text-earth-brown uppercase italic tracking-tight">Booking Context</h3>
-                   <p className="text-[9px] font-black text-earth-mut uppercase tracking-[0.2em] mt-1">Registry Node: # {selectedBooking.id}</p>
+      {/* Booking Details Modal - Compact & Scroll-Free */}
+      {createPortal(
+        <AnimatePresence>
+          {isViewModalOpen && selectedBooking && (
+            <div className="fixed inset-0 z-[1000] flex items-center justify-center p-4 md:p-6" key="admin-booking-modal-portal">
+              {/* Backdrop Lock with separate dark overlay */}
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsViewModalOpen(false)}
+                className="fixed inset-0 bg-earth-main/80 backdrop-blur-sm"
+              />
+              
+              <motion.div 
+                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                className="relative w-full max-w-xl bg-white border border-earth-dark/15 rounded-[2.5rem] shadow-[0_30px_100px_rgba(0,0,0,0.6)] flex flex-col overflow-hidden z-10 max-h-[90vh]"
+              >
+                {/* Modal Header - Operational Context */}
+                <div className="p-5 md:p-6 border-b border-earth-dark/10 flex items-center justify-between bg-earth-main/10 shrink-0">
+                  <div>
+                    <h3 className="text-xl font-black text-earth-brown uppercase italic tracking-tight leading-none">Booking Context</h3>
+                    <p className="text-[9px] font-black text-earth-mut uppercase tracking-[0.2em] mt-2">Registry Node: # {selectedBooking.id}</p>
+                  </div>
+                  <button 
+                    onClick={() => setIsViewModalOpen(false)}
+                    className="h-10 w-10 rounded-xl bg-white border border-earth-dark/10 text-earth-mut flex items-center justify-center hover:text-earth-brown hover:bg-earth-card-alt transition-all"
+                  >
+                    <X size={18} />
+                  </button>
                 </div>
-                <button 
-                  onClick={() => setIsViewModalOpen(false)}
-                  className="h-10 w-10 rounded-xl bg-earth-card border border-earth-dark/10 text-earth-mut flex items-center justify-center hover:text-earth-brown hover:bg-earth-card-alt transition-all"
-                >
-                  <X size={18} />
-                </button>
-              </div>
 
-              <div className="p-6 overflow-y-auto custom-scrollbar space-y-8 text-left">
-                {/* 1. Location Selection (Route Flow) */}
-                <div className="space-y-4">
-                   <h4 className="text-[10px] font-black text-earth-mut uppercase tracking-[0.2em] px-1 flex items-center gap-2">
-                     <Navigation size={12} className="text-earth-primary" />
-                     Service Route Visualization
-                   </h4>
-                   <div className="relative pl-10 space-y-6">
-                      {/* Vertical Line */}
-                      <div className="absolute left-[19px] top-3 bottom-3 w-0.5 bg-dashed border-l border-dashed border-earth-dark/20" />
-                      
-                      {/* From: Hub */}
-                      <div className="relative">
-                        <div className="absolute -left-[30px] top-0 w-5 h-5 rounded-full bg-earth-card border-2 border-earth-primary flex items-center justify-center z-10 shadow-sm">
-                           <div className="w-1.5 h-1.5 rounded-full bg-earth-primary" />
+                {/* Modal Content - Scroll-Free Optimization */}
+                <div className="p-5 md:p-6 space-y-5 text-left overflow-y-auto">
+                  {/* 1. Service Route Visualization Context - Compact */}
+                  <div className="space-y-3">
+                    <h4 className="text-[9px] font-black text-earth-mut uppercase tracking-[0.2em] px-1 flex items-center gap-2">
+                      <Navigation size={12} className="text-earth-primary" />
+                      Service Route Visualization
+                    </h4>
+                    <div className="relative pl-10 space-y-4 py-1">
+                        {/* Vertical Line */}
+                        <div className="absolute left-[19px] top-3 bottom-0 w-0.5 border-l border-dashed border-earth-dark/20" />
+                        
+                        {/* From: Hub */}
+                        <div className="relative">
+                          <div className="absolute -left-[30px] top-0 w-5 h-5 rounded-full bg-white border-2 border-earth-primary flex items-center justify-center z-10">
+                            <div className="w-1.5 h-1.5 rounded-full bg-earth-primary" />
+                          </div>
+                          <div>
+                            <p className="text-[8px] font-black text-earth-mut uppercase tracking-widest leading-none mb-1">Origin Point (Hub)</p>
+                            <p className="text-xs font-black text-earth-brown truncate">{selectedBooking.hubName || "TractorLink Main Hub"}</p>
+                          </div>
+                        </div>
+
+                        {/* Distance Indicator Overlay */}
+                        <div className="relative py-1">
+                          <div className="inline-flex items-center gap-2 px-3 py-1 bg-earth-main border border-earth-dark/10 rounded-full text-[9px] font-black text-earth-primary uppercase tracking-widest">
+                              <ArrowDown size={10} />
+                              {selectedBooking.roadDistance || selectedBooking.distanceKm || 0} KM Road Distance
+                          </div>
+                        </div>
+
+                        {/* To: Farmer */}
+                        <div className="relative">
+                          <div className="absolute -left-[30px] top-0 w-5 h-5 rounded-full bg-earth-primary flex items-center justify-center z-10 shadow-lg shadow-earth-primary/30">
+                            <MapPin size={10} className="text-earth-brown" />
+                          </div>
+                          <div>
+                            <p className="text-[8px] font-black text-earth-mut uppercase tracking-widest leading-none mb-1">Destination Point (Farmer)</p>
+                            <p className="text-xs font-black text-earth-brown truncate">{selectedBooking.location || "Farmer Site Location"}</p>
+                            <p className="text-[9px] font-bold text-earth-mut mt-0.5 uppercase tracking-tighter italic">Zone: {selectedBooking.zoneName || "Calculated Range"}</p>
+                          </div>
+                        </div>
+                    </div>
+                  </div>
+
+                  {/* 2. Grid for Status and Finance to save vertical space */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Deployment Status */}
+                    <div className="p-4 bg-earth-main/5 border border-earth-dark/10 rounded-[1.5rem] space-y-3">
+                        <div className="flex items-center gap-2">
+                          <Clock size={12} className="text-earth-primary" />
+                          <h4 className="text-[9px] font-black text-earth-mut uppercase tracking-[0.2em]">Deployment</h4>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-white border border-earth-dark/10 flex items-center justify-center text-earth-primary">
+                              <Clock size={16} />
+                          </div>
+                          <div>
+                              <p className="text-[8px] font-black text-earth-mut uppercase tracking-[0.2em] mb-1">Scheduled</p>
+                              <p className="text-xs font-black text-earth-brown uppercase">
+                                {selectedBooking.scheduledAt 
+                                  ? new Date(selectedBooking.scheduledAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })
+                                  : "Pending"}
+                              </p>
+                          </div>
+                        </div>
+                    </div>
+
+                    {/* Financial Ledger */}
+                    <div className="p-4 bg-white border border-earth-dark/10 rounded-[1.5rem] shadow-inner space-y-2">
+                        <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-earth-mut">
+                          <span>Work Rate</span>
+                          <span className="text-earth-brown">₦{selectedBooking.basePrice?.toLocaleString()}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-earth-mut">
+                          <span>Logistics</span>
+                          <span className="text-earth-brown">₦{selectedBooking.distanceCharge?.toLocaleString()}</span>
+                        </div>
+                        <div className="h-px bg-earth-dark/5 my-1" />
+                        <div className="flex justify-between items-baseline pt-1">
+                          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-earth-primary italic">Total</span>
+                          <span className="text-lg font-black text-earth-brown tracking-tighter italic">₦{selectedBooking.totalPrice?.toLocaleString()}</span>
+                        </div>
+                    </div>
+                  </div>
+
+                  {/* 3. Service Particulars & Inclusions (Combined Compact) */}
+                  <div className="p-4 bg-earth-primary/5 rounded-[1.5rem] border border-earth-primary/10 flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-white border border-earth-dark/10 flex items-center justify-center text-earth-primary">
+                          <TractorIcon size={16} />
                         </div>
                         <div>
-                          <p className="text-[9px] font-black text-earth-mut uppercase tracking-widest leading-none mb-1">Origin Point (Hub)</p>
-                          <p className="text-sm font-black text-earth-brown truncate">
-                            {selectedBooking.hubName || "TractorLink Main Hub"}
-                          </p>
-                          <p className="text-[10px] font-medium text-earth-mut truncate mt-0.5">
-                            {selectedBooking.hubLocation || "Operational Base Registry"}
-                          </p>
+                          <p className="text-sm font-black text-earth-brown uppercase italic leading-none">{selectedBooking.serviceNameSnapshot || selectedBooking.service?.name}</p>
+                          <p className="text-[9px] font-bold text-earth-mut mt-1">{selectedBooking.landSize} Hectares Registry</p>
                         </div>
-                      </div>
-
-                      {/* Distance Indicator Overlay */}
-                      <div className="relative py-2">
-                         <div className="inline-flex items-center gap-2 px-3 py-1 bg-earth-main border border-earth-dark/10 rounded-full text-[10px] font-black text-earth-primary uppercase tracking-widest shadow-sm">
-                            <ArrowDown size={10} />
-                            {selectedBooking.roadDistance || selectedBooking.distanceKm || 0} KM Road Distance
-                         </div>
-                      </div>
-
-                      {/* To: Farmer */}
-                      <div className="relative">
-                        <div className="absolute -left-[30px] top-0 w-5 h-5 rounded-full bg-earth-primary flex items-center justify-center z-10 shadow-lg shadow-earth-primary/30">
-                           <MapPin size={10} className="text-earth-brown" />
-                        </div>
-                        <div>
-                          <p className="text-[9px] font-black text-earth-mut uppercase tracking-widest leading-none mb-1">Destination Point (Farmer)</p>
-                          <p className="text-sm font-black text-earth-brown truncate">
-                            {selectedBooking.location || "Farmer Site Location"}
-                          </p>
-                          <p className="text-[10px] font-medium text-earth-mut truncate mt-0.5 italic">
-                            Zone: {selectedBooking.zoneName || "Calculated Range"}
-                          </p>
-                        </div>
-                      </div>
-                   </div>
+                    </div>
+                    <div className="text-right">
+                        <Badge className={cn(
+                          "text-[8px] px-2 py-0 font-black uppercase tracking-widest border border-earth-dark/10",
+                          selectedBooking.status === 'completed' || selectedBooking.status === 'paid' ? 'bg-earth-primary/20 text-earth-green border-emerald-500/20' : 'bg-earth-primary/10 text-earth-primary border-earth-primary/20'
+                        )}>{selectedBooking.status}</Badge>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="h-px bg-earth-dark/5 w-full" />
-
-                {/* Added Scheduled Deployment */}
-                <div className="space-y-4">
-                   <h4 className="text-[10px] font-black text-earth-mut uppercase tracking-[0.2em] px-1 flex items-center gap-2">
-                     <Clock size={12} className="text-earth-primary" />
-                     Registry Deployment Status
-                   </h4>
-                   <div className="p-4 bg-earth-card border border-earth-dark/10 rounded-2xl flex items-center justify-between shadow-inner">
-                      <div className="flex items-center gap-3">
-                         <div className="w-10 h-10 rounded-xl bg-earth-primary/5 border border-earth-primary/10 flex items-center justify-center text-earth-primary">
-                            <Clock size={18} />
-                         </div>
-                         <div>
-                            <p className="text-[9px] font-black text-earth-mut uppercase tracking-[0.2em] leading-none mb-1">Scheduled Deployment</p>
-                            <p className={cn(
-                              "text-sm font-black uppercase",
-                              selectedBooking.scheduledAt ? "text-earth-brown" : "text-earth-primary underline decoration-dotted"
-                            )}>
-                               {selectedBooking.scheduledAt 
-                                 ? new Date(selectedBooking.scheduledAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })
-                                 : "Pending Scheduling"}
-                            </p>
-                         </div>
-                      </div>
-                   </div>
+                {/* Modal Footer - Registry Sync Action */}
+                <div className="px-6 py-4 border-t border-earth-dark/10 bg-earth-main/10 flex justify-end shrink-0">
+                  <Button 
+                    onClick={() => setIsViewModalOpen(false)}
+                    className="bg-white hover:bg-earth-card-alt text-earth-sub hover:text-earth-brown font-black uppercase text-[10px] tracking-widest px-8 h-10 rounded-xl border border-earth-dark/15 transition-all"
+                  >
+                    Sync Close
+                  </Button>
                 </div>
-
-                <div className="h-px bg-earth-dark/5 w-full" />
-
-                {/* 2. Service & Financial Breakdown */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                   {/* Service Summary */}
-                   <div className="space-y-4">
-                      <h4 className="text-[10px] font-black text-earth-mut uppercase tracking-[0.2em] px-1">Service Particulars</h4>
-                      <div className="p-4 bg-earth-main/40 rounded-2xl border border-earth-dark/10/50 space-y-3">
-                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-earth-card border border-earth-dark/10 flex items-center justify-center text-earth-primary">
-                               <TractorIcon size={18} />
-                            </div>
-                            <div>
-                               <p className="text-sm font-black text-earth-brown uppercase italic leading-none">{selectedBooking.serviceNameSnapshot || selectedBooking.service?.name}</p>
-                               <p className="text-[10px] font-bold text-earth-mut mt-1">{selectedBooking.landSize} Hectares Coverage</p>
-                            </div>
-                         </div>
-                      </div>
-                   </div>
-
-                   {/* Price Ledger */}
-                   <div className="space-y-4">
-                      <h4 className="text-[10px] font-black text-earth-mut uppercase tracking-[0.2em] px-1">Financial Ledger</h4>
-                      <div className="p-4 bg-earth-card border border-earth-dark/10 rounded-2xl shadow-inner space-y-3">
-                         <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-earth-mut">
-                            <span>Base Work Rate</span>
-                            <span className="text-earth-brown">₦{selectedBooking.basePrice?.toLocaleString()}</span>
-                         </div>
-                         <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-earth-mut">
-                            <span>Distance Logistics</span>
-                            <span className="text-earth-brown">₦{selectedBooking.distanceCharge?.toLocaleString()}</span>
-                         </div>
-                         <div className="h-px bg-earth-dark/10 my-1" />
-                         <div className="flex justify-between items-center bg-earth-primary/10 -mx-4 px-4 py-2">
-                            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-earth-primary italic">Total Valuation</span>
-                            <span className="text-base font-black text-earth-brown tracking-tighter italic">₦{selectedBooking.totalPrice?.toLocaleString()}</span>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-
-                {/* 3. Extra Info & Policy */}
-                <div className="p-4 bg-earth-primary/5 rounded-2xl border border-earth-primary/10 flex gap-4">
-                   <div className="w-10 h-10 rounded-xl bg-earth-primary/20 flex items-center justify-center shrink-0">
-                      <Info size={16} className="text-earth-primary" />
-                   </div>
-                   <div className="space-y-1">
-                      <p className="text-[10px] font-black text-earth-brown uppercase tracking-widest">Inclusions & Policy</p>
-                      <p className="text-[9px] font-bold text-earth-mut uppercase leading-relaxed tracking-wide">
-                        Quote includes full fuel allocation, professional operator deployment, and equipment mobilization.
-                        <br />
-                        <span className="text-earth-primary font-black italic">Valid for 48 hours from Registry Sync Date.</span>
-                      </p>
-                   </div>
-                </div>
-
-                {/* Status Badges */}
-                <div className="flex items-center gap-3 pt-2">
-                   <Badge className={cn(
-                     "text-[8px] px-3 py-1 font-black uppercase tracking-widest border border-earth-dark/10 shadow-sm",
-                     selectedBooking.status === 'completed' || selectedBooking.status === 'paid' ? 'bg-earth-primary/20 text-earth-green border-emerald-500/20' : 'bg-earth-primary/10 text-earth-primary border-earth-primary/20'
-                   )}>{selectedBooking.status}</Badge>
-                   <Badge className={cn(
-                     "text-[8px] px-3 py-1 font-black uppercase tracking-widest border border-earth-dark/10 shadow-sm",
-                     selectedBooking.status === 'paid' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' : 'bg-orange-500/10 text-orange-500 border-orange-500/20'
-                   )}>{selectedBooking.status === 'paid' ? 'Financials Settled' : 'Payment Pending'}</Badge>
-                </div>
-              </div>
-
-              <div className="px-6 py-4 border-t border-earth-dark/10 bg-earth-main/40 flex justify-end">
-                 <Button 
-                   onClick={() => setIsViewModalOpen(false)}
-                   className="bg-earth-card-alt hover:bg-earth-card text-earth-sub hover:text-earth-brown font-black uppercase text-[10px] tracking-widest px-6 h-10 rounded-xl border border-earth-dark/15 transition-all"
-                 >
-                   Sync Close
-                 </Button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>,
+        document.body
+      )}
     </div>
   );
 }

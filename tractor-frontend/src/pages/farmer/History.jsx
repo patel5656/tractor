@@ -136,7 +136,7 @@ export default function History() {
 
   return (
     <div className="p-4 md:p-8 space-y-6 md:space-y-8 max-w-7xl mx-auto relative pb-24 md:pb-8">
-      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-earth-dark/15/50 pb-6">
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-earth-dark/15 pb-6">
         <div>
           <h1 className="text-2xl md:text-3xl font-black tracking-tight text-earth-brown uppercase italic">Booking Archive</h1>
           <p className="text-[10px] md:text-sm text-earth-mut mt-1 font-black uppercase tracking-widest">Central Repository of Services</p>
@@ -211,13 +211,14 @@ export default function History() {
                           <div className="flex items-center gap-1.5 text-[10px] font-black text-earth-mut uppercase tracking-widest mt-1">
                             <Badge className={cn(
                               "text-[8px] px-2 py-0 border font-black uppercase tracking-widest",
-                              booking.status === 'completed' || booking.status === 'paid' ? 'bg-earth-primary/20 text-earth-green border-emerald-500/20' : 
-                              booking.status === 'pending' ? 'bg-earth-dark/10 text-earth-mut border-earth-dark/20' :
-                              booking.status === 'scheduled' ? 'bg-earth-primary/10 text-earth-primary border-earth-primary/20' : 
-                              booking.status === 'dispatched' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
+                              booking.status?.toUpperCase() === 'COMPLETED' || booking.status?.toUpperCase() === 'PAID' ? 'bg-earth-primary/20 text-earth-green border-earth-green/20' : 
+                              booking.status?.toUpperCase() === 'PENDING' ? 'bg-earth-dark/10 text-earth-mut border-earth-dark/20' :
+                              booking.status?.toUpperCase() === 'SCHEDULED' ? 'bg-earth-primary/10 text-earth-primary border-earth-primary/20' : 
+                              booking.status?.toUpperCase() === 'DISPATCHED' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
+                              booking.status?.toUpperCase() === 'IN_PROGRESS' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
                               'bg-orange-500/10 text-orange-400 border-orange-500/20'
                             )}>
-                              {booking.status === 'dispatched' ? 'ASSIGNED' : booking.status}
+                              {booking.status === 'DISPATCHED' ? 'ASSIGNED' : booking.status}
                             </Badge>
                             {booking.scheduledAt ? (
                               <span className="text-[10px] font-black text-earth-primary lowercase">
@@ -306,187 +307,120 @@ export default function History() {
         </div>
       )}
 
-      {/* Detailed Modal */}
+      {/* Detailed Modal - Compact & Premium */}
       <AnimatePresence>
         {selectedBooking && (
-          <div className="fixed inset-0 z-[99999] flex items-start justify-center p-6 md:p-12 overflow-y-auto bg-earth-main/95 backdrop-blur-xl pt-20 pb-20">
+          <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 md:p-6 bg-earth-main/80 backdrop-blur-sm">
             <motion.div 
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setSelectedBooking(null)}
-              className="fixed inset-0 -z-10"
+              className="fixed inset-0 "
             />
             
             <motion.div
               layoutId={selectedBooking.id}
-              className="bg-earth-main border border-earth-dark/10 w-full max-w-md rounded-[2.5rem] shadow-[0_0_100px_rgba(0,0,0,0.8)] relative z-10 max-h-[80vh] flex flex-col my-auto"
+              className="bg-white border border-earth-dark/10 w-full max-w-md rounded-[2.5rem] shadow-[0_25px_80px_rgba(0,0,0,0.15)] relative z-10 overflow-hidden flex flex-col"
             >
-              {/* Modal Header - More Compact */}
-              <div className="p-6 border-b border-earth-dark/10 flex justify-between items-center bg-earth-dark">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-earth-primary rounded-2xl flex items-center justify-center text-earth-brown shadow-2xl">
-                    <Tractor size={20} />
-                  </div>
-                  <div>
-                    <h2 className="text-xl font-black text-earth-main uppercase italic leading-none">{selectedBooking.service?.name}</h2>
-                    <p className="text-[9px] font-black text-earth-main/60 uppercase tracking-widest mt-1">#B-{selectedBooking.id}</p>
-                  </div>
+              {/* Modal Header - Fully synchronized with Admin */}
+              <div className="p-6 border-b border-earth-dark/10 flex items-center justify-between bg-earth-main/20 relative">
+                <div>
+                  <h3 className="text-xl font-black text-earth-brown uppercase italic tracking-tight">Booking Context</h3>
+                  <p className="text-[9px] font-black text-earth-mut uppercase tracking-[0.2em] mt-1">Registry Node: # {selectedBooking.id} • {selectedBooking.landSize} Ha</p>
                 </div>
                 <button 
                   onClick={() => setSelectedBooking(null)}
-                  className="w-10 h-10 rounded-full bg-earth-card-alt flex items-center justify-center text-earth-main/60 hover:text-earth-main transition-all border border-earth-dark/15"
+                  className="h-10 w-10 rounded-xl bg-white border border-earth-dark/10 text-earth-mut flex items-center justify-center hover:text-earth-brown hover:bg-earth-card-alt transition-all"
+                  title="Close Detail View"
                 >
                   <X size={18} />
                 </button>
               </div>
 
-              {/* Modal Content - Refined Spacing */}
-              <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8">
-                {/* 1. Location Selection (Route Flow) */}
-                <div className="space-y-4 text-left">
+              {/* Modal Content - Compact & No Scroll */}
+              <div className="p-6 overflow-y-auto custom-scrollbar space-y-6 text-left">
+                {/* 1. Service Route Visualization Context */}
+                <div className="space-y-4">
                    <h4 className="text-[10px] font-black text-earth-mut uppercase tracking-[0.2em] px-1 flex items-center gap-2">
                      <Navigation size={12} className="text-earth-primary" />
                      Service Route Visualization
                    </h4>
-                   <div className="relative pl-10 space-y-6">
-                      {/* Vertical Line */}
-                      <div className="absolute left-[19px] top-3 bottom-3 w-0.5 bg-dashed border-l border-dashed border-earth-dark/20" />
-                      
-                      {/* From: Hub */}
-                      <div className="relative">
-                        <div className="absolute -left-[30px] top-0 w-5 h-5 rounded-full bg-earth-card border-2 border-earth-primary flex items-center justify-center z-10 shadow-sm">
-                           <div className="w-1.5 h-1.5 rounded-full bg-earth-primary" />
-                        </div>
-                        <div>
-                          <p className="text-[9px] font-black text-earth-mut uppercase tracking-widest leading-none mb-1">Origin Point (Hub)</p>
-                          <p className="text-sm font-black text-earth-brown truncate">
-                            {selectedBooking.hubName || "TractorLink Main Hub"}
-                          </p>
-                          <p className="text-[10px] font-medium text-earth-mut truncate mt-0.5">
-                            {selectedBooking.hubLocation || "Operational Base Registry"}
-                          </p>
+                   <div className="bg-earth-card-alt/30 border border-earth-dark/10 p-4 rounded-[1.5rem] relative overflow-hidden group">
+                    <div className="flex gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-earth-primary/10 border border-earth-primary/20 flex items-center justify-center text-earth-primary shrink-0">
+                        <MapPin size={18} />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[8px] font-black text-earth-mut uppercase tracking-widest leading-none mb-1.5">Site Location & Distance</p>
+                        <p className="text-sm font-black text-earth-brown truncate">{selectedBooking.location || "Your Site Location"}</p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="px-2 py-0.5 bg-earth-primary text-earth-brown rounded-md text-[8px] font-black uppercase tracking-widest">
+                            {selectedBooking.roadDistance || selectedBooking.distanceKm || 0} KM AWAY
+                          </span>
                         </div>
                       </div>
-
-                      {/* Distance Indicator Overlay */}
-                      <div className="relative py-2">
-                         <div className="inline-flex items-center gap-2 px-3 py-1 bg-earth-main border border-earth-dark/10 rounded-full text-[10px] font-black text-earth-primary uppercase tracking-widest shadow-sm">
-                            <ArrowDown size={10} />
-                            {selectedBooking.roadDistance || selectedBooking.distanceKm || 0} KM Road Distance
-                         </div>
-                      </div>
-
-                      {/* To: Farmer */}
-                      <div className="relative">
-                        <div className="absolute -left-[30px] top-0 w-5 h-5 rounded-full bg-earth-primary flex items-center justify-center z-10 shadow-lg shadow-earth-primary/30">
-                           <MapPin size={10} className="text-earth-brown" />
-                        </div>
-                        <div>
-                          <p className="text-[9px] font-black text-earth-mut uppercase tracking-widest leading-none mb-1">Destination Point (You)</p>
-                          <p className="text-sm font-black text-earth-brown truncate">
-                            {selectedBooking.location || "Your Site Location"}
-                          </p>
-                          <p className="text-[10px] font-medium text-earth-mut truncate mt-0.5 italic text-left">
-                            Zone: {selectedBooking.zoneName || "Calculated Range"}
-                          </p>
-                        </div>
-                      </div>
-                   </div>
+                    </div>
+                  </div>
                 </div>
 
-                <div className="h-px bg-earth-dark/5 w-full" />
-
-                {/* 2. Service & Financial Breakdown */}
-                <div className="space-y-6 text-left">
-                   {/* Schedule Status */}
-                   <div className="space-y-4">
-                      <h4 className="text-[10px] font-black text-earth-mut uppercase tracking-[0.2em] px-1 flex items-center gap-2">
-                        <Clock size={12} className="text-earth-primary" />
-                        Mission Scheduling
-                      </h4>
-                      <div className="p-4 bg-earth-card border border-earth-dark/10 rounded-2xl flex items-center justify-between shadow-inner">
-                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-earth-primary/5 border border-earth-primary/10 flex items-center justify-center text-earth-primary">
-                               <Clock size={18} />
-                            </div>
-                            <div>
-                               <p className="text-[9px] font-black text-earth-mut uppercase tracking-[0.2em] leading-none mb-1">Scheduled Deployment</p>
-                               <p className={cn(
-                                 "text-sm font-black uppercase",
-                                 selectedBooking.scheduledAt ? "text-earth-brown" : "text-earth-primary italic"
-                               )}>
-                                  {selectedBooking.scheduledAt 
-                                    ? new Date(selectedBooking.scheduledAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })
-                                    : "Not Scheduled Yet"}
-                               </p>
-                            </div>
-                         </div>
-                      </div>
-                   </div>
-
-                   {/* Service Summary */}
-                   <div className="space-y-4">
-                      <h4 className="text-[10px] font-black text-earth-mut uppercase tracking-[0.2em] px-1">Service Particulars</h4>
-                      <div className="p-4 bg-earth-main/40 rounded-2xl border border-earth-dark/10/50 space-y-3">
-                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-earth-card border border-earth-dark/10 flex items-center justify-center text-earth-primary">
-                               <Tractor size={18} />
-                            </div>
-                            <div>
-                               <p className="text-sm font-black text-earth-brown uppercase italic leading-none">{selectedBooking.serviceNameSnapshot || selectedBooking.service?.name}</p>
-                               <p className="text-[10px] font-bold text-earth-mut mt-1">{selectedBooking.landSize} Hectares Coverage</p>
-                            </div>
-                         </div>
-                      </div>
-                   </div>
-
-                   {/* Price Ledger */}
-                   <div className="space-y-4">
-                      <h4 className="text-[10px] font-black text-earth-mut uppercase tracking-[0.2em] px-1 text-left">Financial Ledger</h4>
-                      <div className="p-4 bg-earth-card border border-earth-dark/10 rounded-2xl shadow-inner space-y-3">
-                         <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-earth-mut">
-                            <span>Base Work Rate</span>
-                            <span className="text-earth-brown">₦{selectedBooking.basePrice?.toLocaleString()}</span>
-                         </div>
-                         <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-earth-mut">
-                            <span>Distance Logistics</span>
-                            <span className="text-earth-brown">₦{selectedBooking.distanceCharge?.toLocaleString()}</span>
-                         </div>
-                         <div className="h-px bg-earth-dark/10 my-1" />
-                         <div className="flex justify-between items-center bg-earth-primary/10 -mx-4 px-4 py-2">
-                            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-earth-primary italic">Final Valuation</span>
-                            <span className="text-lg font-black text-earth-brown tracking-tighter italic">₦{selectedBooking.totalPrice?.toLocaleString()}</span>
-                         </div>
-                      </div>
-                   </div>
-                </div>
-
-                {/* 3. Extra Info & Policy */}
-                <div className="p-4 bg-earth-primary/5 rounded-2xl border border-earth-primary/10 flex gap-4 text-left">
-                   <div className="w-10 h-10 rounded-xl bg-earth-primary/20 flex items-center justify-center shrink-0">
-                      <Info size={16} className="text-earth-primary" />
-                   </div>
-                   <div className="space-y-1">
-                      <p className="text-[10px] font-black text-earth-brown uppercase tracking-widest">Inclusions & Policy</p>
-                      <p className="text-[9px] font-bold text-earth-mut uppercase leading-relaxed tracking-wide">
-                        Quote includes full fuel allocation, professional operator deployment, and equipment mobilization.
-                        <br />
-                        <span className="text-earth-primary font-black italic">Valid for 48 hours for service lock.</span>
+                {/* 2. Schedule Box */}
+                <div className="bg-earth-primary/10 border border-earth-primary/20 p-4 rounded-[1.5rem] flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-lg bg-earth-primary text-earth-brown flex items-center justify-center">
+                      <Clock size={16} />
+                    </div>
+                    <div>
+                      <p className="text-[8px] font-black text-earth-primary uppercase tracking-widest leading-none mb-1">Scheduled Deployment</p>
+                      <p className="text-[11px] font-black text-earth-brown uppercase">
+                        {selectedBooking.scheduledAt 
+                          ? new Date(selectedBooking.scheduledAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })
+                          : "Deployment Pending"}
                       </p>
-                   </div>
+                    </div>
+                  </div>
                 </div>
+
+                {/* 3. Financial Ledger - Tightened */}
+                <div className="space-y-3">
+                  <h4 className="text-[9px] font-black text-earth-mut uppercase tracking-[0.2em] px-1">Financial Settlement</h4>
+                  <div className="bg-white border border-earth-dark/10 rounded-[1.5rem] p-4 space-y-2 shadow-inner">
+                    <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-earth-mut">
+                      <span>Base Service Fee</span>
+                      <span className="text-earth-brown">₦{selectedBooking.basePrice?.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-earth-mut">
+                      <span>Logistics Surcharge</span>
+                      <span className="text-earth-brown">₦{selectedBooking.distanceCharge?.toLocaleString()}</span>
+                    </div>
+                    <div className="h-px bg-earth-dark/5 my-1" />
+                    <div className="flex justify-between items-center pt-1">
+                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-earth-primary italic">Total Valuation</span>
+                      <span className="text-xl font-black text-earth-brown tracking-tighter italic">₦{selectedBooking.totalPrice?.toLocaleString()}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <p className="text-center text-[8px] font-bold text-earth-mut uppercase tracking-widest opacity-60">
+                  Quote includes full fuel allocation & professional mobilization.
+                </p>
               </div>
 
-              {/* Modal Footer - Single Button */}
-              <div className="p-6 bg-earth-card border-t border-earth-dark/10">
+              {/* Modal Footer - Matched to Admin Footer */}
+              <div className="px-6 py-4 border-t border-earth-dark/10 bg-earth-main/40 flex justify-end gap-3">
                 <Button 
                    onClick={() => handleDownloadInvoice(selectedBooking)}
                    disabled={isDownloading}
-                   className="w-full bg-accent hover:opacity-90 text-white font-black uppercase tracking-widest h-12 rounded-2xl shadow-lg transition-all"
+                   className="bg-accent hover:opacity-90 text-white font-black uppercase tracking-widest text-[10px] px-6 h-10 rounded-xl shadow-lg shadow-accent/20 transition-all flex items-center justify-center gap-2"
                 >
-                  {isDownloading ? <Clock className="animate-spin mr-2" size={16} /> : <FileText className="mr-2" size={16} />}
-                  {isDownloading ? "Generating PDF..." : "Download Invoice"}
+                  {isDownloading ? <Clock className="animate-spin" size={14} /> : <FileText size={14} />}
+                  <span>{isDownloading ? "Processing..." : "Download Invoice"}</span>
+                </Button>
+                <Button 
+                   onClick={() => setSelectedBooking(null)}
+                   className="bg-white hover:bg-earth-card-alt text-earth-mut hover:text-earth-brown font-black uppercase text-[10px] tracking-widest px-6 h-10 rounded-xl border border-earth-dark/15 transition-all"
+                >
+                  Sync Close
                 </Button>
               </div>
             </motion.div>

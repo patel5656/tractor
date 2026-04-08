@@ -3,7 +3,7 @@ import prisma from '../config/db.js';
 
 export const getPendingBookings = async () => {
   return await prisma.booking.findMany({
-    where: { status: { in: ['pending', 'scheduled'] } },
+    where: { status: { in: ['PENDING', 'SCHEDULED'] } },
     include: {
       farmer: { select: { name: true, phone: true } },
       service: { select: { name: true } },
@@ -18,14 +18,14 @@ export const scheduleBooking = async (bookingId, scheduledDate) => {
   });
 
   if (!booking) throw new Error('Booking not found');
-  if (booking.status !== 'pending' && booking.status !== 'scheduled') {
+  if (booking.status?.toUpperCase() !== 'PENDING' && booking.status?.toUpperCase() !== 'SCHEDULED') {
     throw new Error('INVALID_TRANSITION: Booking can only be scheduled from pending or scheduled state');
   }
 
   return await prisma.booking.update({
     where: { id: booking.id },
     data: {
-      status: 'scheduled',
+      status: 'SCHEDULED',
       scheduledAt: new Date(scheduledDate)
     }
   });
@@ -64,7 +64,7 @@ export const assignOperator = async (bookingId, operatorId) => {
   });
 
   if (!booking) throw new Error('Booking not found');
-  if (booking.status !== 'scheduled') throw new Error('INVALID_TRANSITION: Booking is not in scheduled state');
+  if (booking.status?.toUpperCase() !== 'SCHEDULED') throw new Error('INVALID_TRANSITION: Booking is not in scheduled state');
 
   // 2. Validate operator exists
   const operator = await prisma.user.findUnique({
@@ -95,7 +95,7 @@ export const assignOperator = async (bookingId, operatorId) => {
       data: {
         operatorId: operator.id,
         tractorId: tractor.id,
-        status: 'dispatched',
+        status: 'DISPATCHED',
       },
     }),
     prisma.user.update({
@@ -123,15 +123,19 @@ export const getAllBookings = async (query = {}) => {
 
   // Status Filter
   if (status && status !== 'All') {
-    where.status = status.toLowerCase().replace(' ', '_');
+    where.status = status.toUpperCase();
   }
 
-  // Search Filter (Farmer Name, Email, or Booking ID)
+  // Search Filter (Farmer Name, Email, Service Name, Status or Booking ID)
   if (search) {
     const searchInt = parseInt(search);
+    const searchUpper = search.toUpperCase();
+    
     where.OR = [
       { farmer: { name: { contains: search } } },
       { farmer: { email: { contains: search } } },
+      { service: { name: { contains: search } } },
+      { status: { contains: searchUpper } } // Search by status too (e.g. typing 'PENDING')
     ];
     
     if (!isNaN(searchInt)) {
@@ -450,10 +454,10 @@ export const updateFarmerStatus = async (id, status) => {
 export const getDashboardMetrics = async () => {
   const [activeJobs, pendingAssignments, fleetReady, totalRevenueResult] = await Promise.all([
     prisma.booking.count({
-      where: { status: 'in_progress' }
+      where: { status: 'IN_PROGRESS' }
     }),
     prisma.booking.count({
-      where: { status: 'scheduled' }
+      where: { status: 'SCHEDULED' }
     }),
     prisma.tractor.count({
       where: { status: 'AVAILABLE' }
@@ -476,7 +480,7 @@ export const getDashboardMetrics = async () => {
  */
 export const getDashboardDispatchQueue = async () => {
   const bookings = await prisma.booking.findMany({
-    where: { status: 'scheduled' },
+    where: { status: 'SCHEDULED' },
     include: {
       farmer: { select: { name: true } },
       service: { select: { name: true } }
@@ -554,14 +558,17 @@ export const getDashboardRevenue = async (timeframe = 'daily') => {
 export const getDashboardFleet = async () => {
   const tractors = await prisma.tractor.findMany({
     include: {
-      operator: { select: { name: true } }
+      operator: { select: { name: true, availability: true } }
     }
   });
 
   return tractors.map(t => ({
+    id: t.id,
     operator_name: t.operator?.name || 'No Operator',
     tractor_model: t.name,
-    status: t.status // AVAILABLE | IN_USE | MAINTENANCE
+    status: t.status, // AVAILABLE | IN_USE | MAINTENANCE
+    engine_hours: t.engineHours,
+    operator_availability: t.operator?.availability || 'unavailable'
   }));
 };
 /**
@@ -613,8 +620,11 @@ export const createOperator = async (operatorData) => {
       id: true,
       name: true,
       email: true,
+      phone: true,
       role: true,
       status: true,
+      availability: true,
+      createdAt: true,
     },
   });
 };

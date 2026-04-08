@@ -74,36 +74,50 @@ export default function Dashboard() {
   const chartMax = Math.max(...(revenueChart.data?.length ? revenueChart.data : [1000]));
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-10">
+    <div className="space-y-8 max-w-7xl mx-auto pb-10 relative">
+      {/* Subtle Background Elements */}
+      <div className="absolute -top-20 -right-20 w-64 h-64 bg-earth-primary/5 blur-[120px] rounded-full pointer-events-none"></div>
+      <div className="absolute top-1/2 -left-20 w-64 h-64 bg-earth-accent/5 blur-[120px] rounded-full pointer-events-none"></div>
+
       
       {/* Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {stats.map((stat, i) => (
           <Card key={i} className={cn(
-            "bg-earth-card-alt border-earth-dark/15/50 shadow-sm relative overflow-hidden group transition-all rounded-[1.5rem]",
-            stat.highlight && "border-primary/50 bg-primary/[0.02]"
+            "relative border-none overflow-hidden hover:scale-[1.02] active:scale-[0.98] transition-all duration-500 transition-shadow",
+            stat.highlight ? "bg-white shadow-[0_20px_50px_rgba(234,179,8,0.15)]" : "bg-white shadow-[0_15px_35px_rgba(0,0,0,0.05)]"
           )}>
-            <CardContent className="p-5 md:p-6 relative z-10 flex flex-col h-full">
-              <div className="flex justify-between items-start mb-4">
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-earth-mut mb-1">{stat.title}</p>
-                  <h3 className="text-2xl md:text-3xl font-black tracking-tight text-earth-brown mb-1 group-hover:text-primary transition-colors">{stat.value}</h3>
+            {/* Top Accent Bar */}
+            <div className={cn("absolute top-0 left-0 w-full h-1.5", 
+              i === 0 ? "bg-blue-500" : i === 1 ? "bg-earth-accent" : i === 2 ? "bg-earth-green" : "bg-earth-green-dark"
+            )}></div>
+            
+            <CardContent className="p-6 relative z-10 flex flex-col h-full">
+              <div className="flex justify-between items-start mb-6">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-earth-mut">{stat.title}</p>
+                  <h3 className="text-3xl font-black tracking-tighter text-earth-brown tabular-nums leading-none">{stat.value}</h3>
                 </div>
                 <div className={cn(
-                  "w-12 h-12 rounded-xl bg-earth-card flex items-center justify-center text-primary border border-earth-dark/15 shadow-inner shrink-0",
-                  stat.highlight && "text-primary border-primary/30"
+                  "w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner shrink-0 group-hover:rotate-6 transition-transform duration-500",
+                  stat.highlight ? "bg-earth-accent/10 text-earth-accent border border-earth-accent/20" : "bg-earth-card border border-earth-dark/10 text-earth-primary"
                 )}>
-                  <stat.icon size={22} className={stat.highlight ? 'animate-pulse' : ''} />
+                  <stat.icon size={26} className={stat.highlight ? 'animate-pulse' : ''} />
                 </div>
               </div>
-              <div className="mt-auto flex items-center gap-2 pt-2 border-t border-earth-dark/15/50">
-                <span className={`flex items-center text-[10px] font-black px-1.5 py-0.5 rounded-md border ${
-                  stat.up ? 'bg-earth-primary/10 text-earth-green border-emerald-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'
-                }`}>
-                  {stat.up && stat.trend.includes('%') ? <ArrowUpRight size={12} className="mr-0.5" /> : null}
-                  {stat.trend}
-                </span>
-                <span className="text-[9px] uppercase tracking-widest font-bold text-earth-mut">Performance</span>
+              
+              <div className="mt-auto flex items-center justify-between pt-4 border-t border-earth-dark/[0.05]">
+                <div className="flex items-center gap-1.5">
+                  <span className={cn(
+                    "flex items-center text-[10px] font-black px-2 py-0.5 rounded-full",
+                    stat.up ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'
+                  )}>
+                    {stat.up && stat.trend.includes('%') ? <ArrowUpRight size={12} className="mr-1" /> : null}
+                    {stat.trend}
+                  </span>
+                  <span className="text-[9px] uppercase tracking-widest font-black text-earth-mut/70">Vs Last Phase</span>
+                </div>
+                <Activity size={12} className="text-earth-mut/30" />
               </div>
             </CardContent>
           </Card>
@@ -114,8 +128,8 @@ export default function Dashboard() {
         
         {/* DISPATCH QUEUE */}
         <div className="lg:col-span-8 space-y-5">
-          <Card className="bg-earth-card-alt border-earth-dark/15/50 shadow-sm rounded-[1.5rem] overflow-hidden">
-            <CardHeader className="border-b border-earth-dark/15/50 pb-5 pt-6 px-6 flex flex-row items-center justify-between bg-earth-card-alt/50">
+          <Card className="bg-white border-none shadow-[0_20px_50px_rgba(0,0,0,0.08)] rounded-[2rem] overflow-hidden">
+            <CardHeader className="border-b border-earth-dark/5 pb-5 pt-7 px-8 flex flex-row items-center justify-between bg-white">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-earth-primary/10 rounded-lg flex items-center justify-center text-earth-primary border border-earth-primary/20">
                   <Zap size={16} />
@@ -129,16 +143,16 @@ export default function Dashboard() {
             <CardContent className="p-0">
               <div className="overflow-x-auto">
                 <table className="w-full text-left">
-                  <thead className="bg-earth-dark text-earth-main text-[10px] font-black uppercase tracking-[0.2em] border-b border-earth-dark/10">
+                  <thead className="bg-earth-dark text-white rounded-t-xl overflow-hidden">
                     <tr>
-                      <th className="px-6 py-4">Farmer / ID</th>
-                      <th className="px-6 py-4">Service</th>
-                      <th className="px-6 py-4">Land / Location</th>
-                      <th className="px-6 py-4">Amount</th>
-                      <th className="px-6 py-4 text-right">Action</th>
+                      <th className="px-3 md:px-6 py-5 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em]">Deployment Identity</th>
+                      <th className="px-3 md:px-6 py-5 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em]">Classification</th>
+                      <th className="px-3 md:px-6 py-5 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em]">Operational Zone</th>
+                      <th className="px-3 md:px-6 py-5 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em]">Valuation</th>
+                      <th className="px-3 md:px-6 py-5 text-[9px] md:text-[10px] font-black uppercase tracking-[0.2em] text-right">Commander Action</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-earth-dark/10">
+                  <tbody className="divide-y divide-earth-dark/5">
                     {isLoading ? (
                       <tr>
                         <td colSpan={5} className="py-20 text-center">
@@ -174,10 +188,9 @@ export default function Dashboard() {
                               <Button 
                                 onClick={() => handleAssign(booking.id)}
                                 disabled={dispatchStatus === booking.id}
-                                variant="primary" 
-                                className="bg-accent hover:opacity-90 text-white h-8 px-4 text-[10px] font-black uppercase tracking-widest rounded-lg shadow-lg shadow-accent/20"
+                                className="bg-earth-accent hover:bg-earth-accent/90 text-white h-9 px-6 text-[10px] font-black uppercase tracking-widest rounded-xl shadow-[0_4px_15px_rgba(255,152,0,0.3)] hover:scale-105 active:scale-95 transition-all border-none"
                               >
-                                {dispatchStatus === booking.id ? "Assigning..." : "Assign"}
+                                {dispatchStatus === booking.id ? "SYNCING..." : "DISPATCH UNIT"}
                               </Button>
                             </div>
                           </td>
@@ -221,18 +234,25 @@ export default function Dashboard() {
                 {/* Dynamic Bar Chart Implementation based on API Data */}
                 {revenueChart?.labels?.map((label, index) => {
                   const val = revenueChart.data[index] || 0;
-                  const heightPercentage = Math.max((val / chartMax) * 100, 5); // Minimum 5% height
+                  const heightPercentage = Math.min(Math.max((val / chartMax) * 100, 8), 100);
 
                   return (
-                    <div key={index} className="flex flex-col items-center justify-end h-full z-10 w-full max-w-[40px] group">
-                      <div className="text-[10px] font-black text-earth-green opacity-0 group-hover:opacity-100 transition-opacity mb-2 bg-earth-card px-2 py-1 rounded-md border border-earth-dark/15 whitespace-nowrap">₦{val.toLocaleString()}</div>
+                    <div key={index} className="flex flex-col items-center justify-end h-full z-10 w-full max-w-[42px] group relative">
+                      {/* Tooltip on hover */}
+                      <div className="absolute bottom-full mb-3 hidden group-hover:flex flex-col items-center z-50 animate-in fade-in slide-in-from-bottom-2 duration-200">
+                        <div className="bg-earth-dark text-white text-[10px] font-black px-3 py-2 rounded-xl shadow-2xl whitespace-nowrap">
+                          ₦{val.toLocaleString()}
+                        </div>
+                        <div className="w-2 h-2 bg-earth-dark rotate-45 -mt-1"></div>
+                      </div>
+
                       <div 
-                        className="w-full bg-earth-primary/10 hover:bg-earth-primary/30 rounded-t-sm transition-all relative overflow-hidden border border-earth-primary/20"
+                        className="w-full bg-gradient-to-t from-earth-primary via-earth-primary/70 to-earth-primary/30 hover:brightness-110 rounded-xl transition-all duration-500 cursor-pointer shadow-[0_4px_15px_rgba(46,125,50,0.2)] relative"
                         style={{ height: `${heightPercentage}%` }}
                       >
-                         <div className="absolute bottom-0 left-0 w-full bg-earth-primary opacity-50" style={{ height: '30%' }}></div>
+                         <div className="absolute bottom-0 left-0 w-full h-1.5 bg-earth-primary-dark/30 rounded-b-xl"></div>
                       </div>
-                      <div className="text-[9px] uppercase font-black text-earth-mut mt-3 tracking-widest">{label}</div>
+                      <div className="text-[10px] font-black text-earth-brown/70 mt-4 tracking-widest group-hover:text-earth-primary transition-colors uppercase whitespace-nowrap">{label}</div>
                     </div>
                   );
                 })}
@@ -252,8 +272,8 @@ export default function Dashboard() {
 
         {/* FLEET MONITORING */}
         <div className="lg:col-span-4 space-y-5">
-           <Card className="bg-earth-card-alt border-earth-dark/15/50 shadow-sm rounded-[1.5rem] overflow-hidden flex flex-col h-full">
-            <CardHeader className="border-b border-earth-dark/15/50 pb-5 pt-6 px-6 shrink-0 bg-earth-card-alt/50">
+           <Card className="bg-white border-none shadow-[0_20px_50px_rgba(0,0,0,0.08)] rounded-[2rem] overflow-hidden flex flex-col h-full">
+            <CardHeader className="border-b border-earth-dark/5 pb-5 pt-7 px-8 shrink-0 bg-white">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                    <div className="w-2 h-2 rounded-full bg-earth-primary shadow-[0_0_8px_rgba(234,179,8,0.5)] animate-pulse"></div>
@@ -281,56 +301,79 @@ export default function Dashboard() {
               </div>
 
               <div className="p-5 space-y-3 flex-1 overflow-y-auto bg-earth-card/30 scrollbar-hide max-h-[400px]">
-                 <h4 className="text-[10px] font-black text-earth-mut uppercase tracking-widest mb-1 pl-1">Operational Fleet</h4>
-                 {isLoading ? (
-                    <div className="py-10 text-center"><Clock className="animate-spin mx-auto text-earth-mut" size={16} /></div>
-                 ) : fleetData.length === 0 ? (
-                    <p className="text-[10px] font-black text-earth-mut uppercase tracking-widest text-center mt-5">No tractors found</p>
-                 ) : fleetData.map((t, index) => (
-                   <div key={index} className="p-4 rounded-[1.25rem] bg-earth-card-alt border border-earth-dark/15/50 hover:border-earth-primary/30 transition-all group overflow-hidden relative">
-                     <div className="flex justify-between items-start mb-3">
-                        <div className="flex items-center gap-3">
+                <h4 className="text-[10px] font-black text-earth-mut uppercase tracking-[0.2em] mb-4 pl-1">Operational Fleet Deployment</h4>
+                {isLoading ? (
+                  <div className="py-20 text-center">
+                    <Activity className="animate-spin mx-auto text-earth-primary/40 mb-3" size={20} />
+                    <p className="text-[9px] font-black uppercase tracking-widest text-earth-mut">Scanning Fleet...</p>
+                  </div>
+                ) : fleetData.length === 0 ? (
+                  <div className="py-20 text-center bg-earth-main/50 rounded-[2rem] border border-dashed border-earth-dark/10">
+                    <Tractor className="mx-auto text-earth-mut/20 mb-3" size={32} />
+                    <p className="text-[9px] font-black text-earth-mut uppercase tracking-widest">No Active Units Found</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 gap-4">
+                    {fleetData.map((t, index) => (
+                      <div key={index} className="p-5 rounded-[1.5rem] bg-white border border-earth-dark/[0.03] shadow-[0_10px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] hover:-translate-y-1 transition-all duration-300 group overflow-hidden relative">
+                        {/* Inner soft glow */}
+                        <div className={cn("absolute top-0 right-0 w-32 h-32 blur-3xl opacity-10 rounded-full -mr-16 -mt-16 pointer-events-none", 
+                          t.status?.toLowerCase() === 'available' ? 'bg-earth-green' : 'bg-earth-accent'
+                        )}></div>
+                        
+                        <div className="flex justify-between items-start mb-5 relative z-10">
+                          <div className="flex items-center gap-4">
+                            <div className={cn(
+                              "w-14 h-14 rounded-2xl flex items-center justify-center shadow-inner transition-all transform group-hover:rotate-6 duration-500",
+                              t.status?.toLowerCase() === 'available' ? 'bg-emerald-50 text-earth-green border border-emerald-100' : 
+                              t.status?.toLowerCase() === 'in_use' ? 'bg-amber-50 text-earth-accent border border-amber-100' : 
+                              'bg-red-50 text-red-500 border border-red-100'
+                            )}>
+                               <Tractor size={24} />
+                            </div>
+                            <div className="space-y-0.5" style={{ minWidth: 0 }}>
+                              <p className="font-black text-earth-brown text-base tracking-tight truncate">{t.operator_name}</p>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] text-earth-mut font-black uppercase tracking-widest truncate">{t.tractor_model}</span>
+                                <div className="w-1 h-1 bg-earth-dark/10 rounded-full shrink-0"></div>
+                                <span className="text-[9px] text-earth-mut font-black uppercase tracking-[0.2em] shrink-0">UNIT #T-{t.id}</span>
+                              </div>
+                            </div>
+                          </div>
                           <div className={cn(
-                            "w-10 h-10 rounded-xl flex items-center justify-center border shadow-inner transition-colors",
-                            t.status === 'available' ? 'bg-earth-primary/10 text-earth-green border-emerald-500/20' : 
-                            t.status === 'busy' ? 'bg-earth-primary/10 text-earth-primary border-earth-primary/20' : 
-                            'bg-red-500/10 text-red-500 border-red-500/20'
+                            "text-[8px] px-3 py-1 font-black uppercase tracking-[0.2em] rounded-full shadow-sm text-white shrink-0",
+                            t.status?.toLowerCase() === 'available' ? 'bg-earth-green shadow-emerald-500/20' : 
+                            t.status?.toLowerCase() === 'in_use' ? 'bg-earth-accent shadow-amber-500/20' : 
+                            'bg-red-500 shadow-red-500/20'
                           )}>
-                             <Tractor size={18} />
-                          </div>
-                          <div>
-                            <p className="font-bold text-earth-brown text-sm tracking-tight">{t.operator_name}</p>
-                            <p className="text-[9px] text-earth-mut font-black uppercase tracking-widest">{t.tractor_model}</p>
+                            {t.status?.replace('_', ' ')}
                           </div>
                         </div>
-                        <Badge className={cn(
-                          "text-[9px] px-2 py-0.5 font-black uppercase tracking-widest rounded-md",
-                          t.status === 'available' ? 'bg-earth-primary/10 text-earth-green' : 
-                          t.status === 'busy' ? 'bg-earth-primary/10 text-earth-primary' : 
-                          'bg-red-500/10 text-red-500'
-                        )}>
-                          {t.status}
-                        </Badge>
-                     </div>
-                     
-                     <div className="grid grid-cols-2 gap-3 pt-3 border-t border-earth-dark/15/30">
-                        <div className="flex items-center gap-2">
-                           <Fuel size={12} className="text-earth-mut" />
-                           <div className="flex-1 h-1 bg-earth-card rounded-full overflow-hidden">
-                              <div className="h-full bg-earth-primary w-[85%] rounded-full"></div>
-                           </div>
-                           <span className="text-[9px] font-black text-earth-sub uppercase">85%</span>
+                        
+                        <div className="grid grid-cols-2 gap-4 pt-5 border-t border-earth-dark/[0.05] relative z-10">
+                          <div className="space-y-2">
+                             <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-earth-mut">
+                                <span>Engine Hours</span>
+                                <span className="text-earth-brown text-right">{t.engine_hours || 0} HRS</span>
+                             </div>
+                             <div className="h-1.5 bg-earth-dark/[0.03] rounded-full overflow-hidden">
+                                <div className="h-full bg-earth-accent rounded-full shadow-[0_0_8px_rgba(255,152,0,0.4)]" style={{ width: `${Math.min(((t.engine_hours || 0) / 250) * 100, 100)}%` }}></div>
+                             </div>
+                          </div>
+                          <div className="space-y-2">
+                             <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-widest text-earth-mut">
+                                <span>Shift Status</span>
+                                <span className={cn("text-right font-bold uppercase", t.operator_availability === 'available' ? "text-earth-green" : "text-earth-accent")}>{t.operator_availability}</span>
+                             </div>
+                             <div className="h-1.5 bg-earth-dark/[0.03] rounded-full overflow-hidden">
+                                <div className={cn("h-full rounded-full transition-all duration-1000", t.operator_availability === 'available' ? "bg-earth-green w-full shadow-[0_0_8px_rgba(46,125,50,0.4)]" : "bg-earth-accent w-1/2 shadow-[0_0_8px_rgba(255,152,0,0.4)]")}></div>
+                             </div>
+                          </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                           <Battery size={12} className="text-earth-mut" />
-                           <div className="flex-1 h-1 bg-earth-card rounded-full overflow-hidden">
-                              <div className="h-full bg-blue-500 w-[92%] rounded-full"></div>
-                           </div>
-                           <span className="text-[9px] font-black text-earth-sub uppercase">92%</span>
-                        </div>
-                     </div>
-                   </div>
-                 ))}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>

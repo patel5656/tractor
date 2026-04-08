@@ -1,7 +1,7 @@
 // Base URL for the backend API
- const API_URL = 'https://tracktor-production.up.railway.app/api';
+//  const API_URL = 'https://tracktor-production.up.railway.app/api';
 
-//const API_URL = 'http://localhost:5000/api'
+const API_URL = 'http://localhost:5000/api'
 //
 /**
  * Standard fetch wrapper that automatically injects the Authorization header
@@ -88,8 +88,9 @@ export const api = {
         body: JSON.stringify(bookingData),
       });
     },
-    listBookings: async () => {
-      return await fetchAPI('/farmer/bookings');
+    listBookings: async (params = {}) => {
+      const query = new URLSearchParams(params).toString();
+      return await fetchAPI(`/farmer/bookings?${query}`);
     },
     getBooking: async (id) => {
       return await fetchAPI(`/farmer/bookings/${id}`);

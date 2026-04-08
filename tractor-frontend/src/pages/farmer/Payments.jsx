@@ -137,7 +137,7 @@ export default function Payments() {
             <h3 className="font-black text-[9px] text-earth-mut uppercase tracking-widest">Pending & Recent Actions</h3>
           </div>
           
-          <div className="bg-earth-card/50 rounded-[2rem] shadow-xl border border-earth-dark/10/50 overflow-hidden divide-y divide-earth-dark/10">
+          <div className="space-y-4">
             {isLoading ? (
               <div className="py-20 text-center">
                 <Clock className="animate-spin mx-auto text-earth-primary mb-4" size={32} />
@@ -150,7 +150,7 @@ export default function Payments() {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: idx * 0.03 }}
                   key={booking.id} 
-                  className="flex flex-col sm:flex-row justify-between sm:items-center p-4 md:p-5 hover:bg-earth-card transition-all group relative"
+                  className="bg-white rounded-[2rem] shadow-[0_10px_35px_rgba(0,0,0,0.05)] flex flex-col sm:flex-row justify-between sm:items-center p-5 md:p-6 hover:shadow-[0_15px_45px_rgba(0,0,0,0.08)] transition-all group relative border-none"
                 >
                   <div className="flex items-center gap-4 cursor-pointer flex-1" onClick={() => setSelectedTx(booking)}>
                     <div className="w-10 h-10 rounded-xl bg-earth-card border border-earth-dark/10 text-earth-mut flex items-center justify-center shrink-0 group-hover:text-earth-primary group-hover:border-earth-primary/20 transition-all">
@@ -203,7 +203,7 @@ export default function Payments() {
                 </motion.div>
               );
             }) : (
-              <div className="py-20 text-center text-earth-mut">
+              <div className="py-20 text-center bg-white rounded-[2.5rem] shadow-[0_15px_35px_rgba(0,0,0,0.05)]">
                 <CheckCircle className="mx-auto mb-4 text-earth-green/20" size={40} />
                 <p className="text-[10px] font-black uppercase tracking-widest text-earth-brown italic">Zero Dues Recorded</p>
                 <p className="text-[8px] font-bold text-earth-mut uppercase tracking-widest mt-2">You are all caught up with your payments!</p>

@@ -469,11 +469,14 @@ export default function Settings() {
                        <div className="space-y-5 relative z-10">
                           <div>
                             <p className="text-[9px] uppercase font-black tracking-widest text-earth-sub mb-1">Calculated Multiplier</p>
-                            <p className="text-2xl font-black text-blue-500">{fuelMultiplier.toFixed(4)}</p>
+                            <p className="text-xl md:text-2xl font-black text-blue-500">{fuelMultiplier.toFixed(4)}</p>
                           </div>
                           <div>
                             <p className="text-[9px] uppercase font-black tracking-widest text-earth-sub mb-1">Adjusted Base Rate</p>
-                            <p className="text-2xl font-black text-earth-primary">₦ {adjustedKmRate.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} <span className="text-sm font-bold text-earth-mut">/KM</span></p>
+                            <p className="text-xl md:text-2xl font-black text-earth-primary flex flex-wrap items-baseline gap-1">
+                              ₦ {adjustedKmRate.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} 
+                              <span className="text-[10px] md:text-sm font-bold text-earth-mut">/KM</span>
+                            </p>
                           </div>
                        </div>
                      </div>
@@ -485,12 +488,12 @@ export default function Settings() {
                      <Search size={14} className="text-earth-primary" />
                      Sample Impact Preview (22 KM)
                    </h4>
-                   <div className="grid grid-cols-2 gap-4">
-                     <div className="p-4 bg-earth-card border border-earth-dark/10 rounded-2xl flex justify-between items-center opacity-60">
+                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                     <div className="p-4 bg-earth-card border border-earth-dark/10 rounded-2xl flex flex-col gap-1 sm:flex-row sm:justify-between sm:items-center opacity-60">
                        <span className="text-[10px] font-black text-earth-sub uppercase tracking-widest">Baseline Charge</span>
                        <span className="text-sm font-black text-earth-mut">₦ {(750 * 22).toLocaleString()}</span>
                      </div>
-                     <div className="p-4 bg-earth-main border border-earth-primary/30 rounded-2xl flex justify-between items-center shadow-lg shadow-earth-primary/10">
+                     <div className="p-4 bg-earth-main border border-earth-primary/30 rounded-2xl flex flex-col gap-1 sm:flex-row sm:justify-between sm:items-center shadow-lg shadow-earth-primary/10">
                        <span className="text-[10px] font-black text-earth-primary uppercase tracking-widest">Adjusted Charge</span>
                        <span className="text-sm font-black text-earth-brown">₦ {newSimulatedCharge.toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
                      </div>
@@ -559,7 +562,7 @@ export default function Settings() {
             {/* Distance Zones Settings */}
             {activeTab === 'zones' && (
               <div className="space-y-8">
-                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div>
                     <h3 className="text-lg font-black text-earth-brown uppercase tracking-tight italic flex items-center gap-2">
                        Active Fleet Radius
@@ -567,31 +570,30 @@ export default function Settings() {
                     </h3>
                     <p className="text-[10px] font-bold text-earth-mut uppercase tracking-widest mt-1">Configuring distance-based surcharges for logistical overhead.</p>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="relative w-full md:w-64">
+                  <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                    <div className="relative w-full sm:w-64">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-earth-mut" size={14} />
                       <Input 
                         value={zoneSearchTerm}
                         onChange={(e) => setZoneSearchTerm(e.target.value)}
                         placeholder="Search zones..." 
-                        className="pl-9 bg-earth-card border-earth-dark/10 rounded-xl h-10 w-full focus:ring-0 focus:border-earth-primary shadow-inner text-xs font-bold text-earth-brown"
+                        className="pl-9 bg-earth-card border-earth-dark/10 rounded-xl h-11 w-full focus:ring-0 focus:border-earth-primary shadow-inner text-xs font-bold text-earth-brown"
                       />
                     </div>
                     <Button 
                       onClick={() => {
                         handleCancelEdit();
-                        // Open a modal if we had one, but for now we'll stick to a toggleable form or inline
                         setEditingZoneId('new'); 
                       }}
-                      className="bg-earth-brown text-white hover:bg-earth-brown/90 px-4 h-10 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-2 shrink-0 shadow-lg"
+                      className="bg-earth-brown text-white hover:bg-earth-brown/90 px-5 h-11 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 shrink-0 shadow-lg"
                     >
                       <Plus size={16} /> Add Zone
                     </Button>
                   </div>
                 </div>
 
-                {/* Inline Add/Edit Form */}
-                {editingZoneId !== null && (
+                {/* Global Add Form - Only shows for NEW entries */}
+                {editingZoneId === 'new' && (
                   <div className="p-6 bg-earth-card border-2 border-earth-primary/20 rounded-3xl shadow-xl space-y-6 animate-in fade-in zoom-in duration-300">
                     <div className="flex items-center justify-between">
                       <h4 className="text-[11px] font-black text-earth-brown uppercase tracking-[0.2em]">{editingZoneId === 'new' ? 'Create New Distance Tier' : 'Modify Existing Tier'}</h4>
@@ -676,7 +678,8 @@ export default function Settings() {
                   </div>
                 )}
 
-                <div className="overflow-hidden bg-earth-card/30 border border-earth-dark/10 rounded-[2rem] shadow-inner">
+                {/* Desktop View Table */}
+                <div className="hidden md:block overflow-hidden bg-earth-card/30 border border-earth-dark/10 rounded-[2rem] shadow-inner">
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="bg-earth-card/50 border-b border-earth-dark/10">
@@ -697,73 +700,223 @@ export default function Settings() {
                           </td>
                         </tr>
                       ) : (
-                        filteredZones.map((z, idx) => (
-                          <tr key={z.id} className={cn(
-                            "group hover:bg-earth-primary/5 transition-colors",
-                            editingZoneId === z.id && "bg-earth-primary/10"
-                          )}>
-                            <td className="px-6 py-5 text-xs font-black text-earth-mut">#{z.id}</td>
-                            <td className="px-6 py-5">
-                              <div className="flex items-center gap-3">
-                                <div className="w-8 h-8 rounded-lg bg-earth-main flex items-center justify-center text-earth-primary shadow-sm border border-earth-dark/5">
-                                  <MapPin size={14} />
+                        filteredZones.map((z) => (
+                          editingZoneId === z.id ? (
+                            <tr key={z.id} className="bg-earth-primary/5">
+                              <td colSpan={5} className="p-6">
+                                <div className="space-y-6 animate-in fade-in zoom-in duration-200">
+                                  <div className="flex items-center justify-between mb-4">
+                                    <h4 className="text-[11px] font-black text-earth-brown uppercase tracking-widest">Editing Tier #{z.id}</h4>
+                                    <Button variant="ghost" size="sm" onClick={handleCancelEdit} className="text-earth-mut">
+                                      <X size={18} />
+                                    </Button>
+                                  </div>
+                                  <div className="grid grid-cols-4 gap-6">
+                                    <div className="space-y-2">
+                                      <label className="text-[9px] font-black text-earth-sub uppercase">Min KM</label>
+                                      <Input type="number" value={newZoneMinDistance} onChange={(e) => setNewZoneMinDistance(e.target.value)} className="h-10 text-xs font-bold" />
+                                    </div>
+                                    <div className="space-y-2">
+                                      <label className="text-[9px] font-black text-earth-sub uppercase">Max KM</label>
+                                      <Input type="number" value={newZoneMaxDistance} onChange={(e) => setNewZoneMaxDistance(e.target.value)} className="h-10 text-xs font-bold" />
+                                    </div>
+                                    <div className="space-y-2">
+                                      <label className="text-[9px] font-black text-earth-sub uppercase">₦ Per Ha</label>
+                                      <Input type="number" value={newZoneSurcharge} onChange={(e) => setNewZoneSurcharge(e.target.value)} className="h-10 text-xs font-bold" />
+                                    </div>
+                                    <div className="space-y-2">
+                                      <label className="text-[9px] font-black text-earth-sub uppercase">Status</label>
+                                      <select value={newZoneStatus} onChange={(e) => setNewZoneStatus(e.target.value)} className="w-full h-10 px-3 bg-earth-main border border-earth-dark/10 rounded-xl text-xs font-black appearance-none">
+                                        <option value="ACTIVE">ACTIVE</option>
+                                        <option value="INACTIVE">INACTIVE</option>
+                                      </select>
+                                    </div>
+                                  </div>
+                                  <div className="flex justify-end gap-3 mt-4">
+                                    <Button variant="outline" size="sm" onClick={handleCancelEdit} className="h-9 px-4 text-[10px] uppercase font-black">Cancel</Button>
+                                    <Button size="sm" onClick={handleSaveZone} className="h-9 px-6 text-[10px] uppercase font-black bg-accent text-white">Save Changes</Button>
+                                  </div>
                                 </div>
-                                <span className="text-sm font-black text-earth-brown">
-                                  {z.minDistance} — {z.maxDistance === null ? `${z.minDistance}+` : z.maxDistance} KM
-                                </span>
-                              </div>
-                            </td>
-                            <td className="px-6 py-5">
-                              <span className="text-sm font-black text-earth-primary">₦ {z.surchargePerHectare.toLocaleString()}</span>
-                            </td>
-                            <td className="px-6 py-5">
-                              <div className={cn(
-                                "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest",
-                                z.status === 'ACTIVE' 
-                                  ? "bg-green-500/10 text-green-600 border border-green-500/20" 
-                                  : "bg-red-500/10 text-red-600 border border-red-500/20 opacity-60"
-                              )}>
-                                <div className={cn("w-1 h-1 rounded-full", z.status === 'ACTIVE' ? "bg-green-500 animate-pulse" : "bg-red-500")}></div>
-                                {z.status}
-                              </div>
-                            </td>
-                            <td className="px-6 py-5 text-right">
-                              <div className="flex items-center justify-end gap-2">
-                                <button 
-                                  onClick={() => handleEditClick(z)} 
-                                  className="w-8 h-8 rounded-lg flex items-center justify-center text-earth-sub hover:bg-earth-primary/20 hover:text-earth-brown transition-all"
-                                  title="Edit Tier"
-                                >
-                                  <Edit size={16} />
-                                </button>
-                                <button 
-                                  onClick={async () => {
-                                    if(z.status === 'ACTIVE') {
-                                      handleDeleteZone(z.id);
-                                    } else {
-                                      try {
-                                        const res = await api.admin.updateZone(z.id, { status: 'ACTIVE' });
-                                        if (res.success) refreshZones();
-                                      } catch(e) { console.error('Failed to reactivate zone'); }
-                                    }
-                                  }} 
-                                  className={cn(
-                                    "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
-                                    z.status === 'ACTIVE' 
-                                      ? "text-red-400 hover:bg-red-400/10" 
-                                      : "text-green-500 hover:bg-green-500/10"
-                                  )}
-                                  title={z.status === 'ACTIVE' ? "Deactivate Tier" : "Reactivate Tier"}
-                                >
-                                  {z.status === 'ACTIVE' ? <Trash2 size={16} /> : <CheckCircle2 size={16} />}
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
+                              </td>
+                            </tr>
+                          ) : (
+                            <tr key={z.id} className={cn(
+                              "group hover:bg-earth-primary/5 transition-colors",
+                              editingZoneId === z.id && "bg-earth-primary/10"
+                            )}>
+                              <td className="px-6 py-5 text-xs font-black text-earth-mut">#{z.id}</td>
+                              <td className="px-6 py-5">
+                                <div className="flex items-center gap-3">
+                                  <div className="w-8 h-8 rounded-lg bg-earth-main flex items-center justify-center text-earth-primary shadow-sm border border-earth-dark/5">
+                                    <MapPin size={14} />
+                                  </div>
+                                  <span className="text-sm font-black text-earth-brown">
+                                    {z.minDistance} — {z.maxDistance === null ? `${z.minDistance}+` : z.maxDistance} KM
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="px-6 py-5">
+                                <span className="text-sm font-black text-earth-primary">₦ {z.surchargePerHectare.toLocaleString()}</span>
+                              </td>
+                              <td className="px-6 py-5">
+                                <div className={cn(
+                                  "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest",
+                                  z.status === 'ACTIVE' 
+                                    ? "bg-green-500/10 text-green-600 border border-green-500/20" 
+                                    : "bg-red-500/10 text-red-600 border border-red-500/20 opacity-60"
+                                )}>
+                                  <div className={cn("w-1 h-1 rounded-full", z.status === 'ACTIVE' ? "bg-green-500 animate-pulse" : "bg-red-500")}></div>
+                                  {z.status}
+                                </div>
+                              </td>
+                              <td className="px-6 py-5 text-right">
+                                <div className="flex items-center justify-end gap-2">
+                                  <button 
+                                    onClick={() => handleEditClick(z)} 
+                                    className="w-8 h-8 rounded-lg flex items-center justify-center text-earth-sub hover:bg-earth-primary/20 hover:text-earth-brown transition-all"
+                                    title="Edit Tier"
+                                  >
+                                    <Edit size={16} />
+                                  </button>
+                                  <button 
+                                    onClick={async () => {
+                                      if(z.status === 'ACTIVE') {
+                                        handleDeleteZone(z.id);
+                                      } else {
+                                        try {
+                                          const res = await api.admin.updateZone(z.id, { status: 'ACTIVE' });
+                                          if (res.success) refreshZones();
+                                        } catch(e) { console.error('Failed to reactivate zone'); }
+                                      }
+                                    }} 
+                                    className={cn(
+                                      "w-8 h-8 rounded-lg flex items-center justify-center transition-all",
+                                      z.status === 'ACTIVE' 
+                                        ? "text-red-400 hover:bg-red-400/10" 
+                                        : "text-green-500 hover:bg-green-500/10"
+                                    )}
+                                    title={z.status === 'ACTIVE' ? "Deactivate Tier" : "Reactivate Tier"}
+                                  >
+                                    {z.status === 'ACTIVE' ? <Trash2 size={16} /> : <CheckCircle2 size={16} />}
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          )
                         ))
                       )}
                     </tbody>
                   </table>
+                </div>
+
+                {/* Mobile View Cards */}
+                <div className="grid grid-cols-1 gap-4 md:hidden">
+                  {filteredZones.length === 0 ? (
+                    <div className="py-12 text-center bg-earth-card/30 rounded-3xl border border-dashed border-earth-dark/10">
+                       <p className="text-[10px] font-black text-earth-mut uppercase tracking-widest">No tiers found.</p>
+                    </div>
+                  ) : (
+                    filteredZones.map((z) => (
+                      editingZoneId === z.id ? (
+                        <div key={z.id} className="p-6 rounded-[2rem] bg-earth-primary/5 border-2 border-earth-primary/20 shadow-xl space-y-6 animate-in fade-in zoom-in duration-200">
+                           <div className="flex items-center justify-between">
+                             <h4 className="text-[11px] font-black text-earth-brown uppercase tracking-widest">Editing Tier #{z.id}</h4>
+                             <Button variant="ghost" size="sm" onClick={handleCancelEdit} className="text-earth-mut"><X size={18} /></Button>
+                           </div>
+                           <div className="space-y-4">
+                              <div className="space-y-2">
+                                <label className="text-[9px] uppercase font-black text-earth-sub">Distance Range (Min - Max)</label>
+                                <div className="grid grid-cols-2 gap-3">
+                                  <Input type="number" placeholder="Min" value={newZoneMinDistance} onChange={(e) => setNewZoneMinDistance(e.target.value)} className="h-12 text-sm font-black" />
+                                  <Input type="number" placeholder="Max" value={newZoneMaxDistance} onChange={(e) => setNewZoneMaxDistance(e.target.value)} className="h-12 text-sm font-black" />
+                                </div>
+                              </div>
+                              <div className="space-y-2">
+                                <label className="text-[9px] uppercase font-black text-earth-sub">Surcharge (₦/ha)</label>
+                                <Input type="number" placeholder="0" value={newZoneSurcharge} onChange={(e) => setNewZoneSurcharge(e.target.value)} className="h-12 text-sm font-black" />
+                              </div>
+                              <div className="space-y-2">
+                                <label className="text-[9px] uppercase font-black text-earth-sub">Status</label>
+                                <select value={newZoneStatus} onChange={(e) => setNewZoneStatus(e.target.value)} className="w-full h-12 px-4 bg-earth-main border border-earth-dark/10 rounded-xl text-xs font-black appearance-none">
+                                  <option value="ACTIVE">ACTIVE</option>
+                                  <option value="INACTIVE">INACTIVE</option>
+                                </select>
+                              </div>
+                           </div>
+                           <div className="flex gap-3 pt-2">
+                              <Button variant="outline" onClick={handleCancelEdit} className="flex-1 h-12 text-[10px] uppercase font-black rounded-xl">Cancel</Button>
+                              <Button onClick={handleSaveZone} className="flex-1 h-12 text-[10px] uppercase font-black rounded-xl bg-accent text-white">Save Changes</Button>
+                           </div>
+                        </div>
+                      ) : (
+                        <div key={z.id} className={cn(
+                          "p-5 rounded-[2rem] border transition-all space-y-4",
+                          editingZoneId === z.id 
+                            ? "bg-earth-primary/5 border-earth-primary/30 shadow-lg" 
+                            : "bg-white border-earth-dark/15 shadow-sm"
+                        )}>
+                          <div className="flex justify-between items-start">
+                             <div className="flex flex-col gap-1">
+                               <span className="text-[9px] font-black text-earth-mut uppercase tracking-widest bg-earth-main/10 px-2 py-0.5 rounded-lg border border-earth-dark/10 w-fit">ID-#{z.id}</span>
+                               <div className="flex items-center gap-2 mt-1">
+                                  <div className="w-8 h-8 rounded-lg bg-earth-main flex items-center justify-center text-earth-primary border border-earth-dark/5">
+                                    <MapPin size={14} />
+                                  </div>
+                                  <span className="text-sm font-black text-earth-brown">
+                                    {z.minDistance} — {z.maxDistance === null ? `${z.minDistance}+` : z.maxDistance} KM
+                                  </span>
+                               </div>
+                             </div>
+                             <div className={cn(
+                                  "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest",
+                                  z.status === 'ACTIVE' 
+                                    ? "bg-green-500/10 text-green-600 border border-green-500/20" 
+                                    : "bg-red-500/10 text-red-600 border border-red-500/20 opacity-60"
+                                )}>
+                                  <div className={cn("w-1 h-1 rounded-full", z.status === 'ACTIVE' ? "bg-green-500 animate-pulse" : "bg-red-500")}></div>
+                                  {z.status}
+                             </div>
+                          </div>
+  
+                          <div className="flex items-center justify-between pt-4 border-t border-earth-dark/10">
+                             <div className="flex flex-col">
+                               <span className="text-[8px] font-black text-earth-mut uppercase tracking-widest mb-1">Surcharge Tier</span>
+                               <span className="text-lg font-black text-earth-primary">₦ {z.surchargePerHectare.toLocaleString()} <span className="text-[10px] text-earth-mut">/HA</span></span>
+                             </div>
+                             <div className="flex items-center gap-2">
+                               <Button 
+                                 size="icon" 
+                                 onClick={() => handleEditClick(z)}
+                                 className="h-10 w-10 bg-earth-main text-earth-sub border border-earth-dark/15 rounded-xl hover:bg-earth-primary/10 hover:text-earth-primary transition-all"
+                               >
+                                  <Edit size={16} />
+                               </Button>
+                               <Button 
+                                 size="icon"
+                                 onClick={async () => {
+                                   if(z.status === 'ACTIVE') handleDeleteZone(z.id);
+                                   else {
+                                     try {
+                                       const res = await api.admin.updateZone(z.id, { status: 'ACTIVE' });
+                                       if (res.success) refreshZones();
+                                     } catch(e) {}
+                                   }
+                                 }}
+                                 className={cn(
+                                   "h-10 w-10 rounded-xl transition-all border",
+                                   z.status === 'ACTIVE' 
+                                     ? "bg-red-500/5 text-red-500 border-red-500/20" 
+                                   : "bg-green-500/5 text-green-500 border-green-500/20"
+                                 )}
+                               >
+                                  {z.status === 'ACTIVE' ? <Trash2 size={16} /> : <CheckCircle2 size={16} />}
+                               </Button>
+                             </div>
+                          </div>
+                        </div>
+                      )
+                    ))
+                  )}
                 </div>
 
                 <div className="flex flex-col md:flex-row gap-6">
@@ -804,74 +957,10 @@ export default function Settings() {
                   </div>
                 </div>
 
-                {editingServiceId && (
-                  <div className="p-6 bg-earth-card border-2 border-earth-primary/20 rounded-3xl shadow-xl space-y-6 animate-in fade-in zoom-in duration-300">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-[11px] font-black text-earth-brown uppercase tracking-[0.2em]">Update Service Rate</h4>
-                      <Button variant="ghost" size="sm" onClick={() => setEditingServiceId(null)} className="text-earth-mut hover:text-earth-brown">
-                        <X size={18} />
-                      </Button>
-                    </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="space-y-2">
-                        <label className="text-[9px] uppercase font-black tracking-widest text-earth-sub pl-1">Rate (₦/ha)</label>
-                        <div className="relative">
-                          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-earth-mut font-bold">₦</div>
-                          <Input 
-                            type="number" 
-                            value={editServiceRate} 
-                            onChange={(e) => setEditServiceRate(e.target.value)}
-                            className="pl-8 bg-earth-main border-earth-dark/10 font-black text-earth-brown h-12 rounded-xl focus:border-earth-primary shadow-inner" 
-                          />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-[9px] uppercase font-black tracking-widest text-earth-sub pl-1">Effective Date</label>
-                        <Input 
-                          type="date" 
-                          value={editServiceDate} 
-                          onChange={(e) => setEditServiceDate(e.target.value)}
-                          className="bg-earth-main border-earth-dark/10 font-black text-earth-brown h-12 rounded-xl focus:border-earth-primary shadow-inner" 
-                        />
-                      </div>
-                    </div>
-                    <div className="flex justify-end gap-3 pt-2">
-                      <Button 
-                        variant="outline" 
-                        onClick={() => setEditingServiceId(null)}
-                        className="bg-transparent border-earth-dark/15 text-earth-brown uppercase font-black tracking-widest rounded-xl h-11 px-6 text-[10px]"
-                      >
-                        Cancel
-                      </Button>
-                      <Button 
-                        onClick={async () => {
-                          const rate = parseFloat(editServiceRate);
-                          if (isNaN(rate) || rate <= 0) return alert('Please enter a valid rate');
-                          if (!editServiceDate) return alert('Please select an effective date');
-                          
-                          try {
-                            const res = await api.admin.updateService(editingServiceId, {
-                              baseRatePerHectare: rate,
-                              effectiveDate: editServiceDate
-                            });
-                            if (res.success) {
-                              await refreshServices();
-                              setEditingServiceId(null);
-                              setSaveStatus('success');
-                            }
-                          } catch (e) {
-                            console.error('Failed to update service:', e);
-                          }
-                        }} 
-                        className="bg-earth-primary hover:bg-earth-primary-hover text-earth-brown uppercase font-black tracking-widest rounded-xl h-11 px-8 text-[10px] shadow-lg shadow-earth-primary/20"
-                      >
-                        Save Changes
-                      </Button>
-                    </div>
-                  </div>
-                )}
+                {/* Global Add Form logic not needed for Rates as there's no ADD button for core services */}
 
-                <div className="overflow-hidden bg-earth-card/30 border border-earth-dark/10 rounded-[2rem] shadow-inner">
+                {/* Desktop View Table */}
+                <div className="hidden md:block overflow-hidden bg-earth-card/30 border border-earth-dark/10 rounded-[2rem] shadow-inner">
                   <table className="w-full text-left border-collapse">
                     <thead>
                       <tr className="bg-earth-card/50 border-b border-earth-dark/10">
@@ -883,40 +972,146 @@ export default function Settings() {
                     </thead>
                     <tbody className="divide-y divide-earth-dark/5">
                       {systemServices.map((s) => (
-                        <tr key={s.id} className="group hover:bg-earth-primary/5 transition-colors">
-                          <td className="px-6 py-5">
-                            <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-lg bg-earth-main flex items-center justify-center text-earth-primary shadow-sm border border-earth-dark/5 text-[10px] font-black">
-                                {s.name.substring(0, 1).toUpperCase()}
+                        editingServiceId === s.id ? (
+                          <tr key={s.id} className="bg-earth-primary/5">
+                            <td colSpan={4} className="p-6">
+                              <div className="space-y-6 animate-in fade-in zoom-in duration-200">
+                                <div className="flex items-center justify-between mb-4">
+                                  <h4 className="text-[11px] font-black text-earth-brown uppercase tracking-widest text-center">Update {s.name} Rate</h4>
+                                  <Button variant="ghost" size="sm" onClick={() => setEditingServiceId(null)} className="text-earth-mut"><X size={18} /></Button>
+                                </div>
+                                <div className="grid grid-cols-2 gap-6">
+                                  <div className="space-y-2">
+                                    <label className="text-[9px] uppercase font-black text-earth-sub">Rate (₦/ha)</label>
+                                    <Input type="number" value={editServiceRate} onChange={(e) => setEditServiceRate(e.target.value)} className="h-10 text-xs font-black" />
+                                  </div>
+                                  <div className="space-y-2">
+                                    <label className="text-[9px] uppercase font-black text-earth-sub">Effective Date</label>
+                                    <Input type="date" value={editServiceDate} onChange={(e) => setEditServiceDate(e.target.value)} className="h-10 text-xs font-black" />
+                                  </div>
+                                </div>
+                                <div className="flex justify-end gap-3 mt-4">
+                                  <Button variant="outline" size="sm" onClick={() => setEditingServiceId(null)} className="h-9 px-4 text-[10px] uppercase font-black shadow-sm">Cancel</Button>
+                                  <Button size="sm" onClick={async () => {
+                                      const rate = parseFloat(editServiceRate);
+                                      if (isNaN(rate) || rate <= 0) return alert('Invalid rate');
+                                      if (!editServiceDate) return alert('Invalid date');
+                                      try {
+                                        const res = await api.admin.updateService(s.id, { baseRatePerHectare: rate, effectiveDate: editServiceDate });
+                                        if (res.success) { await refreshServices(); setEditingServiceId(null); setSaveStatus('success'); }
+                                      } catch (e) {}
+                                  }} className="h-9 px-6 text-[10px] uppercase font-black bg-accent text-white shadow-lg">Confirm Sync</Button>
+                                </div>
                               </div>
-                              <span className="text-sm font-black text-earth-brown capitalize">{s.name}</span>
-                            </div>
-                          </td>
-                          <td className="px-6 py-5">
-                            <span className="text-sm font-black text-earth-primary">₦ {s.baseRatePerHectare.toLocaleString()}</span>
-                          </td>
-                          <td className="px-6 py-5">
-                            <span className="text-xs font-black text-earth-mut uppercase">
-                              {new Date(s.effectiveDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
-                            </span>
-                          </td>
-                          <td className="px-6 py-5 text-right">
-                            <button 
-                              onClick={() => {
-                                setEditingServiceId(s.id);
-                                setEditServiceRate(s.baseRatePerHectare.toString());
-                                setEditServiceDate(new Date(s.effectiveDate).toISOString().split('T')[0]);
-                              }} 
-                              className="w-8 h-8 rounded-lg inline-flex items-center justify-center text-earth-sub hover:bg-earth-primary/20 hover:text-earth-brown transition-all"
-                              title="Edit Service"
-                            >
-                              <Edit size={16} />
-                            </button>
-                          </td>
-                        </tr>
+                            </td>
+                          </tr>
+                        ) : (
+                          <tr key={s.id} className="group hover:bg-earth-primary/5 transition-colors">
+                            <td className="px-6 py-5">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-lg bg-earth-main flex items-center justify-center text-earth-primary shadow-sm border border-earth-dark/5 text-[10px] font-black">
+                                  {s.name.substring(0, 1).toUpperCase()}
+                                </div>
+                                <span className="text-sm font-black text-earth-brown capitalize">{s.name}</span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-5">
+                              <span className="text-sm font-black text-earth-primary">₦ {s.baseRatePerHectare.toLocaleString()}</span>
+                            </td>
+                            <td className="px-6 py-5">
+                              <span className="text-xs font-black text-earth-mut uppercase">
+                                {new Date(s.effectiveDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                              </span>
+                            </td>
+                            <td className="px-6 py-5 text-right">
+                              <button 
+                                onClick={() => {
+                                  setEditingServiceId(s.id);
+                                  setEditServiceRate(s.baseRatePerHectare.toString());
+                                  setEditServiceDate(new Date(s.effectiveDate).toISOString().split('T')[0]);
+                                }} 
+                                className="w-8 h-8 rounded-lg inline-flex items-center justify-center text-earth-sub hover:bg-earth-primary/20 hover:text-earth-brown transition-all"
+                                title="Edit Service"
+                              >
+                                <Edit size={16} />
+                              </button>
+                            </td>
+                          </tr>
+                        )
                       ))}
                     </tbody>
                   </table>
+                </div>
+
+                {/* Mobile View Cards */}
+                <div className="grid grid-cols-1 gap-4 md:hidden">
+                  {systemServices.map((s) => (
+                    editingServiceId === s.id ? (
+                      <div key={s.id} className="p-6 rounded-[2rem] bg-earth-primary/5 border-2 border-earth-primary/20 shadow-xl space-y-6 animate-in fade-in zoom-in duration-200">
+                         <div className="flex items-center justify-between">
+                            <h4 className="text-[11px] font-black text-earth-brown uppercase tracking-widest">Update {s.name}</h4>
+                            <Button variant="ghost" size="sm" onClick={() => setEditingServiceId(null)} className="text-earth-mut"><X size={18} /></Button>
+                         </div>
+                         <div className="space-y-4">
+                            <div className="space-y-2">
+                              <label className="text-[9px] uppercase font-black text-earth-sub">Rate (₦/ha)</label>
+                              <Input type="number" value={editServiceRate} onChange={(e) => setEditServiceRate(e.target.value)} className="h-12 text-sm font-black" />
+                            </div>
+                            <div className="space-y-2">
+                              <label className="text-[9px] uppercase font-black text-earth-sub">Effective Date</label>
+                              <Input type="date" value={editServiceDate} onChange={(e) => setEditServiceDate(e.target.value)} className="h-12 text-sm font-black" />
+                            </div>
+                         </div>
+                         <div className="flex gap-3 pt-2">
+                            <Button variant="outline" onClick={() => setEditingServiceId(null)} className="flex-1 h-12 text-[10px] uppercase font-black rounded-xl">Cancel</Button>
+                            <Button onClick={async () => {
+                               const rate = parseFloat(editServiceRate);
+                               if (isNaN(rate) || rate <= 0) return alert('Invalid rate');
+                               if (!editServiceDate) return alert('Invalid date');
+                               try {
+                                 const res = await api.admin.updateService(s.id, { baseRatePerHectare: rate, effectiveDate: editServiceDate });
+                                 if (res.success) { await refreshServices(); setEditingServiceId(null); setSaveStatus('success'); }
+                               } catch(e) {}
+                            }} className="flex-1 h-12 text-[10px] uppercase font-black rounded-xl bg-accent text-white">Save Changes</Button>
+                         </div>
+                      </div>
+                    ) : (
+                      <div key={s.id} className="p-5 rounded-[2rem] bg-white border border-earth-dark/15 shadow-sm space-y-4">
+                        <div className="flex justify-between items-center">
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-earth-main flex items-center justify-center text-earth-primary border border-earth-dark/10 text-xs font-black">
+                               {s.name.substring(0, 1).toUpperCase()}
+                            </div>
+                            <span className="text-base font-black text-earth-brown capitalize">{s.name}</span>
+                          </div>
+                          <Button 
+                            size="icon"
+                            onClick={() => {
+                              setEditingServiceId(s.id);
+                              setEditServiceRate(s.baseRatePerHectare.toString());
+                              setEditServiceDate(new Date(s.effectiveDate).toISOString().split('T')[0]);
+                            }}
+                            className="h-10 w-10 bg-earth-main text-earth-sub border border-earth-dark/15 rounded-xl hover:bg-earth-primary/10 hover:text-earth-primary transition-colors"
+                          >
+                             <Edit size={16} />
+                          </Button>
+                        </div>
+  
+                        <div className="grid grid-cols-2 gap-4 pt-4 border-t border-earth-dark/5">
+                          <div className="space-y-1">
+                            <p className="text-[8px] font-black text-earth-mut uppercase tracking-widest">Base Rate</p>
+                            <p className="text-sm font-black text-earth-primary">₦ {s.baseRatePerHectare.toLocaleString()} <span className="text-[10px] text-earth-mut">/HA</span></p>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-[8px] font-black text-earth-mut uppercase tracking-widest">Effective On</p>
+                            <p className="text-xs font-black text-earth-brown">
+                              {new Date(s.effectiveDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  ))}
                 </div>
 
                 <div className="p-4 bg-yellow-500/5 border border-yellow-500/10 rounded-2xl flex gap-3">

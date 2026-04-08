@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Users, Briefcase, Plus, Search, Mail, Phone, Shield, ShieldCheck, ShieldAlert, Trash2, X, Loader2, RefreshCw, Key } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '../../components/ui/Card';
 import { Button } from '../../components/ui/Button';
@@ -40,6 +42,18 @@ export default function Operators() {
   useEffect(() => {
     fetchOperators();
   }, []);
+
+  // Handle scroll lock when modal is open
+  useEffect(() => {
+    if (isModalOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isModalOpen]);
 
   const handleCreateOperator = async (e) => {
     e.preventDefault();
@@ -204,105 +218,118 @@ export default function Operators() {
       </Card>
 
       {/* Recruit Operator Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-earth-dark/60 backdrop-blur-md animate-in fade-in duration-300">
-          <div className="w-full max-w-md bg-earth-main rounded-[2.5rem] shadow-2xl overflow-hidden border border-earth-dark/10">
-            <div className="bg-earth-dark p-8 text-earth-main flex justify-between items-center relative overflow-hidden">
-               <div className="absolute top-0 right-0 w-full h-full opacity-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-earth-primary via-transparent to-transparent pointer-events-none"></div>
-               <div className="relative z-10">
-                 <h3 className="text-xl font-black uppercase italic tracking-tight">Personnel Recruitment</h3>
-                 <p className="text-[10px] font-bold text-earth-main/60 uppercase tracking-[0.2em] mt-1">Issue New Operator Credentials</p>
-               </div>
-               <button onClick={() => setIsModalOpen(false)} className="relative z-10 p-2 hover:bg-white/10 rounded-full transition-colors">
-                 <X size={20} />
-               </button>
-            </div>
-            
-            <form onSubmit={handleCreateOperator} className="p-8 space-y-6">
-               {formError && (
-                 <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl text-red-500 text-[10px] font-black uppercase tracking-widest">
-                   {formError}
+      {isModalOpen && createPortal(
+        <div className="fixed inset-0 z-[1000] overflow-hidden">
+          <motion.div 
+            initial={{ opacity: 0 }} 
+            animate={{ opacity: 1 }} 
+            className="fixed inset-0 bg-earth-dark/40 backdrop-blur-xl"
+            onClick={() => setIsModalOpen(false)}
+          />
+          <div className="fixed inset-0 overflow-y-auto flex items-center justify-center p-4" onClick={(e) => e.target === e.currentTarget && setIsModalOpen(false)}>
+            <motion.div 
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              className="relative z-10 w-full max-w-md bg-white rounded-[3rem] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.3)] overflow-hidden border border-earth-dark/10"
+            >
+              <div className="bg-earth-dark p-8 text-earth-main flex justify-between items-center relative overflow-hidden">
+                 <div className="absolute top-0 right-0 w-full h-full opacity-10 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-earth-primary via-transparent to-transparent pointer-events-none"></div>
+                 <div className="relative z-10">
+                   <h3 className="text-xl font-black uppercase italic tracking-tight">Personnel Recruitment</h3>
+                   <p className="text-[10px] font-bold text-earth-main/60 uppercase tracking-[0.2em] mt-1">Issue New Operator Credentials</p>
                  </div>
-               )}
-
-               <div className="space-y-4">
-                 <div>
-                   <label className="text-[10px] font-black text-earth-mut uppercase tracking-[0.2em] mb-1.5 block ml-1">Full Name</label>
-                   <div className="relative">
-                     <Users className="absolute left-4 top-1/2 -translate-y-1/2 text-earth-mut" size={16} />
-                     <Input 
-                       required
-                       value={formData.name}
-                       onChange={(e) => setFormData({...formData, name: e.target.value})}
-                       className="pl-12 bg-earth-card border-earth-dark/10 rounded-2xl h-12 focus:ring-0 focus:border-earth-primary font-bold shadow-inner"
-                       placeholder="e.g. Samuel Adebayo"
-                     />
+                 <button onClick={() => setIsModalOpen(false)} className="relative z-10 h-10 w-10 flex items-center justify-center hover:bg-white/10 rounded-xl transition-colors">
+                   <X size={20} />
+                 </button>
+              </div>
+              
+              <form onSubmit={handleCreateOperator} className="p-8 space-y-6">
+                 {formError && (
+                   <div className="bg-red-500/10 border border-red-500/20 p-4 rounded-2xl text-red-500 text-[10px] font-black uppercase tracking-widest text-center">
+                      {formError}
                    </div>
-                 </div>
+                 )}
 
-                 <div>
-                   <label className="text-[10px] font-black text-earth-mut uppercase tracking-[0.2em] mb-1.5 block ml-1">Email System Key</label>
-                   <div className="relative">
-                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-earth-mut" size={16} />
-                     <Input 
-                       required
-                       type="email"
-                       value={formData.email}
-                       onChange={(e) => setFormData({...formData, email: e.target.value})}
-                       className="pl-12 bg-earth-card border-earth-dark/10 rounded-2xl h-12 focus:ring-0 focus:border-earth-primary font-bold shadow-inner"
-                       placeholder="operator@tractorlink.com"
-                     />
+                 <div className="space-y-4">
+                   <div className="space-y-1.5">
+                     <label className="text-[10px] font-black text-earth-mut uppercase tracking-[0.2em] ml-1">Full Name</label>
+                     <div className="relative group">
+                       <Users className="absolute left-4 top-1/2 -translate-y-1/2 text-earth-mut group-focus-within:text-earth-primary transition-colors" size={16} />
+                       <Input 
+                         required
+                         value={formData.name}
+                         onChange={(e) => setFormData({...formData, name: e.target.value})}
+                         className="pl-12 bg-earth-card border-earth-dark/10 rounded-2xl h-12 focus:ring-0 focus:border-earth-primary font-bold shadow-inner"
+                         placeholder="e.g. Samuel Adebayo"
+                       />
+                     </div>
                    </div>
-                 </div>
 
-                 <div>
-                    <label className="text-[10px] font-black text-earth-mut uppercase tracking-[0.2em] mb-1.5 block ml-1">Contact Phone</label>
-                    <div className="relative">
-                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-earth-mut" size={16} />
-                      <Input 
-                        value={formData.phone}
-                        onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                        className="pl-12 bg-earth-card border-earth-dark/10 rounded-2xl h-12 focus:ring-0 focus:border-earth-primary font-bold shadow-inner"
-                        placeholder="+234 800 000 0000"
-                      />
+                   <div className="space-y-1.5">
+                     <label className="text-[10px] font-black text-earth-mut uppercase tracking-[0.2em] ml-1">Email System Key</label>
+                     <div className="relative group">
+                       <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-earth-mut group-focus-within:text-earth-primary transition-colors" size={16} />
+                       <Input 
+                         required
+                         type="email"
+                         value={formData.email}
+                         onChange={(e) => setFormData({...formData, email: e.target.value})}
+                         className="pl-12 bg-earth-card border-earth-dark/10 rounded-2xl h-12 focus:ring-0 focus:border-earth-primary font-bold shadow-inner"
+                         placeholder="operator@tractorlink.com"
+                       />
+                     </div>
+                   </div>
+
+                   <div className="space-y-1.5">
+                      <label className="text-[10px] font-black text-earth-mut uppercase tracking-[0.2em] ml-1">Contact Phone</label>
+                      <div className="relative group">
+                        <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-earth-mut group-focus-within:text-earth-primary transition-colors" size={16} />
+                        <Input 
+                          value={formData.phone}
+                          onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                          className="pl-12 bg-earth-card border-earth-dark/10 rounded-2xl h-12 focus:ring-0 focus:border-earth-primary font-bold shadow-inner"
+                          placeholder="+234 800 000 0000"
+                        />
+                      </div>
                     </div>
-                  </div>
 
-                 <div>
-                   <label className="text-[10px] font-black text-earth-mut uppercase tracking-[0.2em] mb-1.5 block ml-1">Initial Authorization Password</label>
-                   <div className="relative">
-                     <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-earth-mut" size={16} />
-                     <Input 
-                       required
-                       type="password"
-                       value={formData.password}
-                       onChange={(e) => setFormData({...formData, password: e.target.value})}
-                       className="pl-12 bg-earth-card border-earth-dark/10 rounded-2xl h-12 focus:ring-0 focus:border-earth-primary font-bold shadow-inner"
-                       placeholder="••••••••"
-                     />
+                   <div className="space-y-1.5">
+                     <label className="text-[10px] font-black text-earth-mut uppercase tracking-[0.2em] ml-1">Initial Authorization Password</label>
+                     <div className="relative group">
+                       <Key className="absolute left-4 top-1/2 -translate-y-1/2 text-earth-mut group-focus-within:text-earth-primary transition-colors" size={16} />
+                       <Input 
+                         required
+                         type="password"
+                         value={formData.password}
+                         onChange={(e) => setFormData({...formData, password: e.target.value})}
+                         className="pl-12 bg-earth-card border-earth-dark/10 rounded-2xl h-12 focus:ring-0 focus:border-earth-primary font-bold shadow-inner"
+                         placeholder="••••••••"
+                       />
+                     </div>
                    </div>
                  </div>
-               </div>
 
-               <div className="pt-4 flex gap-3">
-                 <Button 
-                   type="button" 
-                   variant="outline" 
-                   onClick={() => setIsModalOpen(false)}
-                   className="flex-1 h-12 rounded-2xl border-earth-dark/15 text-earth-sub font-black uppercase tracking-widest text-[10px] bg-earth-card-alt"
-                 >
-                   Cancel
-                 </Button>
-                 <Button 
-                   disabled={isSubmitting}
-                   className="flex-1 h-12 rounded-2xl bg-accent hover:opacity-90 text-white font-black uppercase tracking-widest text-[10px] border-none shadow-lg"
-                 >
-                   {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : "Finalize Recruit"}
-                 </Button>
-               </div>
-            </form>
+                 <div className="pt-4 flex gap-3">
+                   <Button 
+                     type="button" 
+                     variant="outline" 
+                     onClick={() => setIsModalOpen(false)}
+                     className="flex-1 h-12 rounded-2xl border-earth-dark/15 text-earth-sub font-black uppercase tracking-widest text-[10px] bg-earth-card-alt hover:text-earth-brown transition-all"
+                   >
+                     Cancel
+                   </Button>
+                   <Button 
+                     disabled={isSubmitting}
+                     className="flex-1 h-12 rounded-2xl bg-accent hover:opacity-90 text-white font-black uppercase tracking-widest text-[10px] border-none shadow-[0_12px_24px_-8px_rgba(255,152,0,0.4)]"
+                   >
+                     {isSubmitting ? <Loader2 className="animate-spin" size={16} /> : "Finalize Recruit"}
+                   </Button>
+                 </div>
+              </form>
+            </motion.div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
 
     </div>

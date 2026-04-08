@@ -42,16 +42,12 @@ export default function Home() {
     <div className="p-4 md:p-6 space-y-5 md:space-y-6 max-w-7xl mx-auto pb-24 md:pb-6">
       
       {/* Dark Theme Header */}
-      <header className="relative bg-earth-card-alt border border-earth-dark/15/50 text-earth-brown p-4 md:p-6 rounded-[1.2rem] overflow-hidden shadow-2xl shadow-black/20">
+      <header className="relative bg-white border-none shadow-[0_15px_35px_rgba(0,0,0,0.05)] text-earth-brown p-4 md:p-6 rounded-[1.2rem] overflow-hidden">
         <div className="absolute top-0 right-0 w-full h-full opacity-[0.03] bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white via-transparent to-transparent pointer-events-none"></div>
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <p className="text-earth-primary text-xs md:text-sm font-bold mb-0.5 tracking-wider uppercase">Welcome back,</p>
             <h1 className="text-xl md:text-2xl font-black tracking-tight text-earth-brown">{isLoading ? 'Loading...' : dashboardData.name}</h1>
-          </div>
-          <div className="px-3 py-1.5 bg-earth-card/50 border border-earth-dark/15 rounded-xl flex items-center gap-2 w-fit">
-            <div className={`w-2 h-2 rounded-full ${isLoading ? 'bg-earth-mut' : 'bg-earth-primary animate-pulse'}`}></div>
-            <span className="text-[10px] font-black uppercase tracking-widest text-earth-brown">Live Status: {isLoading ? 'Syncing...' : 'Active'}</span>
           </div>
         </div>
       </header>
@@ -65,7 +61,9 @@ export default function Home() {
             {stats.slice(0, 2).map((stat, i) => {
               const Icon = stat.icon;
               return (
-                <Card key={i} className="bg-earth-card-alt border-earth-dark/15/50 rounded-[1.2rem] h-full">
+                <Card key={i} className="bg-white border-none shadow-[0_15px_35px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] transition-shadow rounded-[1.2rem] h-full relative overflow-hidden group">
+                  <div className={cn("absolute top-0 left-0 w-full h-1.5", i === 0 ? "bg-earth-green" : "bg-earth-primary")}></div>
+                  <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-earth-primary/5 to-transparent rounded-full blur-2xl transform translate-x-1/2 -translate-y-1/2 pointer-events-none group-hover:scale-150 transition-transform duration-700"></div>
                   <CardContent className="p-4 flex items-center justify-between h-full">
                     <div>
                       <p className="text-[10px] font-black text-earth-mut uppercase tracking-widest mb-1">{stat.label}</p>
@@ -80,8 +78,8 @@ export default function Home() {
             })}
           </div>
 
-          {/* Activity & Insight Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          {/* Activity Section */}
+          <div className="flex flex-col gap-5 md:gap-6 mt-5 md:mt-6">
             <div className="space-y-5 md:space-y-6 flex flex-col h-full">
               {/* Main CTA Card */}
               <Card className="bg-earth-primary text-earth-brown border-none shadow-[0_10px_30px_rgba(234,179,8,0.1)] relative overflow-hidden rounded-[1.2rem]">
@@ -106,33 +104,33 @@ export default function Home() {
                   <Link to="/farmer/track" className="text-[10px] font-black text-earth-primary hover:text-earth-primary-hover uppercase tracking-widest">Track</Link>
                 </div>
                 
-                <div className="space-y-3 flex-1">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-5 flex-1">
                   {isLoading ? (
-                    <Card className="bg-earth-card-alt/50 border-earth-dark/15/50 border-dashed rounded-xl">
+                    <Card className="bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)] border-none rounded-[1.2rem] md:col-span-3">
                       <CardContent className="p-4 flex items-center justify-center h-[72px]">
                          <Clock className="animate-spin text-earth-mut" size={16} />
                       </CardContent>
                     </Card>
                   ) : recentActivity.length > 0 ? (
-                    recentActivity.map((activity, idx) => (
+                    recentActivity.slice(0, 3).map((activity, idx) => (
                       <Link key={idx} to="/farmer/track" className="block group">
-                        <Card className="bg-earth-card-alt border-earth-dark/15/50 shadow-sm hover:border-earth-primary/50 hover:bg-earth-card-alt/80 transition-all rounded-xl relative overflow-hidden">
-                          <div className="absolute top-0 left-0 w-1 h-full bg-earth-primary"></div>
-                          <CardContent className="p-4 flex items-center justify-between">
+                        <Card className="bg-white border-none shadow-[0_10px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] transition-all rounded-[1.2rem] relative overflow-hidden h-full">
+                          <div className={cn("absolute top-0 left-0 w-1 h-full", activity.status.toLowerCase() === 'completed' ? 'bg-earth-primary' : 'bg-earth-accent')}></div>
+                          <CardContent className="p-4 flex items-center justify-between h-full">
                             <div>
-                              <p className="text-[9px] font-black text-earth-primary uppercase tracking-widest leading-none mb-1">
+                              <p className={cn("text-[9px] font-black uppercase tracking-widest leading-none mb-1", activity.status.toLowerCase() === 'completed' ? 'text-earth-primary' : 'text-earth-accent')}>
                                 {activity.status.replace('_', ' ')} : {new Date(activity.created_at).toLocaleDateString()}
                               </p>
                               <h4 className="font-black text-earth-brown text-sm group-hover:text-earth-primary transition-colors uppercase tracking-tight">{activity.service_type}</h4>
                               <p className="text-[10px] text-earth-sub font-semibold uppercase tracking-widest leading-none mt-1">{activity.land_size} Hectares</p>
                             </div>
-                            <History size={18} className="text-earth-mut group-hover:text-earth-primary transition-colors" />
+                            <History size={18} className="text-earth-mut group-hover:text-earth-primary transition-colors shrink-0 ml-2" />
                           </CardContent>
                         </Card>
                       </Link>
                     ))
                   ) : (
-                    <Card className="bg-earth-card-alt/50 border-earth-dark/15/50 border-dashed rounded-xl h-full min-h-[120px]">
+                    <Card className="bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)] border-none rounded-[1.2rem] h-full min-h-[120px] md:col-span-3">
                         <CardContent className="p-4 flex items-center justify-center text-[10px] font-bold text-earth-mut uppercase tracking-widest h-full">
                            No Recent Activity
                         </CardContent>
@@ -141,25 +139,6 @@ export default function Home() {
                 </div>
               </div>
             </div>
-
-            {/* Weather / Tip Card */}
-            <div className="space-y-3 flex flex-col h-full">
-              <h3 className="font-bold text-earth-brown tracking-tight text-xs uppercase tracking-widest px-1">Farming Insight</h3>
-              <Card className="bg-earth-card-alt border-earth-dark/15/50 rounded-xl overflow-hidden flex-1">
-                <CardContent className="p-4 flex flex-col justify-between h-full bg-earth-card">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2">
-                      <Cloud className="text-blue-400" size={18} />
-                      <span className="text-xs font-black text-earth-brown uppercase">28°C Clear</span>
-                    </div>
-                  </div>
-                  <div className="p-2.5 bg-earth-main/50 border border-earth-dark/15/30 rounded-lg flex-1 flex flex-col justify-center">
-                    <p className="text-[9px] font-bold text-earth-primary uppercase tracking-widest mb-0.5">Tip: Optimal Soil Moisture</p>
-                    <p className="text-[10px] text-earth-sub leading-tight">Great time for wheat sowing. Ensure soil moisture is checked.</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
           </div>
         </div>
 
@@ -167,7 +146,9 @@ export default function Home() {
         <div className="lg:col-span-4 space-y-5">
           <div className="space-y-4">
             {/* Stat for Right Side */}
-            <Card className="bg-earth-card-alt border-earth-dark/15/50 rounded-[1.2rem]">
+            <Card className="bg-white border-none shadow-[0_15px_35px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] transition-shadow rounded-[1.2rem] relative overflow-hidden group">
+              <div className="absolute top-0 left-0 w-full h-1.5 bg-blue-500"></div>
+              <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-earth-primary/5 to-transparent rounded-full blur-2xl transform translate-x-1/2 -translate-y-1/2 pointer-events-none group-hover:scale-150 transition-transform duration-700"></div>
               <CardContent className="p-4 flex items-center justify-between">
                 <div>
                   <p className="text-[10px] font-black text-earth-mut uppercase tracking-widest mb-1">{stats[2].label}</p>
@@ -184,7 +165,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <Card className="bg-earth-card-alt border-earth-dark/15/50 shadow-sm rounded-xl">
+            <Card className="bg-white border-none shadow-[0_15px_35px_rgba(0,0,0,0.05)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] transition-shadow rounded-[1.2rem]">
               <CardContent className="p-4 flex items-center gap-3">
                 <div className="w-10 h-10 bg-earth-card border border-earth-dark/15 rounded-lg flex items-center justify-center text-earth-primary shrink-0 shadow-inner">
                   <MapPin size={18} />
@@ -198,18 +179,7 @@ export default function Home() {
               </CardContent>
             </Card>
 
-            <Card className="bg-earth-card-alt border border-earth-primary/10 shadow-sm rounded-xl relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-24 h-24 bg-earth-primary/10 rounded-full blur-2xl transform translate-x-1/2 -translate-y-1/2 pointer-events-none"></div>
-              <CardContent className="p-4 flex items-center gap-3 relative z-10">
-                <div className="w-10 h-10 bg-earth-primary rounded-lg flex items-center justify-center text-earth-brown shrink-0 group-hover:scale-110 transition-transform shadow-[0_4px_10px_rgba(234,179,8,0.2)]">
-                  <Star size={18} />
-                </div>
-                <div className="flex flex-col justify-center">
-                  <h4 className="font-black text-earth-brown text-xs mb-0.5 leading-none uppercase tracking-wide">Refer & Earn</h4>
-                  <p className="text-[10px] text-earth-sub font-semibold leading-none">Earn ₦500 credits per referral.</p>
-                </div>
-              </CardContent>
-            </Card>
+
           </div>
 
           {/* Upcoming Schedule */}
@@ -224,10 +194,10 @@ export default function Home() {
                 upcomingJobs.map((job, idx) => {
                   const jobDate = new Date(job.date);
                   return (
-                    <div key={idx} className="flex gap-3 items-center bg-earth-card-alt/30 p-3 rounded-xl border border-earth-dark/10/50">
-                      <div className="w-10 h-10 bg-earth-card rounded-lg flex flex-col items-center justify-center border border-earth-dark/15 shrink-0">
-                        <span className="text-[8px] font-black text-earth-primary uppercase leading-none mb-0.5">{jobDate.toLocaleString('default', { month: 'short' })}</span>
-                        <span className="text-sm font-black text-earth-brown leading-none">{jobDate.getDate()}</span>
+                    <div key={idx} className="flex gap-4 items-center bg-white shadow-[0_10px_30px_rgba(0,0,0,0.03)] hover:shadow-[0_20px_50px_rgba(0,0,0,0.08)] transition-shadow p-4 rounded-[1.2rem]">
+                      <div className="w-12 h-12 bg-earth-card rounded-xl flex flex-col items-center justify-center border border-earth-dark/10 shrink-0 shadow-inner">
+                        <span className="text-[9px] font-black text-earth-primary uppercase leading-none mb-0.5">{jobDate.toLocaleString('default', { month: 'short' })}</span>
+                        <span className="text-base font-black text-earth-brown leading-none">{jobDate.getDate()}</span>
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-[11px] font-black text-earth-brown truncate uppercase tracking-wide leading-none">{job.service_type}</p>
