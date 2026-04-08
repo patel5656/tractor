@@ -487,11 +487,11 @@ export default function Settings() {
                    </h4>
                    <div className="grid grid-cols-2 gap-4">
                      <div className="p-4 bg-earth-card border border-earth-dark/10 rounded-2xl flex justify-between items-center opacity-60">
-                       <span className="text-[10px] font-black text-earth-sub uppercase tracking-widest">Old KM Surcharge</span>
-                       <span className="text-sm font-black text-earth-mut">₦ {oldSimulatedCharge.toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
+                       <span className="text-[10px] font-black text-earth-sub uppercase tracking-widest">Baseline Charge</span>
+                       <span className="text-sm font-black text-earth-mut">₦ {(750 * 22).toLocaleString()}</span>
                      </div>
                      <div className="p-4 bg-earth-main border border-earth-primary/30 rounded-2xl flex justify-between items-center shadow-lg shadow-earth-primary/10">
-                       <span className="text-[10px] font-black text-earth-primary uppercase tracking-widest">New KM Surcharge</span>
+                       <span className="text-[10px] font-black text-earth-primary uppercase tracking-widest">Adjusted Charge</span>
                        <span className="text-sm font-black text-earth-brown">₦ {newSimulatedCharge.toLocaleString(undefined, {maximumFractionDigits: 2})}</span>
                      </div>
                    </div>

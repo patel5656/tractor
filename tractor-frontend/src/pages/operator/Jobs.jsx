@@ -125,10 +125,16 @@ export default function Jobs() {
                    <div className="bg-earth-primary/5 border border-emerald-500/20 px-2.5 py-1 rounded-lg text-earth-green font-black text-[9px] uppercase tracking-widest shadow-inner">
                       {activeJob?.landSize || 0} Hectares
                    </div>
-                   <div className="bg-earth-card-alt px-2.5 py-1 rounded-lg text-earth-mut font-black text-[9px] uppercase tracking-widest">
-                      ID: #{activeJob?.id || '---'}
-                   </div>
-                </div>
+                    <div className="bg-earth-card-alt px-2.5 py-1 rounded-lg text-earth-mut font-black text-[9px] uppercase tracking-widest">
+                       ID: #{activeJob?.id || '---'}
+                    </div>
+                    {activeJob?.scheduledAt && (
+                      <div className="flex items-center gap-1.5 bg-earth-primary/5 px-2.5 py-1 rounded-lg text-earth-primary font-black text-[9px] uppercase tracking-widest">
+                        <Clock size={10} />
+                        {new Date(activeJob.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </div>
+                    )}
+                 </div>
               </div>
               <div className="text-right shrink-0">
                 <span className="bg-earth-primary text-earth-brown px-3 py-1.5 rounded-lg text-[9px] font-black tracking-[0.15em] shadow-[0_4px_15px_rgba(234,179,8,0.2)] uppercase italic">
@@ -195,7 +201,14 @@ export default function Jobs() {
                     <h4 className="font-black text-earth-brown text-sm tracking-tight group-hover:text-earth-primary transition-colors italic truncate">
                       {job.farmer?.name || 'Unknown Client'}
                     </h4>
-                    <p className="text-[9px] uppercase font-black text-earth-mut tracking-widest mt-1 truncate">{job.service?.name} • {job.landSize} ha</p>
+                     <p className="text-[9px] uppercase font-black text-earth-mut tracking-widest mt-1 truncate">
+                       {job.service?.name} • {job.landSize} ha
+                       {job.scheduledAt && (
+                         <span className="text-earth-primary/80 ml-2 italic">
+                           @ {new Date(job.scheduledAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                         </span>
+                       )}
+                     </p>
                   </div>
                   <div className="flex items-center text-earth-sub group-hover:text-earth-primary transition-all pr-1">
                     <ArrowRight size={16} />

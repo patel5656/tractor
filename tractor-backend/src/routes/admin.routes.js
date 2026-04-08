@@ -25,6 +25,7 @@ router.post('/settle-booking/:bookingId', adminController.settleBooking);
 
 // Dispatch feature
 router.get('/pending-dispatch', dispatchController.getPendingBookings);
+router.put('/schedule/:bookingId', dispatchController.scheduleBooking);
 router.get('/operators', dispatchController.getAvailableOperators);
 router.put('/assign/:bookingId', dispatchController.dispatchBooking);
 

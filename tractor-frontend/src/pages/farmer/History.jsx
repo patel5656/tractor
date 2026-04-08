@@ -209,8 +209,25 @@ export default function History() {
                             <Badge className="bg-earth-card-alt text-[8px] font-black text-earth-mut border-none px-1.5 uppercase tracking-tighter">#{booking.id}</Badge>
                           </div>
                           <div className="flex items-center gap-1.5 text-[10px] font-black text-earth-mut uppercase tracking-widest mt-1">
-                            <Calendar size={12} className="text-earth-mut" />
-                            {new Date(booking.createdAt).toLocaleDateString()}
+                            <Badge className={cn(
+                              "text-[8px] px-2 py-0 border font-black uppercase tracking-widest",
+                              booking.status === 'completed' || booking.status === 'paid' ? 'bg-earth-primary/20 text-earth-green border-emerald-500/20' : 
+                              booking.status === 'pending' ? 'bg-earth-dark/10 text-earth-mut border-earth-dark/20' :
+                              booking.status === 'scheduled' ? 'bg-earth-primary/10 text-earth-primary border-earth-primary/20' : 
+                              booking.status === 'dispatched' ? 'bg-blue-500/10 text-blue-400 border-blue-500/20' :
+                              'bg-orange-500/10 text-orange-400 border-orange-500/20'
+                            )}>
+                              {booking.status === 'dispatched' ? 'ASSIGNED' : booking.status}
+                            </Badge>
+                            {booking.scheduledAt ? (
+                              <span className="text-[10px] font-black text-earth-primary lowercase">
+                                @ {new Date(booking.scheduledAt).toLocaleString([], { dateStyle: 'short', timeStyle: 'short' })}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] font-black text-earth-mut/60 lowercase italic">
+                                {booking.status === 'scheduled' ? 'pending scheduling' : 'not scheduled'}
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -382,6 +399,32 @@ export default function History() {
 
                 {/* 2. Service & Financial Breakdown */}
                 <div className="space-y-6 text-left">
+                   {/* Schedule Status */}
+                   <div className="space-y-4">
+                      <h4 className="text-[10px] font-black text-earth-mut uppercase tracking-[0.2em] px-1 flex items-center gap-2">
+                        <Clock size={12} className="text-earth-primary" />
+                        Mission Scheduling
+                      </h4>
+                      <div className="p-4 bg-earth-card border border-earth-dark/10 rounded-2xl flex items-center justify-between shadow-inner">
+                         <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl bg-earth-primary/5 border border-earth-primary/10 flex items-center justify-center text-earth-primary">
+                               <Clock size={18} />
+                            </div>
+                            <div>
+                               <p className="text-[9px] font-black text-earth-mut uppercase tracking-[0.2em] leading-none mb-1">Scheduled Deployment</p>
+                               <p className={cn(
+                                 "text-sm font-black uppercase",
+                                 selectedBooking.scheduledAt ? "text-earth-brown" : "text-earth-primary italic"
+                               )}>
+                                  {selectedBooking.scheduledAt 
+                                    ? new Date(selectedBooking.scheduledAt).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' })
+                                    : "Not Scheduled Yet"}
+                               </p>
+                            </div>
+                         </div>
+                      </div>
+                   </div>
+
                    {/* Service Summary */}
                    <div className="space-y-4">
                       <h4 className="text-[10px] font-black text-earth-mut uppercase tracking-[0.2em] px-1">Service Particulars</h4>

@@ -3,12 +3,31 @@ import prisma from '../config/db.js';
 
 export const getPendingBookings = async () => {
   return await prisma.booking.findMany({
-    where: { status: 'scheduled' },
+    where: { status: { in: ['pending', 'scheduled'] } },
     include: {
       farmer: { select: { name: true, phone: true } },
       service: { select: { name: true } },
     },
     orderBy: { createdAt: 'asc' },
+  });
+};
+
+export const scheduleBooking = async (bookingId, scheduledDate) => {
+  const booking = await prisma.booking.findUnique({
+    where: { id: parseInt(bookingId) },
+  });
+
+  if (!booking) throw new Error('Booking not found');
+  if (booking.status !== 'pending' && booking.status !== 'scheduled') {
+    throw new Error('INVALID_TRANSITION: Booking can only be scheduled from pending or scheduled state');
+  }
+
+  return await prisma.booking.update({
+    where: { id: booking.id },
+    data: {
+      status: 'scheduled',
+      scheduledAt: new Date(scheduledDate)
+    }
   });
 };
 
@@ -19,8 +38,10 @@ export const getAvailableOperators = async () => {
       role: 'operator',
       status: 'active',             // must have active account
       availability: 'available',    // must be free to take a job
-      tractors: {
-        some: { status: 'available' }
+      tractor: {
+        is: {
+          status: 'AVAILABLE'
+        }
       }
     },
     select: {
@@ -30,7 +51,6 @@ export const getAvailableOperators = async () => {
       phone: true,
       availability: true,
       tractor: {
-        where: { status: 'available' },
         select: { id: true, name: true, model: true }
       }
     }
@@ -49,7 +69,7 @@ export const assignOperator = async (bookingId, operatorId) => {
   // 2. Validate operator exists
   const operator = await prisma.user.findUnique({
     where: { id: parseInt(operatorId) },
-    include: { tractors: true }
+    include: { tractor: true }
   });
 
   if (!operator || operator.role !== 'operator') {
@@ -60,7 +80,7 @@ export const assignOperator = async (bookingId, operatorId) => {
   const tractor = await prisma.tractor.findFirst({
     where: {
       operatorId: operator.id,
-      status: 'available'
+      status: 'AVAILABLE'
     }
   });
 
@@ -84,7 +104,7 @@ export const assignOperator = async (bookingId, operatorId) => {
     }),
     prisma.tractor.update({
       where: { id: tractor.id },
-      data: { status: 'busy' },
+      data: { status: 'IN_USE' },
     })
   ]);
 
@@ -436,7 +456,7 @@ export const getDashboardMetrics = async () => {
       where: { status: 'scheduled' }
     }),
     prisma.tractor.count({
-      where: { status: 'available' }
+      where: { status: 'AVAILABLE' }
     }),
     prisma.payment.aggregate({
       _sum: { amount: true }
@@ -541,7 +561,7 @@ export const getDashboardFleet = async () => {
   return tractors.map(t => ({
     operator_name: t.operator?.name || 'No Operator',
     tractor_model: t.name,
-    status: t.status // available | busy | maintenance
+    status: t.status // AVAILABLE | IN_USE | MAINTENANCE
   }));
 };
 /**
@@ -614,38 +634,62 @@ export const deleteOperator = async (id) => {
 
 export const getAllTractors = async () => {
   console.log(`[AdminService] Fetching all tractors...`);
-  return await prisma.tractor.findMany({
+  const tractors = await prisma.tractor.findMany({
     include: {
       operator: { select: { id: true, name: true } }
     },
     orderBy: { createdAt: 'desc' }
   });
+
+  // Apply Maintenance Logic
+  return await Promise.all(tractors.map(async (t) => {
+    const hoursRemaining = t.nextServiceDueHours - t.engineHours;
+    let currentStatus = t.status;
+
+    // Auto-maintenance rule
+    if (hoursRemaining <= 50 && currentStatus !== 'MAINTENANCE') {
+      await prisma.tractor.update({
+        where: { id: t.id },
+        data: { status: 'MAINTENANCE' }
+      });
+      currentStatus = 'MAINTENANCE';
+    }
+
+    return { ...t, status: currentStatus, hoursRemaining };
+  }));
 };
 
 export const createTractor = async (data) => {
-  const { name, model } = data;
+  const { name, model, engineHours = 0, nextServiceDueHours = 250, lastServiceDate } = data;
   return await prisma.tractor.create({
     data: {
       name,
       model,
-      status: 'available'
+      engineHours: parseFloat(engineHours),
+      nextServiceDueHours: parseFloat(nextServiceDueHours),
+      lastServiceDate: lastServiceDate ? new Date(lastServiceDate) : null,
+      status: 'AVAILABLE'
     }
   });
 };
 
 export const updateTractor = async (id, data) => {
   const tId = parseInt(id);
-  const { name, model, status, operatorId } = data;
+  const { name, model, status, operatorId, engineHours, nextServiceDueHours, lastServiceDate } = data;
 
   const tractor = await prisma.tractor.findUnique({ where: { id: tId } });
   if (!tractor) throw new Error('Tractor not found');
 
-  // Business Rule: Do NOT allow assigning tractor in maintenance
-  if (operatorId && status === 'maintenance') {
+  // Business Rule: Do NOT allow assigning tractor in Maintenance
+  if (operatorId && status === 'MAINTENANCE') {
     throw new Error('Cannot assign a tractor that is in maintenance');
   }
 
   const updateData = { name, model, status };
+  
+  if (engineHours !== undefined) updateData.engineHours = parseFloat(engineHours);
+  if (nextServiceDueHours !== undefined) updateData.nextServiceDueHours = parseFloat(nextServiceDueHours);
+  if (lastServiceDate !== undefined) updateData.lastServiceDate = lastServiceDate ? new Date(lastServiceDate) : null;
 
   if (operatorId !== undefined) {
     if (operatorId === null) {

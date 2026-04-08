@@ -168,8 +168,10 @@ Includes:
 - tractor_id
 - operator_id
 
-- status: scheduled, dispatched, en_route, in_progress, completed, paid, cancelled
-- payment_status: PENDING, PARTIAL, PAID
+| status | String | `pending` | `pending`, `scheduled`, `dispatched`, `en_route`, `in_progress`, `completed`, `paid`, `cancelled` |
+| scheduledAt | DateTime? | - | Explicit date/time set by Admin during Review |
+| paymentStatus | String | `PENDING` | `PENDING`, `PARTIAL`, `PAID` |
+| createdAt | DateTime | `now()` | - |
 
 ---
 
